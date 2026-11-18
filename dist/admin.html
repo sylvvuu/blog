@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>인사팀 블로그 관리자</title>
+  <!-- Google Analytics 4: G-BC6KK97MHL 를 실제 측정 ID로 바꾸세요 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BC6KK97MHL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BC6KK97MHL');
+  </script>
+  <style>
+:root {
+  --brand: #1f4e79;
+  --text: #1e2630;
+  --muted: #6b7785;
+  --line: #e3e8ee;
+  --bg: #f7f9fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+a { color: var(--brand); text-decoration: none; }
+header.site { background: #fff; border-bottom: 1px solid var(--line); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--text); }
+nav a { margin-left: 22px; color: var(--muted); font-size: 15px; }
+nav a:hover { color: var(--brand); }
+main { padding: 40px 0 80px; min-height: 70vh; }
+.hero { margin-bottom: 28px; }
+.hero h1 { margin: 0 0 6px; font-size: 28px; }
+.hero p { margin: 0; color: var(--muted); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; color: var(--text); transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.07); transform: translateY(-2px); }
+.card h3 { margin: 10px 0 8px; font-size: 18px; line-height: 1.4; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.card time, .post time { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--brand); background: #e8f0f8; border-radius: 4px; padding: 3px 8px; }
+.post { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 40px; max-width: 760px; margin: 0 auto; }
+.post h1 { margin: 12px 0 6px; font-size: 28px; line-height: 1.35; }
+.post .body p { margin: 0 0 16px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 14px; }
+.meta { display: grid; grid-template-columns: 80px 1fr; gap: 6px 14px; background: var(--bg); padding: 16px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.empty, .loading { color: var(--muted); padding: 40px 0; text-align: center; }
+.notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
+footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
+
+/* 채용 상세 헤더 */
+.job-head { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.job-head h1 { margin: 10px 0 8px; font-size: 26px; }
+.job-sub { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
+.job-period { margin: 0; color: var(--muted); font-size: 14px; }
+.job-actions { display: flex; flex-direction: column; gap: 8px; min-width: 180px; }
+.job-actions .msg { min-height: 0; margin: 0; }
+.pill { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 12px; }
+.pill.open { background: #e6f2ea; color: #1d6b3a; }
+.pill.closed { background: #eceff2; color: #6b7785; }
+.btn { display: block; text-align: center; padding: 12px 16px; border-radius: 8px; border: 1px solid #cfd7e0; font-size: 15px; cursor: pointer; font-family: inherit; }
+.btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn.ghost { background: #fff; color: var(--text); }
+.btn.muted { background: #eef2f6; color: var(--muted); border-color: #eef2f6; cursor: default; }
+.bottom-nav { text-align: center; margin-top: 32px; }
+.bottom-nav .btn { display: inline-block; min-width: 180px; }
+
+/* 글 반응 버튼과 댓글 */
+.actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.act { display: inline-flex; gap: 6px; align-items: center; background: #fff; color: var(--text); border: 1px solid #cfd7e0; border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+.act strong { color: var(--brand); }
+.act[aria-pressed="true"] { background: #e8f0f8; border-color: var(--brand); }
+.comments { margin-top: 36px; }
+.comments h2 { font-size: 18px; margin: 0 0 14px; }
+.comment-list { list-style: none; padding: 0; margin: 0 0 24px; }
+.comment-list li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.c-head { font-size: 14px; margin-bottom: 4px; }
+.c-head time { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.comment-list p { margin: 0; font-size: 15px; white-space: pre-wrap; }
+.comment-form { display: grid; gap: 8px; }
+.comment-form input, .comment-form textarea { width: 100%; }
+.comment-form textarea { min-height: 100px; }
+.comment-form button { justify-self: start; }
+
+/* 메인 배너: 전자 회사 느낌의 남색 배경과 회로 패턴 (직접 그린 SVG) */
+.banner { position: relative; overflow: hidden; color: #fff; border-radius: 14px; padding: 48px 40px; margin-bottom: 28px; background: linear-gradient(120deg, #0b2540 0%, #13467a 100%); }
+.banner::before { content: ""; position: absolute; inset: 0; opacity: .9; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='160' viewBox='0 0 240 160'><g fill='none' stroke='%2366b3ff' stroke-width='1.5' opacity='.4'><path d='M0 40h60l10 10h50v40h40'/><path d='M240 20h-70l-10 10h-40v50h-40v40'/><path d='M120 160v-30h30'/><path d='M180 120h40'/></g><g fill='%2366b3ff' opacity='.6'><circle cx='60' cy='40' r='3'/><circle cx='180' cy='70' r='3'/><circle cx='150' cy='110' r='3'/></g></svg>"); background-size: 240px 160px; }
+.banner .kicker { position: relative; margin: 0 0 8px; font-size: 13px; letter-spacing: .12em; color: #8fc7ff; font-weight: 600; }
+.banner h1 { position: relative; margin: 0 0 10px; font-size: 32px; }
+.banner p { position: relative; margin: 0; color: #d6e6f5; font-size: 15px; max-width: 560px; }
+
+/* 메인 3개 칼럼: 칼럼 사이 세로선으로 구분 */
+.columns { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.col { padding: 28px 26px; min-height: 340px; }
+.col + .col { border-left: 1px solid var(--line); }
+.col-head h2 { margin: 0 0 6px; font-size: 22px; }
+.col-head p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.col-education .col-head h2 { color: var(--brand); }
+.col-recruit .col-head h2 { color: #1d6b5a; }
+.col-inquiry .col-head h2 { color: #6b4e9b; }
+.more { font-size: 14px; font-weight: 600; }
+.feature { display: block; background: var(--bg); border-radius: 10px; padding: 16px; margin-top: 16px; color: var(--text); }
+.feature h3 { margin: 10px 0 6px; font-size: 17px; line-height: 1.4; }
+.feature p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.feature time { color: var(--muted); font-size: 13px; }
+.art svg, .thumb svg, .post-art svg { display: block; width: 100%; height: auto; }
+.art { margin-top: 12px; max-width: 220px; }
+.thumb { background: var(--bg); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.thumb svg { height: 110px; width: 100%; }
+.post-art { max-width: 320px; margin: 0 0 24px; }
+.auth-btn { font: inherit; font-size: 14px; border: 1px solid var(--brand); color: var(--brand); background: #fff; border-radius: 999px; padding: 6px 14px; cursor: pointer; margin-left: 16px; }
+.login-box { text-align: center; background: var(--bg); border-radius: 10px; padding: 22px; }
+.login-box p { margin: 0 0 12px; color: var(--muted); }
+.who { font-size: 13px; color: var(--muted); margin: 0; }
+.inquiry { max-width: 620px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px; }
+.apply-box { margin-top: 28px; background: var(--bg); border-radius: 10px; padding: 22px; }
+.apply-box h2 { margin: 0 0 4px; font-size: 18px; }
+.apply-box[hidden] { display: none; }
+
+/* 좋아요 하트와 뾰로롱 효과 */
+.heart, .book { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; vertical-align: -3px; }
+.book { stroke-linejoin: round; }
+.act[aria-pressed="true"] .heart { fill: #e0457b; stroke: #e0457b; }
+.act[aria-pressed="true"] .book { fill: var(--brand); stroke: var(--brand); }
+.act { user-select: none; }
+.act.bump { animation: bump .35s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.pop { position: fixed; pointer-events: none; color: #e0457b; width: 20px; height: 20px; z-index: 50; animation: popup .9s ease-out forwards; }
+.pop svg { width: 100%; height: 100%; fill: currentColor; stroke: none; }
+@keyframes popup {
+  0% { transform: translate(0, 0) scale(.4); opacity: 0; }
+  15% { opacity: 1; transform: translate(0, -6px) scale(1.2); }
+  100% { transform: translate(var(--dx), -70px) rotate(var(--r)) scale(.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pop, .act.bump { display: none; animation: none; } }
+
+@media (max-width: 860px) {
+  .columns { grid-template-columns: 1fr; }
+  .col + .col { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* 관리자 */
+.admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.panel h2 { margin: 0 0 16px; font-size: 17px; }
+.login-card { max-width: 380px; margin: 120px auto; text-align: center; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #cfd7e0; border-radius: 6px; background: #fff; }
+textarea { min-height: 260px; resize: vertical; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 6px; padding: 10px 16px; background: var(--brand); color: #fff; }
+button.ghost { background: #eef2f6; color: var(--text); }
+button.danger { background: #b03a2e; }
+button.link { background: none; color: var(--brand); padding: 4px 0; text-align: left; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.row { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.post-list { list-style: none; padding: 0; margin: 0; }
+.post-list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.tag { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.msg { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+@media (max-width: 760px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .post { padding: 24px; }
+}
+
+/* 글 사진 (Unsplash 무료 사진) */
+.art img, .thumb img, .post-art img { display: block; width: 100%; height: auto; border-radius: 8px; aspect-ratio: 3 / 2; object-fit: cover; }
+.thumb img { height: 130px; aspect-ratio: auto; }
+.credit { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* 우측 하단 문의하기 버튼 */
+.fab { position: fixed; right: 20px; bottom: 20px; z-index: 50; background: var(--brand); color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 18px rgba(31, 78, 121, .28); }
+.fab:hover { filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+  <!-- 로그인 화면 -->
+  <div id="login-view" class="login-card panel" hidden>
+    <h2>인사팀 블로그 관리자</h2>
+    <p class="msg">허용된 Google 계정으로 로그인하세요.</p>
+    <button id="login-btn">Google 계정으로 로그인</button>
+    <p id="login-msg" class="msg"></p>
+  </div>
+
+  <!-- 관리 화면 -->
+  <div id="admin-view" class="admin-wrap" hidden>
+    <div class="admin-top">
+      <div><strong>인사팀 블로그 관리</strong> <span id="who" class="msg"></span></div>
+      <div class="row">
+        <a href="index.html" class="ghost" style="padding:10px 16px;border-radius:6px;background:#eef2f6;color:#1e2630;">블로그 보기</a>
+        <button id="logout-btn" class="ghost">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <aside class="panel">
+        <h2>글 목록</h2>
+        <button id="new-btn" class="ghost" style="width:100%;margin-bottom:12px;">+ 새 글 작성</button>
+        <button id="seed-btn" hidden style="width:100%;margin-bottom:12px;">샘플 글 등록 (최초 1회)</button>
+        <ul id="post-list" class="post-list"></ul>
+      </aside>
+
+      <section class="panel">
+        <h2 id="form-title">새 글 작성</h2>
+        <form id="post-form">
+          <input type="hidden" id="f-id">
+
+          <label for="f-category">분류</label>
+          <select id="f-category">
+            <option value="education">교육</option>
+            <option value="recruit">채용 공고</option>
+          </select>
+
+          <div id="job-fields" hidden>
+            <label for="f-jobType">채용 구분</label>
+            <select id="f-jobType">
+              <option value="신입공채">신입공채</option>
+              <option value="경력직">경력직</option>
+            </select>
+            <label for="f-location">근무지</label>
+            <input id="f-location" placeholder="예: 본사(서울) 및 지점 각 지역">
+            <label for="f-deadline">마감</label>
+            <input id="f-deadline" placeholder="예: 2026-12-31 또는 추후 공지">
+            <label for="f-applyUrl">지원하기 링크 (https://로 시작, 비우면 버튼이 안내 문구로 바뀜)</label>
+            <input id="f-applyUrl" placeholder="https://">
+          </div>
+
+          <label for="f-imageUrl">사진 주소 (Unsplash 등 무료 사진의 https:// 주소, 비우면 위 그림 사용)</label>
+          <input id="f-imageUrl" placeholder="https://images.unsplash.com/...">
+          <label for="f-imageCredit">사진 출처 표기</label>
+          <input id="f-imageCredit" placeholder="예: Photo by 작가명 on Unsplash">
+
+          <label for="f-image">그림</label>
+          <select id="f-image">
+            <option value="">자동 (분류에 맞게)</option>
+            <option value="education">교육</option>
+            <option value="ai">AI 교육</option>
+            <option value="ax">AX·업무 혁신</option>
+            <option value="recruit">신입·팀 채용</option>
+            <option value="career">경력직</option>
+          </select>
+
+          <label for="f-title">제목</label>
+          <input id="f-title" required>
+
+          <label for="f-summary">요약 (목록에 노출)</label>
+          <input id="f-summary">
+
+          <label for="f-body">본문 (빈 줄로 문단 구분)</label>
+          <textarea id="f-body"></textarea>
+
+          <div class="row">
+            <button type="submit">저장</button>
+            <button type="button" id="delete-btn" class="danger" hidden>삭제</button>
+          </div>
+          <p id="form-msg" class="msg"></p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+// Firebase 웹 앱 설정값. Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 구성에서 복사해 붙여넣으세요.
+const firebaseConfig = {
+  apiKey: "AIzaSyC6CHywgzwyALWZKEfrZFvo4TT9hjpGyZk",
+  authDomain: "sylvi-electronic.firebaseapp.com",
+  projectId: "sylvi-electronic",
+  storageBucket: "sylvi-electronic.firebasestorage.app",
+  messagingSenderId: "852910515729",
+  appId: "1:852910515729:web:dcaebdc2f2fc9cd5a4f3b0",
+  measurementId: "G-BC6KK97MHL"
+};
+
+// 관리자 페이지에 로그인할 수 있는 Google 계정
+const ADMIN_EMAIL = "fkdna3@gmail.com";
+
+const COMPANY_NAME = "SY Electronics";
+
+
+// 초기 샘플 글. 관리자 페이지에서 "샘플 글 등록" 버튼으로 한 번만 넣을 수 있습니다.
+// 그림은 Unsplash 무료 사진(Unsplash License)을 사용하며 imageCredit에 출처를 적습니다.
+const U = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+
+const SEED_POSTS = [
+  {
+    category: "education",
+    jobType: null,
+    image: null,
+    imageUrl: U("photo-1675557009875-436f71457475"),
+    imageCredit: "Photo by Jonathan Kemper on Unsplash",
+    title: "AI 활용 교육: 업무에 바로 쓰는 생성형 AI 실무 과정",
+    summary: "문서 작성, 데이터 정리, 보고서 요약을 생성형 AI로 줄이는 실습 중심 교육입니다.",
+    location: "",
+    deadline: "",
+    body: "SY Electronics 인사팀에서 임직원 대상 AI 활용 교육을 진행합니다.\n\n교육 내용은 문서 작성, 데이터 정리, 보고서 요약 등 일상 업무에서 생성형 AI를 활용하는 방법입니다. 실습 위주로 진행하며, 개인 업무 사례를 직접 적용해 봅니다.\n\n교육 일정과 신청 방법은 사내 공지를 통해 안내드리겠습니다. 본사(서울)와 지점 임직원 모두 참여할 수 있으며, 지점 교육은 온라인으로 함께 진행합니다."
+  },
+  {
+    category: "education",
+    jobType: null,
+    image: null,
+    imageUrl: U("photo-1758518731457-5ef826b75b3b"),
+    imageCredit: "Photo by Vitaly Gariev on Unsplash",
+    title: "AI·AX 업무 혁신 교육: 업무 자동화에서 조직 전환까지",
+    summary: "업무 프로세스를 점검하고 자동화할 영역을 찾아 팀별 개선안을 만드는 워크숍입니다.",
+    location: "",
+    deadline: "",
+    body: "AX(AI Transformation)는 AI를 도구로 쓰는 수준을 넘어 업무 방식과 조직 문화를 바꾸는 과정입니다.\n\n이번 교육에서는 업무 프로세스를 점검하고 자동화할 수 있는 영역을 찾는 방법을 다룹니다. 팀별 과제를 정해 업무 개선안을 직접 만들어 보는 워크숍을 포함합니다.\n\n관리자와 팀장급 임직원을 우선 대상으로 하며, 이후 전사로 확대할 예정입니다."
+  },
+  {
+    category: "recruit",
+    jobType: "신입공채",
+    image: null,
+    imageUrl: U("photo-1542744095-fcf48d80b0fd"),
+    imageCredit: "Photo by Campaign Creators on Unsplash",
+    title: "[신입 공개채용] 연구원 모집",
+    summary: "SY Electronics 연구원 신입 공개채용 안내입니다. 이름과 이메일로 바로 지원할 수 있습니다.",
+    location: "본사(서울) 및 지점 각 지역",
+    deadline: "추후 공지",
+    body: "SY Electronics에서 함께할 신입 연구원을 모집합니다.\n\n모집 분야: 연구원\n근무지: 본사(서울) 및 지점 각 지역\n지원 자격과 전형 절차는 채용 공고 확정 후 안내드리겠습니다.\n\n지원하기 버튼을 누르고 이름과 이메일을 입력하면 지원이 접수됩니다. 세부 내용은 인사팀에 문의해 주세요."
+  },
+  {
+    category: "recruit",
+    jobType: "경력직",
+    image: null,
+    imageUrl: U("photo-1705579610353-ffd640d857e9"),
+    imageCredit: "Photo by ThisisEngineering on Unsplash",
+    title: "[경력직 채용] 연구원 모집",
+    summary: "관련 분야 경력을 가진 연구원을 모집합니다.",
+    location: "본사(서울) 및 지점 각 지역",
+    deadline: "추후 공지",
+    body: "SY Electronics에서 관련 경력을 갖춘 연구원을 모집합니다.\n\n모집 분야: 연구원 (경력직)\n근무지: 본사(서울) 및 지점 각 지역\n경력 요건과 우대 사항은 채용 공고 확정 후 안내드리겠습니다.\n\n지원 방법과 세부 내용은 인사팀에 문의해 주세요."
+  }
+];
+
+
+
+
+const $ = id => document.getElementById(id);
+const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const isConfigured = !firebaseConfig.apiKey.startsWith("YOUR_");
+if (!isConfigured) {
+  $("login-msg").textContent = "js/config.js에 Firebase 설정값을 먼저 입력해 주세요.";
+  $("login-btn").disabled = true;
+}
+const fbApp = isConfigured ? initializeApp(firebaseConfig) : null;
+const auth = isConfigured ? getAuth(fbApp) : null;
+const db = isConfigured ? getFirestore(fbApp) : null;
+
+let posts = [];
+
+$("login-btn").addEventListener("click", async () => {
+  $("login-msg").textContent = "";
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    $("login-msg").textContent = "로그인에 실패했습니다: " + e.message;
+  }
+});
+$("logout-btn").addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    $("login-view").hidden = false;
+    $("admin-view").hidden = true;
+    return;
+  }
+  if (user.email !== ADMIN_EMAIL) {
+    $("login-msg").textContent = `${user.email} 계정은 관리자 권한이 없습니다.`;
+    await signOut(auth);
+    return;
+  }
+  $("login-view").hidden = true;
+  $("admin-view").hidden = false;
+  $("who").textContent = user.email;
+  await loadPosts();
+});
+
+async function loadPosts() {
+  const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
+  posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("seed-btn").hidden = posts.length > 0;
+  renderList();
+}
+
+function renderList() {
+  $("post-list").innerHTML = posts.length
+    ? posts.map(p => `<li><button data-id="${esc(p.id)}" class="link">${esc(p.title)}</button>
+        <span class="tag">${p.category === "recruit" ? esc(p.jobType || "채용") : "교육"}</span></li>`).join("")
+    : `<li class="empty">등록된 글이 없습니다.</li>`;
+}
+
+$("post-list").addEventListener("click", e => {
+  const id = e.target.dataset.id;
+  if (!id) return;
+  const p = posts.find(x => x.id === id);
+  if (p) fillForm(p);
+});
+
+function syncJobType() {
+  $("job-fields").hidden = $("f-category").value !== "recruit";
+}
+$("f-category").addEventListener("change", syncJobType);
+
+function fillForm(p = {}) {
+  $("f-id").value = p.id || "";
+  $("f-category").value = p.category || "education";
+  $("f-jobType").value = p.jobType || "신입공채";
+  $("f-title").value = p.title || "";
+  $("f-summary").value = p.summary || "";
+  $("f-location").value = p.location || "";
+  $("f-deadline").value = p.deadline || "";
+  $("f-applyUrl").value = p.applyUrl || "";
+  $("f-image").value = p.image || "";
+  $("f-imageUrl").value = p.imageUrl || "";
+  $("f-imageCredit").value = p.imageCredit || "";
+  $("f-body").value = p.body || "";
+  $("delete-btn").hidden = !p.id;
+  $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
+  $("form-msg").textContent = "";
+  syncJobType();
+}
+
+function safeHttps(u) {
+  return /^https:\/\//i.test(u) ? u : "";
+}
+
+$("new-btn").addEventListener("click", () => fillForm({}));
+
+$("post-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const data = {
+    category: $("f-category").value,
+    jobType: $("f-category").value === "recruit" ? $("f-jobType").value : null,
+    title: $("f-title").value.trim(),
+    summary: $("f-summary").value.trim(),
+    location: $("f-location").value.trim(),
+    deadline: $("f-deadline").value.trim(),
+    applyUrl: $("f-applyUrl").value.trim(),
+    image: $("f-image").value || null,
+    imageUrl: safeHttps($("f-imageUrl").value.trim()),
+    imageCredit: $("f-imageCredit").value.trim(),
+    body: $("f-body").value
+  };
+  const id = $("f-id").value;
+  try {
+    if (id) {
+      await updateDoc(doc(db, "posts", id), data);
+    } else {
+      await addDoc(collection(db, "posts"), { ...data, createdAt: serverTimestamp() });
+    }
+    $("form-msg").textContent = "저장되었습니다.";
+    await loadPosts();
+    fillForm({});
+  } catch (err) {
+    $("form-msg").textContent = "저장 실패: " + err.message;
+  }
+});
+
+$("delete-btn").addEventListener("click", async () => {
+  const id = $("f-id").value;
+  if (!id || !confirm("이 글을 삭제할까요? 되돌릴 수 없습니다.")) return;
+  await deleteDoc(doc(db, "posts", id));
+  await loadPosts();
+  fillForm({});
+});
+
+$("seed-btn").addEventListener("click", async () => {
+  if (!confirm("샘플 글 " + SEED_POSTS.length + "개를 등록할까요?")) return;
+  for (const p of SEED_POSTS) {
+    await addDoc(collection(db, "posts"), { ...p, createdAt: serverTimestamp() });
+  }
+  await loadPosts();
+});
+
+syncJobType();
+
+</script>
+</body>
+</html>

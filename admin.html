@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>인사팀 블로그 관리자</title>
+  <!-- Google Analytics 4: G-BC6KK97MHL 를 실제 측정 ID로 바꾸세요 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BC6KK97MHL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BC6KK97MHL');
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 로그인 화면 -->
+  <div id="login-view" class="login-card panel" hidden>
+    <h2>인사팀 블로그 관리자</h2>
+    <p class="msg">허용된 Google 계정으로 로그인하세요.</p>
+    <button id="login-btn">Google 계정으로 로그인</button>
+    <p id="login-msg" class="msg"></p>
+  </div>
+
+  <!-- 관리 화면 -->
+  <div id="admin-view" class="admin-wrap" hidden>
+    <div class="admin-top">
+      <div><strong>인사팀 블로그 관리</strong> <span id="who" class="msg"></span></div>
+      <div class="row">
+        <a href="index.html" class="ghost" style="padding:10px 16px;border-radius:6px;background:#eef2f6;color:#1e2630;">블로그 보기</a>
+        <button id="logout-btn" class="ghost">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <aside class="panel">
+        <h2>글 목록</h2>
+        <button id="new-btn" class="ghost" style="width:100%;margin-bottom:12px;">+ 새 글 작성</button>
+        <button id="seed-btn" hidden style="width:100%;margin-bottom:12px;">샘플 글 등록 (최초 1회)</button>
+        <ul id="post-list" class="post-list"></ul>
+      </aside>
+
+      <section class="panel">
+        <h2 id="form-title">새 글 작성</h2>
+        <form id="post-form">
+          <input type="hidden" id="f-id">
+
+          <label for="f-category">분류</label>
+          <select id="f-category">
+            <option value="education">교육</option>
+            <option value="recruit">채용 공고</option>
+          </select>
+
+          <div id="job-fields" hidden>
+            <label for="f-jobType">채용 구분</label>
+            <select id="f-jobType">
+              <option value="신입공채">신입공채</option>
+              <option value="경력직">경력직</option>
+            </select>
+            <label for="f-location">근무지</label>
+            <input id="f-location" placeholder="예: 본사(서울) 및 지점 각 지역">
+            <label for="f-deadline">마감</label>
+            <input id="f-deadline" placeholder="예: 2026-12-31 또는 추후 공지">
+            <label for="f-applyUrl">지원하기 링크 (https://로 시작, 비우면 버튼이 안내 문구로 바뀜)</label>
+            <input id="f-applyUrl" placeholder="https://">
+          </div>
+
+          <label for="f-imageUrl">사진 주소 (Unsplash 등 무료 사진의 https:// 주소, 비우면 위 그림 사용)</label>
+          <input id="f-imageUrl" placeholder="https://images.unsplash.com/...">
+          <label for="f-imageCredit">사진 출처 표기</label>
+          <input id="f-imageCredit" placeholder="예: Photo by 작가명 on Unsplash">
+
+          <label for="f-image">그림</label>
+          <select id="f-image">
+            <option value="">자동 (분류에 맞게)</option>
+            <option value="education">교육</option>
+            <option value="ai">AI 교육</option>
+            <option value="ax">AX·업무 혁신</option>
+            <option value="recruit">신입·팀 채용</option>
+            <option value="career">경력직</option>
+          </select>
+
+          <label for="f-title">제목</label>
+          <input id="f-title" required>
+
+          <label for="f-summary">요약 (목록에 노출)</label>
+          <input id="f-summary">
+
+          <label for="f-body">본문 (빈 줄로 문단 구분)</label>
+          <textarea id="f-body"></textarea>
+
+          <div class="row">
+            <button type="submit">저장</button>
+            <button type="button" id="delete-btn" class="danger" hidden>삭제</button>
+          </div>
+          <p id="form-msg" class="msg"></p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
