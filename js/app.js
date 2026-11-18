@@ -99,7 +99,7 @@ function columnBlock(key, list) {
 function renderHome(posts) {
   const edu = posts.filter(p => p.category === "education");
   const rec = posts.filter(p => p.category === "recruit");
-  app.innerHTML = `<section class="banner"><p class="kicker">SY ELECTRONICS HR</p><h1>인사팀 블로그</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  app.innerHTML = `<section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
   <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
