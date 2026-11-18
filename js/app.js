@@ -158,7 +158,7 @@ const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo
 const WORK24_HOME = "https://www.work24.go.kr";
 
 // 워크넷이 주는 상세 링크가 http(s)일 때만 사용한다
-const safeUrl = u => (u && /^https?:\/\//.test(u)) ? u : (u ? `${WORK24_HOME}${u.startsWith("/") ? "" : "/"}${u}` : "");
+const workUrl = u => (u && /^https?:\/\//.test(u)) ? u : (u ? `${WORK24_HOME}${u.startsWith("/") ? "" : "/"}${u}` : "");
 
 // 목록을 가져와 채용정보 항목을 돌려준다 (sortOrderBy=DESC: 등록일 기준 정렬)
 async function fetchLatestJobs(raw, display) {
@@ -184,7 +184,7 @@ async function fetchLatestJobs(raw, display) {
       regDt: get("regDt"),
       closeDt: get("closeDt"),
       region: get("region"),
-      url: safeUrl(get("wantedInfoUrl"))
+      url: workUrl(get("wantedInfoUrl"))
     };
   }).filter(j => j.title);
 }

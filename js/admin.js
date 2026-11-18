@@ -95,46 +95,7 @@ $("jobs-save").addEventListener("click", async () => {
   }
 });
 
-// ---- 명언 관리 ----
-async function loadQuotes() {
-  const snap = await getDocs(query(collection(db, "quotes"), orderBy("createdAt", "desc")));
-  $("quote-list").innerHTML = snap.size
-    ? snap.docs.map(d => {
-        const q = d.data();
-        return `<li><span>${esc(q.text)}${q.author ? ` — ${esc(q.author)}` : ""}</span> <button type="button" class="danger" data-del="${esc(d.id)}">삭제</button></li>`;
-      }).join("")
-    : '<li class="msg">등록된 명언이 없습니다.</li>';
-}
-
-$("quote-add").addEventListener("click", async () => {
-  const text = $("quote-text").value.trim();
-  const author = $("quote-author").value.trim();
-  if (!text) return ($("quote-msg").textContent = "명언을 입력하세요.");
-  if (text.length > 200) return ($("quote-msg").textContent = "명언은 200자 이하로 입력하세요.");
-  try {
-    await addDoc(collection(db, "quotes"), { text, author, createdAt: serverTimestamp() });
-    $("quote-text").value = "";
-    $("quote-author").value = "";
-    $("quote-msg").textContent = "추가했습니다.";
-    await loadQuotes();
-  } catch (e) {
-    $("quote-msg").textContent = "추가에 실패했습니다: " + e.message;
-  }
-});
-
-$("quote-list").addEventListener("click", async (e) => {
-  const id = e.target.dataset.del;
-  if (!id || !confirm("이 명언을 삭제할까요?")) return;
-  try {
-    await deleteDoc(doc(db, "quotes", id));
-    await loadQuotes();
-  } catch (err) {
-    $("quote-msg").textContent = "삭제에 실패했습니다: " + err.message;
-  }
-});
-
 async function loadPosts() {
-  loadQuotes().catch(() => { $("quote-msg").textContent = "명언 목록을 불러오지 못했습니다."; });
   loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
