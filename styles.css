@@ -1,0 +1,62 @@
+:root {
+  --brand: #1f4e79;
+  --text: #1e2630;
+  --muted: #6b7785;
+  --line: #e3e8ee;
+  --bg: #f7f9fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+a { color: var(--brand); text-decoration: none; }
+header.site { background: #fff; border-bottom: 1px solid var(--line); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--text); }
+nav a { margin-left: 22px; color: var(--muted); font-size: 15px; }
+nav a:hover { color: var(--brand); }
+main { padding: 40px 0 80px; min-height: 70vh; }
+.hero { margin-bottom: 28px; }
+.hero h1 { margin: 0 0 6px; font-size: 28px; }
+.hero p { margin: 0; color: var(--muted); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; color: var(--text); transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.07); transform: translateY(-2px); }
+.card h3 { margin: 10px 0 8px; font-size: 18px; line-height: 1.4; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.card time, .post time { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--brand); background: #e8f0f8; border-radius: 4px; padding: 3px 8px; }
+.post { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 40px; max-width: 760px; margin: 0 auto; }
+.post h1 { margin: 12px 0 6px; font-size: 28px; line-height: 1.35; }
+.post .body p { margin: 0 0 16px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 14px; }
+.meta { display: grid; grid-template-columns: 80px 1fr; gap: 6px 14px; background: var(--bg); padding: 16px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.empty, .loading { color: var(--muted); padding: 40px 0; text-align: center; }
+.notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
+footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
+
+/* 관리자 */
+.admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.panel h2 { margin: 0 0 16px; font-size: 17px; }
+.login-card { max-width: 380px; margin: 120px auto; text-align: center; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #cfd7e0; border-radius: 6px; background: #fff; }
+textarea { min-height: 260px; resize: vertical; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 6px; padding: 10px 16px; background: var(--brand); color: #fff; }
+button.ghost { background: #eef2f6; color: var(--text); }
+button.danger { background: #b03a2e; }
+button.link { background: none; color: var(--brand); padding: 4px 0; text-align: left; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.row { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.post-list { list-style: none; padding: 0; margin: 0; }
+.post-list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.tag { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.msg { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+@media (max-width: 760px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .post { padding: 24px; }
+}
