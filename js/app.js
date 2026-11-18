@@ -1,4 +1,5 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
+import { startSeoulWeather } from "./weather.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -51,8 +52,15 @@ const artHtml = (p, useBody = false) => {
 };
 const creditHtml = p => (p.imageCredit ? `<p class="credit">${esc(p.imageCredit)}</p>` : "");
 
+// 관리자(소유자) 브라우저: 관리자로 한 번 로그인하면 표시를 남기고, 로그아웃 후에도 측정하지 않는다
+const OWNER_KEY = "sy_owner";
+const isOwnerBrowser = () => {
+  try { return localStorage.getItem(OWNER_KEY) === "1"; } catch (e) { return false; }
+};
+
 // GA4 이벤트 전송 (index.html의 gtag가 로드된 경우)
 function track(name, params = {}) {
+  if (isOwnerBrowser()) return;
   if (typeof window.gtag === "function") window.gtag("event", name, params);
 }
 
@@ -128,7 +136,7 @@ function renderHome(posts) {
     <p>${esc(COMPANY_INTRO.body)}</p>
     <ul class="values">${COMPANY_INTRO.values.map(v => `<li><strong>${esc(v.title)}</strong><span>${esc(v.desc)}</span></li>`).join("")}</ul>
   </section>`;
-  app.innerHTML = `${intro}<section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  app.innerHTML = `${intro}<section class="weather" id="weather" hidden></section><section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
   <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
@@ -141,6 +149,19 @@ function renderHome(posts) {
       <div class="art">${ART.inquiry}</div>
     </section>
   </div>`;
+  loadSeoulWeather();
+}
+
+// 관리자 화면에서 저장한 OpenWeather 키를 읽어 날씨 위젯을 채운다
+async function loadSeoulWeather() {
+  const el = document.getElementById("weather");
+  if (!el || !db) return;
+  try {
+    const snap = await getDoc(doc(db, "settings", "weather"));
+    await startSeoulWeather(el, snap.exists() ? snap.data().kmaServiceKey : "");
+  } catch (e) {
+    el.hidden = true;
+  }
 }
 
 function renderList(key, posts) {
@@ -187,7 +208,7 @@ async function renderPost(posts, id) {
     return;
   }
   document.title = `${p.title} | ${SITE_TITLE}`;
-  const base = { post_id: id, post_title: p.title, category: p.category };
+  const base = { post_id: id, post_title: p.title, category: p.category, content_group: COLUMNS[p.category].title };
   const isRec = p.category === "recruit";
   const st = isRec ? statusOf(p) : "";
   // 지원하기는 모두 Google 로그인 후 가능
@@ -253,19 +274,10 @@ async function renderPost(posts, id) {
     <div class="bottom-nav"><a class="btn ghost" href="#/${p.category}">목록으로</a></div>
   </article>`;
 
-  track("post_view", base);
-
-  // 글을 끝까지 읽음: 글 하단이 보이면 한 번만 기록
-  const endMark = document.querySelector(".bottom-nav");
-  if (endMark && "IntersectionObserver" in window) {
-    const io = new IntersectionObserver(entries => {
-      if (entries.some(en => en.isIntersecting)) {
-        track("post_complete", base);
-        io.disconnect();
-      }
-    }, { threshold: 0.5 });
-    io.observe(endMark);
-  }
+  // 페이지 조회: 글 식별 정보(post_id, 메뉴)를 붙여서 보낸다
+  attachPostView(base);
+  // 완독 준비: 본문 끝 표식이 보이고, 활성 체류가 예상 읽기 시간 이상(최소 10초)이면 post_read
+  setupRead(base, String(p.body || "").replace(/\s/g, "").length);
 
   // 내 상태 확인 (로그인한 경우에만)
   let liked = false, scraped = false, likeCount = p.likes || 0, scrapCount = p.scraps || 0;
@@ -338,13 +350,17 @@ async function renderPost(posts, id) {
   document.getElementById("share-btn").onclick = async () => {
     const link = location.href.split("#")[0] + "#/post/" + id;
     try {
-      if (navigator.share) await navigator.share({ title: p.title, url: link });
-      else await navigator.clipboard.writeText(link);
+      if (navigator.share) {
+        await navigator.share({ title: p.title, url: link });
+        track("share", { ...base, method: "native" });
+      } else {
+        await navigator.clipboard.writeText(link);
+        track("share", { ...base, method: "copy_link" });
+      }
       actionMsg.textContent = "공유 링크를 준비했습니다.";
     } catch (e) {
       actionMsg.textContent = "공유에 실패했습니다. 주소창의 주소를 직접 복사해 주세요.";
     }
-    track("post_share", base);
   };
 
   // 경력직 등 외부 지원 링크: 로그인 후 새 창으로 이동
@@ -497,18 +513,88 @@ async function renderRoute() {
   }
 }
 
-// 화면 추적: 주소가 바뀔 때마다 page_view, 머문 시간은 page_time으로 보냄
+// 화면 추적: 주소가 바뀔 때마다 page_view, 활성 체류 시간은 60초마다 page_time으로 보냄
 let view = null;
+const isVisible = () => document.visibilityState === "visible";
+// 활성 시간: 탭이 보이는 동안만 센다 (숨겨진 시간 제외)
+function tickActive() {
+  if (!view) return;
+  const now = Date.now();
+  if (view.visible) view.activeMs += now - view.last;
+  view.last = now;
+  view.visible = isVisible();
+}
+// 아직 보내지 않은 활성 시간을 page_time으로 보낸다
+function flushActive() {
+  if (!view) return;
+  tickActive();
+  const delta = view.activeMs - view.sentMs;
+  if (delta >= 1000) {
+    track("page_time", { ...view.ctx, page_path: view.path, page_title: view.title, active_seconds: Math.round(delta / 1000) });
+    view.sentMs = view.activeMs;
+  }
+}
 function endView() {
   if (!view) return;
-  track("page_time", { page_path: view.path, page_title: view.title, seconds: Math.round((Date.now() - view.start) / 1000) });
+  flushActive();
   view = null;
 }
 function startView() {
   const path = location.hash || "#/";
-  view = { path, title: document.title, start: Date.now() };
-  track("page_view", { page_path: path, page_title: document.title });
+  view = { path, title: document.title, ctx: {}, last: Date.now(), visible: isVisible(), activeMs: 0, sentMs: 0, pageSent: false, read: null };
+  // 글 페이지는 글 정보를 받은 뒤 renderPost에서 page_view를 보낸다
+  if (!path.startsWith("#/post/")) {
+    track("page_view", { page_path: path, page_title: document.title });
+    view.pageSent = true;
+  }
 }
+// 글 페이지의 page_view: 같은 화면에서 다시 그려도 한 번만 보낸다
+function attachPostView(ctx) {
+  if (!view) return;
+  view.ctx = ctx;
+  if (view.pageSent) return;
+  view.pageSent = true;
+  track("page_view", { ...ctx, page_path: view.path, page_title: document.title });
+}
+// 완독: 본문 끝 표식이 보이고, 활성 체류가 예상 읽기 시간 이상(최소 10초)이면 글당 1회 post_read
+function setupRead(ctx, charCount) {
+  if (!view) return;
+  if (view.read && view.read.id === ctx.post_id) return; // 같은 글을 다시 그린 경우 유지
+  const thresholdMs = Math.max((charCount / 500) * 60000, 10000);
+  view.read = { id: ctx.post_id, ctx, charCount, thresholdMs, endSeen: false, sent: false };
+  const endMark = document.querySelector(".bottom-nav");
+  if (endMark && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(en => en.isIntersecting) && view && view.read) {
+        view.read.endSeen = true;
+        io.disconnect();
+      }
+    });
+    io.observe(endMark);
+  }
+}
+function checkRead() {
+  const r = view && view.read;
+  if (!r || r.sent || !r.endSeen) return;
+  tickActive();
+  if (view.activeMs < r.thresholdMs) return;
+  r.sent = true;
+  track("post_read", { ...r.ctx, word_count: Math.round(r.charCount / 100) * 100 });
+}
+let lastFlush = Date.now();
+setInterval(() => {
+  if (!view) return;
+  tickActive();
+  checkRead();
+  if (Date.now() - lastFlush >= 60000) {
+    flushActive();
+    lastFlush = Date.now();
+  }
+}, 5000);
+document.addEventListener("visibilitychange", () => {
+  tickActive();
+  if (!isVisible()) flushActive();
+});
 window.addEventListener("pagehide", endView);
 
 async function route(nav = false) {
@@ -528,6 +614,10 @@ if (isConfigured) {
     // 관리자 계정으로 로그인했을 때만 글쓰기 메뉴를 보여 준다
     const adminLink = document.getElementById("admin-link");
     if (adminLink) adminLink.hidden = !isAdminUser();
+    // 관리자로 로그인한 브라우저는 표시를 남겨 두어 이후 방문을 측정하지 않는다
+    if (isAdminUser()) {
+      try { localStorage.setItem(OWNER_KEY, "1"); } catch (e) { /* 저장 불가 환경은 무시 */ }
+    }
     route();
   });
 } else {
