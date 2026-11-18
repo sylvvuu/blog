@@ -160,3 +160,4 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* 우측 하단 문의하기 버튼 */
 .fab { position: fixed; right: 20px; bottom: 20px; z-index: 50; background: var(--brand); color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 18px rgba(31, 78, 121, .28); }
 .fab:hover { filter: brightness(1.08); }
+.login-hint { margin: 8px 0 0; font-size: 13px; max-width: 240px; }
