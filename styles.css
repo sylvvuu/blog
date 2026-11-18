@@ -211,3 +211,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .jobs-panel li { display:grid; gap:2px; padding:10px 12px; background:var(--bg); border-radius:8px; }
 .jobs-panel li span { font-size:13px; color:var(--muted); }
 .jobs-panel li em { font-style:normal; font-size:12px; color:var(--brand); }
+
+/* 관리자 조회수 */
+.views-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.views-kpi div { background: #f6f8fb; border-radius: 8px; padding: 14px 16px; }
+.views-kpi span { display: block; font-size: 13px; color: #5b6878; }
+.views-kpi strong { font-size: 22px; }
+.views-top { margin: 0; padding-left: 20px; }
+.views-top li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.views-top li b { white-space: nowrap; }

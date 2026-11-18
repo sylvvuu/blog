@@ -82,7 +82,7 @@ async function loadJobsState() {
 $("jobs-save").addEventListener("click", async () => {
   const key = $("jobs-key").value.trim();
   if (key && key.length < 20) {
-    $("jobs-msg").textContent = "인증키가 너무 짧습니다. 공공데이터포털에서 복사한 키를 넣으세요.";
+    $("jobs-msg").textContent = "인증키가 너무 짧습니다. 고용24 Open-API 인증키를 넣으세요.";
     return;
   }
   try {
@@ -135,7 +135,7 @@ $("quote-list").addEventListener("click", async (e) => {
 
 async function loadPosts() {
   loadQuotes().catch(() => { $("quote-msg").textContent = "명언 목록을 불러오지 못했습니다."; });
-  loadJobsState().catch(() => { $("jobs-state").textContent = "공공취업정보 설정을 불러오지 못했습니다."; });
+  loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -146,7 +146,59 @@ async function loadPosts() {
   }
   $("seed-btn").hidden = posts.length > 0;
   renderList();
+  loadViews(currentViewDays).catch(() => { $("views-msg").textContent = "조회수를 불러오지 못했습니다."; });
 }
+
+// ---------- 조회수 ----------
+let currentViewDays = 7;
+let viewsChart = null;
+const dayKey = d => d.toLocaleDateString("sv-SE");
+
+async function loadViews(days) {
+  currentViewDays = days;
+  document.querySelectorAll(".views-range").forEach(b => b.classList.toggle("ghost", Number(b.dataset.days) !== days));
+  $("views-msg").textContent = "불러오는 중...";
+  const snap = await getDocs(collection(db, "posts"));
+  const rows = snap.docs.map(d => ({ id: d.id, title: d.data().title || "(제목 없음)", views: d.data().views || 0 }));
+  // 글마다 날짜별 조회수를 모은다 (최근 30일까지 계산해 두고 기간별로 잘라 쓴다)
+  const dailyByPost = await Promise.all(rows.map(r =>
+    getDocs(collection(db, "posts", r.id, "daily")).then(s => s.docs.map(x => ({ day: x.id, count: x.data().count || 0 })))
+  ));
+  const byDay = {};
+  dailyByPost.flat().forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.count; });
+
+  const labels = [], values = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = dayKey(d);
+    labels.push(k.slice(5)); values.push(byDay[k] || 0);
+  }
+  const total = rows.reduce((s, r) => s + r.views, 0);
+  const today = byDay[dayKey(new Date())] || 0;
+  const period = values.reduce((s, v) => s + v, 0);
+  $("views-total").textContent = total.toLocaleString("ko-KR");
+  $("views-today").textContent = today.toLocaleString("ko-KR");
+  $("views-period").textContent = period.toLocaleString("ko-KR");
+
+  $("views-top").innerHTML = rows.filter(r => r.views > 0).sort((a, b) => b.views - a.views).slice(0, 5)
+    .map(r => `<li><span>${esc(r.title)}</span><b>${r.views.toLocaleString("ko-KR")}</b></li>`).join("")
+    || `<li class="msg">아직 집계된 조회수가 없습니다.</li>`;
+
+  if (!window.Chart) { $("views-msg").textContent = "차트 라이브러리를 불러오지 못했습니다."; return; }
+  $("views-msg").textContent = "";
+  if (viewsChart) viewsChart.destroy();
+  viewsChart = new Chart($("views-chart"), {
+    type: "bar",
+    data: { labels, datasets: [{ label: "조회수", data: values, backgroundColor: "#60a5fa", borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+}
+
+document.querySelectorAll(".views-range").forEach(btn => {
+  btn.addEventListener("click", () => {
+    loadViews(Number(btn.dataset.days)).catch(() => { $("views-msg").textContent = "조회수를 불러오지 못했습니다."; });
+  });
+});
 
 function renderList() {
   $("post-list").innerHTML = posts.length

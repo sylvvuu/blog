@@ -48,7 +48,7 @@
         <p id="owm-msg" class="msg"></p>
         <h2 style="margin-top:24px;">공공취업정보 설정</h2>
         <p class="msg" id="jobs-state">저장된 키 확인 중...</p>
-        <label for="jobs-key">인사혁신처 공공취업정보 인증키 (비우고 저장하면 홈 목록이 숨겨집니다)</label>
+        <label for="jobs-key">고용24 채용정보 Open-API 인증키 (비우고 저장하면 홈 목록이 숨겨집니다)</label>
         <input id="jobs-key" type="password" autocomplete="off" placeholder="재발급한 인증키 붙여넣기">
         <button id="jobs-save" type="button" style="width:100%;margin-top:8px;">키 저장</button>
         <p id="jobs-msg" class="msg"></p>
@@ -126,8 +126,28 @@
         </form>
       </section>
     </div>
+
+    <section class="panel" style="margin-top:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 style="margin:0;">조회수</h2>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="views-range ghost" data-days="7">최근 7일</button>
+          <button type="button" class="views-range" data-days="30">최근 30일</button>
+        </div>
+      </div>
+      <p class="msg" id="views-msg">불러오는 중...</p>
+      <div class="views-kpi">
+        <div><span>누적 조회수</span><strong id="views-total">-</strong></div>
+        <div><span>오늘 조회수</span><strong id="views-today">-</strong></div>
+        <div><span>기간 조회수</span><strong id="views-period">-</strong></div>
+      </div>
+      <div style="height:260px;margin-top:16px;"><canvas id="views-chart"></canvas></div>
+      <h3 style="font-size:15px;margin:24px 0 8px;">글별 누적 조회수 TOP 5</h3>
+      <ol id="views-top" class="views-top"></ol>
+    </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script type="module" src="js/admin.js"></script>
 </body>
 </html>
