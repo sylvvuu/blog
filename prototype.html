@@ -22,6 +22,12 @@
   .note { font-size:12px; color:var(--muted); margin:14px 0 0; }
   body.paged .screen { display:none; }
   body.paged .screen.on { display:block; }
+  .about { background:#fff; border:1px solid var(--line); border-radius:14px; padding:36px; margin-bottom:24px; }
+  .about .kicker { font-size:12px; letter-spacing:.12em; color:var(--brand); font-weight:700; margin:0 0 10px; }
+  .values { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .values li { background:var(--bg); border-radius:10px; padding:16px; display:grid; gap:4px; }
+  .values strong { color:var(--brand); }
+  .values span { font-size:14px; color:var(--muted); }
   .screen { display:block; padding:56px 0; border-bottom:1px solid var(--line); scroll-margin-top:72px; }
   .screen:last-of-type { border-bottom:0; }
   .sec { font-size:12px; letter-spacing:.12em; color:var(--brand); font-weight:700; margin:0 0 10px; }
@@ -87,6 +93,16 @@
   <!-- 1. 홈 -->
   <section class="screen" id="home">
     <p class="sec">화면 1 · 홈</p>
+    <div class="about">
+      <p class="kicker">ABOUT SY ELECTRONICS</p>
+      <h2 style="font-size:28px;margin:0 0 12px">사람이 기술을 완성합니다</h2>
+      <p class="muted" style="max-width:720px;margin:0 0 22px">SY Electronics는 본사 서울과 전국 지점이 함께 일하는 회사입니다. 임직원이 실무 역량을 키울 수 있도록 교육을 지원하고, 함께 성장할 인재를 찾고 있습니다.</p>
+      <ul class="values">
+        <li><strong>성장</strong><span>실무 중심 교육으로 역량을 키웁니다</span></li>
+        <li><strong>협업</strong><span>본사와 지점이 한 팀으로 일합니다</span></li>
+        <li><strong>기술</strong><span>AI를 실제 업무에 적용합니다</span></li>
+      </ul>
+    </div>
     <div class="banner">
       <p class="kicker">SY ELECTRONICS CAREERS</p>
       <h1>채용과 교육 소식</h1>
