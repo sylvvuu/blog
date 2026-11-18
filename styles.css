@@ -188,3 +188,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .weather span { color:var(--muted, #6b7280); }
 .weather-label { font-weight:700; color:var(--brand, #1d4ed8); }
 .weather[hidden] { display:none; }
+
+/* 헤더 아래 날씨 바 */
+.weather-bar { padding-top:12px; }
+.weather-bar .weather { margin:0; }
