@@ -157,6 +157,22 @@ function renderHome(posts) {
 const JOBS_API = "https://apis.data.go.kr/1760000/PblJobService/getList";
 const fmtYmd = s => (s && s.length === 8) ? `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}` : "";
 
+// 한 페이지를 가져와 항목과 전체 건수를 돌려준다
+async function fetchJobPage(raw, pageNo, rows) {
+  const res = await fetch(`${JOBS_API}?serviceKey=${encodeURIComponent(raw)}&pageNo=${pageNo}&numOfRows=${rows}`);
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+  if (xml.getElementsByTagName("resultCode")[0]?.textContent !== "00") throw new Error("API 오류");
+  const total = Number(xml.getElementsByTagName("totalCount")[0]?.textContent || 0);
+  const items = Array.from(xml.getElementsByTagName("item")).map(n => ({
+    title: n.getElementsByTagName("title")[0]?.textContent || "",
+    insttname: n.getElementsByTagName("insttname")[0]?.textContent || "",
+    enddate: n.getElementsByTagName("enddate")[0]?.textContent || "",
+    regdate: n.getElementsByTagName("regdate")[0]?.textContent || ""
+  })).filter(j => j.title);
+  return { items, total };
+}
+
 async function loadPublicJobs() {
   const el = document.getElementById("jobs-panel");
   if (!el || !db) return;
@@ -166,17 +182,15 @@ async function loadPublicJobs() {
     if (!key) { el.hidden = true; return; }
     let raw = key;
     try { raw = decodeURIComponent(key); } catch (e) { /* 이미 디코딩된 키 */ }
-    const res = await fetch(`${JOBS_API}?serviceKey=${encodeURIComponent(raw)}&pageNo=1&numOfRows=50`);
-    if (!res.ok) throw new Error(`status ${res.status}`);
-    const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-    if (xml.getElementsByTagName("resultCode")[0]?.textContent !== "00") throw new Error("API 오류");
-    const items = Array.from(xml.getElementsByTagName("item")).map(n => ({
-      title: n.getElementsByTagName("title")[0]?.textContent || "",
-      insttname: n.getElementsByTagName("insttname")[0]?.textContent || "",
-      enddate: n.getElementsByTagName("enddate")[0]?.textContent || "",
-      regdate: n.getElementsByTagName("regdate")[0]?.textContent || ""
-    })).filter(j => j.title);
-    const latest = items.sort((a, b) => b.regdate.localeCompare(a.regdate)).slice(0, 5);
+
+    // API는 오래된 공고부터 순서대로 주므로, 마지막 페이지(와 그 앞 페이지)에서 최신을 고른다
+    const first = await fetchJobPage(raw, 1, 1);
+    const pages = Math.max(1, Math.ceil(first.total / 50));
+    const last = await fetchJobPage(raw, pages, 50);
+    const prev = pages > 1 ? await fetchJobPage(raw, pages - 1, 50) : { items: [] };
+    const latest = [...prev.items, ...last.items]
+      .sort((a, b) => b.regdate.localeCompare(a.regdate))
+      .slice(0, 5);
     if (!latest.length) { el.hidden = true; return; }
     el.innerHTML = `
       <h2>공공취업정보 <span>최신 ${latest.length}건</span></h2>
