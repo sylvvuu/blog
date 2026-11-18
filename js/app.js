@@ -168,7 +168,7 @@ async function route() {
     const posts = await loadPosts();
     if (hash.startsWith("/post/")) return await renderPost(posts, decodeURIComponent(hash.slice(6)));
     if (hash === "/education") return renderList(posts.filter(p => p.category === "education"), "교육", "임직원 대상 교육 프로그램 안내");
-    if (hash === "/recruit") return renderList(posts.filter(p => p.category === "recruit"), "채용 공고", "Sylvi 일렉트로닉 채용 공고");
+    if (hash === "/recruit") return renderList(posts.filter(p => p.category === "recruit"), "채용 공고", "SY Electronics 채용 공고");
     renderList(posts, "최신 글", "인사팀이 전하는 채용과 교육 소식");
   } catch (e) {
     app.innerHTML = `<div class="notice">글을 불러오지 못했습니다: ${esc(e.message)}</div>`;

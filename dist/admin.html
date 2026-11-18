@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>인사팀 블로그 관리자</title>
+  <!-- Google Analytics 4: G-XXXXXXXXXX 를 실제 측정 ID로 바꾸세요 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <style>
+:root {
+  --brand: #1f4e79;
+  --text: #1e2630;
+  --muted: #6b7785;
+  --line: #e3e8ee;
+  --bg: #f7f9fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+a { color: var(--brand); text-decoration: none; }
+header.site { background: #fff; border-bottom: 1px solid var(--line); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--text); }
+nav a { margin-left: 22px; color: var(--muted); font-size: 15px; }
+nav a:hover { color: var(--brand); }
+main { padding: 40px 0 80px; min-height: 70vh; }
+.hero { margin-bottom: 28px; }
+.hero h1 { margin: 0 0 6px; font-size: 28px; }
+.hero p { margin: 0; color: var(--muted); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; color: var(--text); transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.07); transform: translateY(-2px); }
+.card h3 { margin: 10px 0 8px; font-size: 18px; line-height: 1.4; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.card time, .post time { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--brand); background: #e8f0f8; border-radius: 4px; padding: 3px 8px; }
+.post { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 40px; max-width: 760px; margin: 0 auto; }
+.post h1 { margin: 12px 0 6px; font-size: 28px; line-height: 1.35; }
+.post .body p { margin: 0 0 16px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 14px; }
+.meta { display: grid; grid-template-columns: 80px 1fr; gap: 6px 14px; background: var(--bg); padding: 16px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.empty, .loading { color: var(--muted); padding: 40px 0; text-align: center; }
+.notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
+footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
+
+/* 글 반응 버튼과 댓글 */
+.actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.act { display: inline-flex; gap: 6px; align-items: center; background: #fff; color: var(--text); border: 1px solid #cfd7e0; border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+.act strong { color: var(--brand); }
+.act[aria-pressed="true"] { background: #e8f0f8; border-color: var(--brand); }
+.comments { margin-top: 36px; }
+.comments h2 { font-size: 18px; margin: 0 0 14px; }
+.comment-list { list-style: none; padding: 0; margin: 0 0 24px; }
+.comment-list li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.c-head { font-size: 14px; margin-bottom: 4px; }
+.c-head time { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.comment-list p { margin: 0; font-size: 15px; white-space: pre-wrap; }
+.comment-form { display: grid; gap: 8px; }
+.comment-form input, .comment-form textarea { width: 100%; }
+.comment-form textarea { min-height: 100px; }
+.comment-form button { justify-self: start; }
+
+/* 관리자 */
+.admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.panel h2 { margin: 0 0 16px; font-size: 17px; }
+.login-card { max-width: 380px; margin: 120px auto; text-align: center; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #cfd7e0; border-radius: 6px; background: #fff; }
+textarea { min-height: 260px; resize: vertical; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 6px; padding: 10px 16px; background: var(--brand); color: #fff; }
+button.ghost { background: #eef2f6; color: var(--text); }
+button.danger { background: #b03a2e; }
+button.link { background: none; color: var(--brand); padding: 4px 0; text-align: left; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.row { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.post-list { list-style: none; padding: 0; margin: 0; }
+.post-list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.tag { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.msg { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+@media (max-width: 760px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .post { padding: 24px; }
+}
+
+</style>
+</head>
+<body>
+  <!-- 로그인 화면 -->
+  <div id="login-view" class="login-card panel" hidden>
+    <h2>인사팀 블로그 관리자</h2>
+    <p class="msg">허용된 Google 계정으로 로그인하세요.</p>
+    <button id="login-btn">Google 계정으로 로그인</button>
+    <p id="login-msg" class="msg"></p>
+  </div>
+
+  <!-- 관리 화면 -->
+  <div id="admin-view" class="admin-wrap" hidden>
+    <div class="admin-top">
+      <div><strong>인사팀 블로그 관리</strong> <span id="who" class="msg"></span></div>
+      <div class="row">
+        <a href="index.html" class="ghost" style="padding:10px 16px;border-radius:6px;background:#eef2f6;color:#1e2630;">블로그 보기</a>
+        <button id="logout-btn" class="ghost">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <aside class="panel">
+        <h2>글 목록</h2>
+        <button id="new-btn" class="ghost" style="width:100%;margin-bottom:12px;">+ 새 글 작성</button>
+        <button id="seed-btn" hidden style="width:100%;margin-bottom:12px;">샘플 글 등록 (최초 1회)</button>
+        <ul id="post-list" class="post-list"></ul>
+      </aside>
+
+      <section class="panel">
+        <h2 id="form-title">새 글 작성</h2>
+        <form id="post-form">
+          <input type="hidden" id="f-id">
+
+          <label for="f-category">분류</label>
+          <select id="f-category">
+            <option value="education">교육</option>
+            <option value="recruit">채용 공고</option>
+          </select>
+
+          <div id="job-fields" hidden>
+            <label for="f-jobType">채용 구분</label>
+            <select id="f-jobType">
+              <option value="신입공채">신입공채</option>
+              <option value="경력직">경력직</option>
+            </select>
+            <label for="f-location">근무지</label>
+            <input id="f-location" placeholder="예: 본사(서울) 및 지점 각 지역">
+            <label for="f-deadline">마감</label>
+            <input id="f-deadline" placeholder="예: 2026-12-31 또는 추후 공지">
+          </div>
+
+          <label for="f-title">제목</label>
+          <input id="f-title" required>
+
+          <label for="f-summary">요약 (목록에 노출)</label>
+          <input id="f-summary">
+
+          <label for="f-body">본문 (빈 줄로 문단 구분)</label>
+          <textarea id="f-body"></textarea>
+
+          <div class="row">
+            <button type="submit">저장</button>
+            <button type="button" id="delete-btn" class="danger" hidden>삭제</button>
+          </div>
+          <p id="form-msg" class="msg"></p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+// Firebase 웹 앱 설정값. Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 구성에서 복사해 붙여넣으세요.
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "sylvi-electronic.firebaseapp.com",
+  projectId: "sylvi-electronic",
+  storageBucket: "sylvi-electronic.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// 관리자 페이지에 로그인할 수 있는 Google 계정
+const ADMIN_EMAIL = "fkdna3@gmail.com";
+
+const COMPANY_NAME = "SY Electronics";
+
+
+// 초기 샘플 글. 관리자 페이지에서 "샘플 글 등록" 버튼으로 한 번만 넣을 수 있습니다.
+// 세부 자격 요건, 마감일, 근무 조건은 실제 공고에 맞게 관리자 페이지에서 수정하세요.
+const SEED_POSTS = [
+  {
+    category: "education",
+    jobType: null,
+    title: "AI 활용 교육 안내: 임직원 생성형 AI 실무 과정",
+    summary: "업무에 바로 쓸 수 있는 생성형 AI 활용법을 배우는 실무 중심 교육입니다.",
+    location: "",
+    deadline: "",
+    body: "SY Electronics 인사팀에서 임직원 대상 AI 활용 교육을 진행합니다.\n\n교육 내용은 문서 작성, 데이터 정리, 보고서 요약 등 일상 업무에서 생성형 AI를 활용하는 방법입니다. 실습 위주로 진행하며, 개인 업무 사례를 직접 적용해 봅니다.\n\n교육 일정과 신청 방법은 사내 공지를 통해 안내드리겠습니다. 본사(서울)와 지점 임직원 모두 참여할 수 있으며, 지점 교육은 온라인으로 함께 진행합니다."
+  },
+  {
+    category: "education",
+    jobType: null,
+    title: "AI·AX 업무 혁신 교육: 업무 자동화에서 조직 전환까지",
+    summary: "AI 기반 업무 혁신(AX)의 개념과 실제 적용 사례를 함께 살펴보는 교육입니다.",
+    location: "",
+    deadline: "",
+    body: "AX(AI Transformation)는 AI를 도구로 쓰는 수준을 넘어 업무 방식과 조직 문화를 바꾸는 과정입니다.\n\n이번 교육에서는 업무 프로세스를 점검하고 자동화할 수 있는 영역을 찾는 방법을 다룹니다. 팀별 과제를 정해 업무 개선안을 직접 만들어 보는 워크숍을 포함합니다.\n\n관리자와 팀장급 임직원을 우선 대상으로 하며, 이후 전사로 확대할 예정입니다."
+  },
+  {
+    category: "recruit",
+    jobType: "신입공채",
+    title: "[신입 공개채용] 연구원 모집",
+    summary: "SY Electronics 연구원 신입 공개채용 안내입니다.",
+    location: "본사(서울) 및 지점 각 지역",
+    deadline: "추후 공지",
+    body: "SY Electronics에서 함께할 신입 연구원을 모집합니다.\n\n모집 분야: 연구원\n근무지: 본사(서울) 및 지점 각 지역\n지원 자격과 전형 절차는 채용 공고 확정 후 안내드리겠습니다.\n\n지원 방법과 세부 내용은 인사팀에 문의해 주세요."
+  },
+  {
+    category: "recruit",
+    jobType: "경력직",
+    title: "[경력직 채용] 연구원 모집",
+    summary: "관련 분야 경력을 가진 연구원을 모집합니다.",
+    location: "본사(서울) 및 지점 각 지역",
+    deadline: "추후 공지",
+    body: "SY Electronics에서 관련 경력을 갖춘 연구원을 모집합니다.\n\n모집 분야: 연구원 (경력직)\n근무지: 본사(서울) 및 지점 각 지역\n경력 요건과 우대 사항은 채용 공고 확정 후 안내드리겠습니다.\n\n지원 방법과 세부 내용은 인사팀에 문의해 주세요."
+  }
+];
+
+
+
+
+const $ = id => document.getElementById(id);
+const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const isConfigured = !firebaseConfig.apiKey.startsWith("YOUR_");
+if (!isConfigured) {
+  $("login-msg").textContent = "js/config.js에 Firebase 설정값을 먼저 입력해 주세요.";
+  $("login-btn").disabled = true;
+}
+const fbApp = isConfigured ? initializeApp(firebaseConfig) : null;
+const auth = isConfigured ? getAuth(fbApp) : null;
+const db = isConfigured ? getFirestore(fbApp) : null;
+
+let posts = [];
+
+$("login-btn").addEventListener("click", async () => {
+  $("login-msg").textContent = "";
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    $("login-msg").textContent = "로그인에 실패했습니다: " + e.message;
+  }
+});
+$("logout-btn").addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    $("login-view").hidden = false;
+    $("admin-view").hidden = true;
+    return;
+  }
+  if (user.email !== ADMIN_EMAIL) {
+    $("login-msg").textContent = `${user.email} 계정은 관리자 권한이 없습니다.`;
+    await signOut(auth);
+    return;
+  }
+  $("login-view").hidden = true;
+  $("admin-view").hidden = false;
+  $("who").textContent = user.email;
+  await loadPosts();
+});
+
+async function loadPosts() {
+  const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
+  posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("seed-btn").hidden = posts.length > 0;
+  renderList();
+}
+
+function renderList() {
+  $("post-list").innerHTML = posts.length
+    ? posts.map(p => `<li><button data-id="${esc(p.id)}" class="link">${esc(p.title)}</button>
+        <span class="tag">${p.category === "recruit" ? esc(p.jobType || "채용") : "교육"}</span></li>`).join("")
+    : `<li class="empty">등록된 글이 없습니다.</li>`;
+}
+
+$("post-list").addEventListener("click", e => {
+  const id = e.target.dataset.id;
+  if (!id) return;
+  const p = posts.find(x => x.id === id);
+  if (p) fillForm(p);
+});
+
+function syncJobType() {
+  $("job-fields").hidden = $("f-category").value !== "recruit";
+}
+$("f-category").addEventListener("change", syncJobType);
+
+function fillForm(p = {}) {
+  $("f-id").value = p.id || "";
+  $("f-category").value = p.category || "education";
+  $("f-jobType").value = p.jobType || "신입공채";
+  $("f-title").value = p.title || "";
+  $("f-summary").value = p.summary || "";
+  $("f-location").value = p.location || "";
+  $("f-deadline").value = p.deadline || "";
+  $("f-body").value = p.body || "";
+  $("delete-btn").hidden = !p.id;
+  $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
+  $("form-msg").textContent = "";
+  syncJobType();
+}
+
+$("new-btn").addEventListener("click", () => fillForm({}));
+
+$("post-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const data = {
+    category: $("f-category").value,
+    jobType: $("f-category").value === "recruit" ? $("f-jobType").value : null,
+    title: $("f-title").value.trim(),
+    summary: $("f-summary").value.trim(),
+    location: $("f-location").value.trim(),
+    deadline: $("f-deadline").value.trim(),
+    body: $("f-body").value
+  };
+  const id = $("f-id").value;
+  try {
+    if (id) {
+      await updateDoc(doc(db, "posts", id), data);
+    } else {
+      await addDoc(collection(db, "posts"), { ...data, createdAt: serverTimestamp() });
+    }
+    $("form-msg").textContent = "저장되었습니다.";
+    await loadPosts();
+    fillForm({});
+  } catch (err) {
+    $("form-msg").textContent = "저장 실패: " + err.message;
+  }
+});
+
+$("delete-btn").addEventListener("click", async () => {
+  const id = $("f-id").value;
+  if (!id || !confirm("이 글을 삭제할까요? 되돌릴 수 없습니다.")) return;
+  await deleteDoc(doc(db, "posts", id));
+  await loadPosts();
+  fillForm({});
+});
+
+$("seed-btn").addEventListener("click", async () => {
+  if (!confirm("샘플 글 " + SEED_POSTS.length + "개를 등록할까요?")) return;
+  for (const p of SEED_POSTS) {
+    await addDoc(collection(db, "posts"), { ...p, createdAt: serverTimestamp() });
+  }
+  await loadPosts();
+});
+
+syncJobType();
+
+</script>
+</body>
+</html>

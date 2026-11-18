@@ -11,4 +11,4 @@ export const firebaseConfig = {
 // 관리자 페이지에 로그인할 수 있는 Google 계정
 export const ADMIN_EMAIL = "fkdna3@gmail.com";
 
-export const COMPANY_NAME = "Sylvi 일렉트로닉";
+export const COMPANY_NAME = "SY Electronics";

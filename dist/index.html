@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SY Electronics 인사팀 블로그</title>
+  <meta name="description" content="SY Electronics 인사팀의 채용 공고와 교육 소식">
+  <!-- Google Analytics 4: G-XXXXXXXXXX 를 실제 측정 ID로 바꾸세요 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <style>
+:root {
+  --brand: #1f4e79;
+  --text: #1e2630;
+  --muted: #6b7785;
+  --line: #e3e8ee;
+  --bg: #f7f9fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+a { color: var(--brand); text-decoration: none; }
+header.site { background: #fff; border-bottom: 1px solid var(--line); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { font-weight: 700; font-size: 18px; color: var(--text); }
+nav a { margin-left: 22px; color: var(--muted); font-size: 15px; }
+nav a:hover { color: var(--brand); }
+main { padding: 40px 0 80px; min-height: 70vh; }
+.hero { margin-bottom: 28px; }
+.hero h1 { margin: 0 0 6px; font-size: 28px; }
+.hero p { margin: 0; color: var(--muted); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; color: var(--text); transition: box-shadow .15s, transform .15s; }
+.card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.07); transform: translateY(-2px); }
+.card h3 { margin: 10px 0 8px; font-size: 18px; line-height: 1.4; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.card time, .post time { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--brand); background: #e8f0f8; border-radius: 4px; padding: 3px 8px; }
+.post { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 40px; max-width: 760px; margin: 0 auto; }
+.post h1 { margin: 12px 0 6px; font-size: 28px; line-height: 1.35; }
+.post .body p { margin: 0 0 16px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 14px; }
+.meta { display: grid; grid-template-columns: 80px 1fr; gap: 6px 14px; background: var(--bg); padding: 16px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.empty, .loading { color: var(--muted); padding: 40px 0; text-align: center; }
+.notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
+footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
+
+/* 글 반응 버튼과 댓글 */
+.actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.act { display: inline-flex; gap: 6px; align-items: center; background: #fff; color: var(--text); border: 1px solid #cfd7e0; border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+.act strong { color: var(--brand); }
+.act[aria-pressed="true"] { background: #e8f0f8; border-color: var(--brand); }
+.comments { margin-top: 36px; }
+.comments h2 { font-size: 18px; margin: 0 0 14px; }
+.comment-list { list-style: none; padding: 0; margin: 0 0 24px; }
+.comment-list li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.c-head { font-size: 14px; margin-bottom: 4px; }
+.c-head time { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.comment-list p { margin: 0; font-size: 15px; white-space: pre-wrap; }
+.comment-form { display: grid; gap: 8px; }
+.comment-form input, .comment-form textarea { width: 100%; }
+.comment-form textarea { min-height: 100px; }
+.comment-form button { justify-self: start; }
+
+/* 관리자 */
+.admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.admin-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.panel h2 { margin: 0 0 16px; font-size: 17px; }
+.login-card { max-width: 380px; margin: 120px auto; text-align: center; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #cfd7e0; border-radius: 6px; background: #fff; }
+textarea { min-height: 260px; resize: vertical; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 6px; padding: 10px 16px; background: var(--brand); color: #fff; }
+button.ghost { background: #eef2f6; color: var(--text); }
+button.danger { background: #b03a2e; }
+button.link { background: none; color: var(--brand); padding: 4px 0; text-align: left; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.row { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.post-list { list-style: none; padding: 0; margin: 0; }
+.post-list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.tag { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.msg { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+@media (max-width: 760px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .post { padding: 24px; }
+}
+
+</style>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="brand" href="#/">SY Electronics 인사팀</a>
+      <nav>
+        <a href="#/education">교육</a>
+        <a href="#/recruit">채용 공고</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="wrap" id="app"></div>
+  </main>
+  <footer class="site">&copy; SY Electronics. 본사 서울 · 지점 전국</footer>
+  <script type="module">
+// Firebase 웹 앱 설정값. Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 구성에서 복사해 붙여넣으세요.
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "sylvi-electronic.firebaseapp.com",
+  projectId: "sylvi-electronic",
+  storageBucket: "sylvi-electronic.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// 관리자 페이지에 로그인할 수 있는 Google 계정
+const ADMIN_EMAIL = "fkdna3@gmail.com";
+
+const COMPANY_NAME = "SY Electronics";
+
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, orderBy, query, doc, updateDoc, addDoc, increment, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = document.getElementById("app");
+const isConfigured = !firebaseConfig.apiKey.startsWith("YOUR_");
+const db = isConfigured ? getFirestore(initializeApp(firebaseConfig)) : null;
+
+const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtDate = ts => (ts && ts.toDate ? ts.toDate().toLocaleDateString("ko-KR") : "");
+
+// GA4 이벤트 전송 (index.html / admin.html의 gtag가 로드된 경우에만)
+function track(name, params = {}) {
+  if (typeof window.gtag === "function") window.gtag("event", name, params);
+}
+
+// 같은 브라우저에서 중복 좋아요·스크랩을 막기 위한 로컬 상태
+const memo = {
+  get: (kind, id) => localStorage.getItem(`hrblog:${kind}:${id}`) === "1",
+  set: (kind, id, on) => (on ? localStorage.setItem(`hrblog:${kind}:${id}`, "1") : localStorage.removeItem(`hrblog:${kind}:${id}`))
+};
+
+let cache = null;
+async function loadPosts() {
+  if (cache) return cache;
+  const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
+  cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return cache;
+}
+
+function badgeOf(p) {
+  return p.category === "recruit" ? (p.jobType || "채용") : "교육";
+}
+
+function card(p) {
+  return `<a class="card" href="#/post/${esc(p.id)}">
+    <span class="badge">${esc(badgeOf(p))}</span>
+    <h3>${esc(p.title)}</h3>
+    <p>${esc(p.summary)}</p>
+    <time>${fmtDate(p.createdAt)}</time>
+  </a>`;
+}
+
+function renderList(posts, title, desc) {
+  const list = posts.length
+    ? `<div class="grid">${posts.map(card).join("")}</div>`
+    : `<p class="empty">등록된 글이 없습니다.</p>`;
+  app.innerHTML = `<section class="hero"><h1>${esc(title)}</h1><p>${esc(desc)}</p></section>${list}`;
+}
+
+async function renderPost(posts, id) {
+  const p = posts.find(x => x.id === id);
+  if (!p) {
+    app.innerHTML = `<p class="empty">글을 찾을 수 없습니다. <a href="#/">홈으로</a></p>`;
+    return;
+  }
+  const meta = p.category === "recruit"
+    ? `<dl class="meta">
+        <dt>구분</dt><dd>${esc(p.jobType || "-")}</dd>
+        <dt>근무지</dt><dd>${esc(p.location || "-")}</dd>
+        <dt>마감</dt><dd>${esc(p.deadline || "-")}</dd>
+      </dl>`
+    : "";
+  const paras = String(p.body || "").split(/\n\s*\n/).map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
+
+  app.innerHTML = `<article class="post">
+    <a class="back" href="#/">&larr; 목록으로</a>
+    <span class="badge">${esc(badgeOf(p))}</span>
+    <h1>${esc(p.title)}</h1>
+    <time>${fmtDate(p.createdAt)}</time>
+    ${meta}
+    <div class="body">${paras}</div>
+
+    <div class="actions">
+      <button class="act" id="like-btn" aria-pressed="${memo.get("like", id)}">
+        <span>좋아요</span> <strong id="like-count">${p.likes || 0}</strong>
+      </button>
+      <button class="act" id="scrap-btn" aria-pressed="${memo.get("scrap", id)}">
+        <span>스크랩</span> <strong id="scrap-count">${p.scraps || 0}</strong>
+      </button>
+      <a class="act" href="#comments"><span>댓글</span> <strong id="comment-count">0</strong></a>
+    </div>
+
+    <section id="comments" class="comments">
+      <h2>댓글</h2>
+      <ul id="comment-list" class="comment-list"><li class="empty">불러오는 중...</li></ul>
+      <form id="comment-form" class="comment-form">
+        <input id="c-name" maxlength="20" placeholder="이름" required>
+        <textarea id="c-text" maxlength="500" placeholder="댓글을 남겨 주세요 (최대 500자)" required></textarea>
+        <button type="submit">댓글 등록</button>
+        <p id="c-msg" class="msg"></p>
+      </form>
+    </section>
+  </article>`;
+
+  const ref = doc(db, "posts", id);
+  const base = { post_id: id, post_title: p.title, category: p.category || "education" };
+
+  // 좋아요: 누르면 +1, 다시 누르면 -1 (같은 브라우저 기준)
+  document.getElementById("like-btn").addEventListener("click", async e => {
+    const btn = e.currentTarget;
+    const on = !memo.get("like", id);
+    btn.disabled = true;
+    try {
+      await updateDoc(ref, { likes: increment(on ? 1 : -1) });
+      memo.set("like", id, on);
+      btn.setAttribute("aria-pressed", String(on));
+      const c = document.getElementById("like-count");
+      c.textContent = Math.max(0, Number(c.textContent) + (on ? 1 : -1));
+      track(on ? "post_like" : "post_unlike", base);
+    } finally { btn.disabled = false; }
+  });
+
+  // 스크랩: 누르면 +1, 다시 누르면 -1 (같은 브라우저 기준)
+  document.getElementById("scrap-btn").addEventListener("click", async e => {
+    const btn = e.currentTarget;
+    const on = !memo.get("scrap", id);
+    btn.disabled = true;
+    try {
+      await updateDoc(ref, { scraps: increment(on ? 1 : -1) });
+      memo.set("scrap", id, on);
+      btn.setAttribute("aria-pressed", String(on));
+      const c = document.getElementById("scrap-count");
+      c.textContent = Math.max(0, Number(c.textContent) + (on ? 1 : -1));
+      track(on ? "post_scrap" : "post_unscrap", base);
+    } finally { btn.disabled = false; }
+  });
+
+  await loadComments(id);
+
+  document.getElementById("comment-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("c-name").value.trim();
+    const text = document.getElementById("c-text").value.trim();
+    const msg = document.getElementById("c-msg");
+    if (!name || !text) return;
+    try {
+      await addDoc(collection(db, "posts", id, "comments"), { name, text, createdAt: serverTimestamp() });
+      document.getElementById("c-text").value = "";
+      msg.textContent = "댓글이 등록되었습니다.";
+      track("post_comment", { ...base, comment_length: text.length });
+      await loadComments(id);
+    } catch (err) {
+      msg.textContent = "댓글 등록에 실패했습니다: " + err.message;
+    }
+  });
+}
+
+async function loadComments(postId) {
+  const snap = await getDocs(query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc")));
+  const list = snap.docs.map(d => d.data());
+  document.getElementById("comment-count").textContent = list.length;
+  document.getElementById("comment-list").innerHTML = list.length
+    ? list.map(c => `<li><div class="c-head"><strong>${esc(c.name)}</strong> <time>${fmtDate(c.createdAt)}</time></div><p>${esc(c.text)}</p></li>`).join("")
+    : `<li class="empty">첫 댓글을 남겨 주세요.</li>`;
+}
+
+async function route() {
+  if (!isConfigured) {
+    app.innerHTML = `<div class="notice">Firebase 설정이 필요합니다. js/config.js의 값을 입력해 주세요.</div>`;
+    return;
+  }
+  const hash = location.hash.replace(/^#/, "") || "/";
+  app.innerHTML = `<p class="loading">불러오는 중...</p>`;
+  try {
+    const posts = await loadPosts();
+    if (hash.startsWith("/post/")) return await renderPost(posts, decodeURIComponent(hash.slice(6)));
+    if (hash === "/education") return renderList(posts.filter(p => p.category === "education"), "교육", "임직원 대상 교육 프로그램 안내");
+    if (hash === "/recruit") return renderList(posts.filter(p => p.category === "recruit"), "채용 공고", "SY Electronics 채용 공고");
+    renderList(posts, "최신 글", "인사팀이 전하는 채용과 교육 소식");
+  } catch (e) {
+    app.innerHTML = `<div class="notice">글을 불러오지 못했습니다: ${esc(e.message)}</div>`;
+  }
+}
+
+window.addEventListener("hashchange", route);
+route();
+
+</script>
+</body>
+</html>
