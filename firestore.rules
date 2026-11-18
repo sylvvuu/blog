@@ -71,6 +71,16 @@ service cloud.firestore {
         && request.resource.data.kmaServiceKey.size() <= 200;
     }
 
+    // 명언: 방문자가 읽고, 관리자만 추가·삭제 (수정은 막음)
+    match /quotes/{quoteId} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 200
+        && request.resource.data.author is string && request.resource.data.author.size() <= 50;
+      allow delete: if isAdmin();
+    }
+
     // 문의: 로그인 사용자가 작성, 읽기·삭제는 관리자만
     match /inquiries/{inquiryId} {
       allow create: if isSignedIn()

@@ -625,3 +625,20 @@ if (isConfigured) {
 
 // 날씨 위젯은 페이지와 상관없이 항상 표시한다
 loadSeoulWeather();
+
+// 명언: 페이지를 열 때마다 등록된 명언 중 하나를 무작위로 보여 준다
+async function loadRandomQuote() {
+  const el = document.getElementById("quote");
+  if (!el || !db) return;
+  try {
+    const snap = await getDocs(collection(db, "quotes"));
+    const list = snap.docs.map(d => d.data()).filter(q => q.text);
+    if (!list.length) { el.hidden = true; return; }
+    const q = list[Math.floor(Math.random() * list.length)];
+    el.innerHTML = `<span class="quote-text">“${esc(q.text)}”</span>${q.author ? ` <span class="quote-author">— ${esc(q.author)}</span>` : ""}`;
+    el.hidden = false;
+  } catch (e) {
+    el.hidden = true;
+  }
+}
+loadRandomQuote();
