@@ -192,3 +192,4 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* 헤더 아래 날씨 바 */
 .weather-bar { padding-top:12px; }
 .weather-bar .weather { margin:0; }
+.weather-icon { font-size:22px; line-height:1; }
