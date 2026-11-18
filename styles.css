@@ -22,7 +22,7 @@ nav a[hidden] { display: none; }
 .thumbs .msg { width: 100%; margin: 0; }
 .post figure { margin: 1.4em 0; }
 .post figure img { display: block; max-width: 100%; height: auto; border-radius: 8px; }
-main { padding: 40px 0 80px; min-height: 70vh; }
+main { padding: 24px 0 80px; min-height: 70vh; }
 .hero { margin-bottom: 28px; }
 .hero h1 { margin: 0 0 6px; font-size: 28px; }
 .hero p { margin: 0; color: var(--muted); }
