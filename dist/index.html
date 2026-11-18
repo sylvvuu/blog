@@ -86,6 +86,13 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 .comment-form textarea { min-height: 100px; }
 .comment-form button { justify-self: start; }
 
+/* 메인 배너: 전자 회사 느낌의 남색 배경과 회로 패턴 (직접 그린 SVG) */
+.banner { position: relative; overflow: hidden; color: #fff; border-radius: 14px; padding: 48px 40px; margin-bottom: 28px; background: linear-gradient(120deg, #0b2540 0%, #13467a 100%); }
+.banner::before { content: ""; position: absolute; inset: 0; opacity: .9; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='160' viewBox='0 0 240 160'><g fill='none' stroke='%2366b3ff' stroke-width='1.5' opacity='.4'><path d='M0 40h60l10 10h50v40h40'/><path d='M240 20h-70l-10 10h-40v50h-40v40'/><path d='M120 160v-30h30'/><path d='M180 120h40'/></g><g fill='%2366b3ff' opacity='.6'><circle cx='60' cy='40' r='3'/><circle cx='180' cy='70' r='3'/><circle cx='150' cy='110' r='3'/></g></svg>"); background-size: 240px 160px; }
+.banner .kicker { position: relative; margin: 0 0 8px; font-size: 13px; letter-spacing: .12em; color: #8fc7ff; font-weight: 600; }
+.banner h1 { position: relative; margin: 0 0 10px; font-size: 32px; }
+.banner p { position: relative; margin: 0; color: #d6e6f5; font-size: 15px; max-width: 560px; }
+
 /* 메인 3개 칼럼: 칼럼 사이 세로선으로 구분 */
 .columns { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .col { padding: 28px 26px; min-height: 340px; }
@@ -298,7 +305,8 @@ function columnBlock(key, list) {
 function renderHome(posts) {
   const edu = posts.filter(p => p.category === "education");
   const rec = posts.filter(p => p.category === "recruit");
-  app.innerHTML = `<div class="columns">
+  app.innerHTML = `<section class="banner"><p class="kicker">SY ELECTRONICS HR</p><h1>인사팀 블로그</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
     <section class="col col-inquiry">
