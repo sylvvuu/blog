@@ -155,6 +155,8 @@ function renderHome(posts) {
 
 // 공공취업정보 최신 5건 (인사혁신처 PblJobService /getList, 응답은 XML)
 const JOBS_API = "https://apis.data.go.kr/1760000/PblJobService/getList";
+const fmtYmd = s => (s && s.length === 8) ? `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}` : "";
+
 async function loadPublicJobs() {
   const el = document.getElementById("jobs-panel");
   if (!el || !db) return;
@@ -181,7 +183,7 @@ async function loadPublicJobs() {
       <ul>${latest.map(j => `<li>
         <strong>${esc(j.title)}</strong>
         <span>${esc(j.insttname)}</span>
-        <em>마감 ${esc(fmtDate(j.enddate) || "추후 공지")}</em>
+        <em>마감 ${esc(fmtYmd(j.enddate) || "추후 공지")}</em>
       </li>`).join("")}</ul>`;
     el.hidden = false;
   } catch (e) {
