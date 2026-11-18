@@ -71,10 +71,10 @@
     <a class="brand" href="#home">SY Electronics Careers</a>
     <nav class="tabs" id="tabs">
       <a href="#home" data-s="home">1 홈</a>
-      <a href="#list" data-s="list">2 채용 목록</a>
+      <a href="#list" data-s="list">2 글 목록</a>
       <a href="#detail" data-s="detail">3 글 상세</a>
-      <a href="#admin" data-s="admin">4 관리자 글쓰기</a>
-      <a href="#inquiry" data-s="inquiry">5 문의하기</a>
+      <a href="#admin" data-s="admin">4 글쓰기</a>
+      <a href="#login" data-s="login">5 관리자 로그인</a>
     </nav>
     <div class="spacer"></div>
     <button class="btn" id="mode" type="button" style="font-size:13px">5개 화면으로 나눠 보기</button>
@@ -107,46 +107,50 @@
         <div class="thumb"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=800&q=80" alt="팀 회의 이미지"></div>
         <span class="pill">접수중</span>
         <h3>[신입 공개채용] 연구원 모집</h3>
-        <p class="muted">이름과 이메일로 바로 지원</p>
+        <p class="muted">서울 강남 · 마감 2026-11-30</p>
         <p><a class="more" href="#list">전체 보기 (2) →</a></p>
       </div>
       <div class="col">
         <h2>문의하기</h2>
         <p class="muted">채용이나 교육에 관해 궁금한 점을 남겨 주세요.</p>
-        <div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--brand);font-weight:700">문의</div>
-        <p class="muted">로그인 후 문의를 남기면 인사팀이 확인합니다.</p>
-        <p><a class="more" href="#inquiry">문의 작성하기 →</a></p>
+        <div id="home-inquiry" style="margin-top:12px"><div id="inq-area"></div></div>
       </div>
     </div>
     <p class="note">화면 1 · 홈: 교육, 채용 공고, 문의하기 세 칼럼. 칼럼마다 최신 글 한 개와 전체 보기 버튼.</p>
   </section>
 
-  <!-- 2. 채용 목록 -->
+  <!-- 2. 글 목록 -->
   <section class="screen" id="list">
-    <p class="sec">화면 2 · 채용 목록</p>
-    <h1>채용 공고</h1>
-    <p class="lead">SY Electronics와 함께할 인재를 찾습니다. 신입공채와 경력직 채용 공고를 확인해 보세요.</p>
+    <p class="sec">화면 2 · 글 목록</p>
+    <h1>글 목록</h1>
+    <p class="lead">교육과 채용 글을 모두 모아 보여 줍니다. 글마다 한 번씩만 나옵니다.</p>
     <div class="grid">
       <a class="card" href="#detail">
-        <div class="thumb"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=800&q=80" alt="팀 회의 이미지"></div>
-        <span class="badge">신입공채</span>
-        <h3>[신입 공개채용] 연구원 모집</h3>
-        <p class="muted">본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
-      </a>
-      <a class="card" href="#detail">
-        <div class="thumb"><img src="https://images.unsplash.com/photo-1705579610353-ffd640d857e9?auto=format&fit=crop&w=800&q=80" alt="연구실에서 일하는 연구원"></div>
-        <span class="badge">경력직</span>
-        <h3>[경력직 채용] 연구원 모집</h3>
-        <p class="muted">본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1675557009875-436f71457475?auto=format&fit=crop&w=800&q=80" alt="AI 칩 이미지"></div>
+        <span class="badge">교육</span>
+        <h3>AI 활용 교육: 업무에 바로 쓰는 생성형 AI 실무 과정</h3>
+        <p class="muted">문서 작성, 데이터 정리, 보고서 요약 실습</p>
       </a>
       <a class="card" href="#list">
         <div class="thumb"><img src="https://images.unsplash.com/photo-1758518731457-5ef826b75b3b?auto=format&fit=crop&w=800&q=80" alt="팀 워크숍 이미지"></div>
         <span class="badge">교육</span>
-        <h3>AI·AX 업무 혁신 교육 (교육 목록 예시)</h3>
-        <p class="muted">업무 자동화에서 조직 전환까지</p>
+        <h3>AI·AX 업무 혁신 교육: 업무 자동화에서 조직 전환까지</h3>
+        <p class="muted">업무 프로세스 점검과 팀별 개선안 워크숍</p>
+      </a>
+      <a class="card" href="#detail">
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=800&q=80" alt="팀 회의 이미지"></div>
+        <span class="badge">신입공채</span>
+        <h3>[신입 공개채용] 연구원 모집</h3>
+        <p class="muted">서울 강남 · 마감 2026-11-30</p>
+      </a>
+      <a class="card" href="#list">
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1705579610353-ffd640d857e9?auto=format&fit=crop&w=800&q=80" alt="연구실에서 일하는 연구원"></div>
+        <span class="badge">경력직</span>
+        <h3>[경력직 채용] 연구원 모집</h3>
+        <p class="muted">서울 강남 · 마감 2026-11-30</p>
       </a>
     </div>
-    <p class="note">화면 2 · 목록: 카드 그리드. 글 종류(신입공채, 경력직, 교육) 표시. 카드를 누르면 상세 화면으로 이동.</p>
+    <p class="note">화면 2 · 글 목록: 교육 글 2개와 채용 글 2개가 각각 한 번씩 나옵니다. 카드를 누르면 글 상세로 이동합니다.</p>
   </section>
 
   <!-- 3. 글 상세 -->
@@ -158,7 +162,7 @@
         <div>
           <span class="pill">접수중</span>
           <h1 style="margin-top:10px">[신입 공개채용] 연구원 모집</h1>
-          <p class="muted"><span class="badge">신입공채</span> 본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
+          <p class="muted"><span class="badge">신입공채</span> 서울 강남 · 마감 2026-11-30</p>
         </div>
       </div>
       <div class="photo"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=1200&q=80" alt="팀 회의 이미지"></div>
@@ -192,9 +196,9 @@
 
   <!-- 4. 관리자 글쓰기 -->
   <section class="screen" id="admin">
-    <p class="sec">화면 4 · 관리자 글쓰기</p>
+    <p class="sec">화면 4 · 글쓰기</p>
     <div class="panel">
-      <h1>관리자 · 글쓰기</h1>
+      <h1>글쓰기</h1>
       <p class="lead">관리자 계정으로 로그인한 경우에만 열립니다. 글마다 공개 또는 나만보기를 고를 수 있습니다.</p>
       <form class="form" id="admin-form">
         <div class="row2">
@@ -226,40 +230,50 @@
         <p class="toast" id="save-out"></p>
       </form>
     </div>
-    <p class="note">화면 4 · 관리자 글쓰기: 공개 설정으로 공개 또는 나만보기를 고릅니다. 나만보기 글은 방문자 목록에 나오지 않습니다.</p>
+    <p class="note">화면 4 · 글쓰기: 공개 설정으로 공개 또는 나만보기를 고릅니다. 나만보기 글은 방문자 목록에 나오지 않습니다.</p>
   </section>
 
-  <!-- 5. 문의하기 -->
-  <section class="screen" id="inquiry">
-    <p class="sec">화면 5 · 문의하기</p>
+  <!-- 5. 관리자 로그인 -->
+  <section class="screen" id="login">
+    <p class="sec">화면 5 · 관리자 로그인</p>
     <div class="panel">
-      <h1>문의하기</h1>
-      <p class="lead">채용이나 교육에 관해 궁금한 점을 남겨 주세요. 로그인 후 문의를 남기면 인사팀이 확인합니다.</p>
-      <div id="inq-area"></div>
+      <h1>관리자 로그인</h1>
+      <p class="lead">허용된 관리자 계정으로 로그인해야 글쓰기 화면을 사용할 수 있습니다.</p>
+      <div class="login-box" id="admin-gate">
+        <p style="margin:0 0 10px">Google 계정으로 로그인하세요.</p>
+        <button class="btn primary" type="button" id="admin-login">Google 로그인</button>
+      </div>
+      <div class="login-box" id="admin-ok" hidden>
+        <p style="margin:0 0 10px">관리자로 로그인되었습니다.</p>
+        <a class="btn primary" href="#admin">글쓰기 화면으로 이동</a>
+      </div>
     </div>
-    <p class="note">화면 5 · 문의하기: 로그인 전에는 안내와 로그인 버튼, 로그인 후에는 문의 폼.</p>
+    <p class="note">화면 5 · 관리자 로그인: 허용된 계정만 글쓰기 화면에 들어갈 수 있습니다. 상단 로그인 버튼과 같은 상태를 공유합니다.</p>
   </section>
 
 </main>
 
-<a class="fab" href="#inquiry">문의하기</a>
+<a class="fab" href="#home-inquiry">문의하기</a>
 
 <script>
   const state = { logged: false, liked: false, scraped: false, likes: 12, scraps: 5, comments: [
     { name: "홍길동", text: "지원 자격을 조금 더 알고 싶습니다." }
   ] };
   const $ = id => document.getElementById(id);
-  const screens = ["home", "list", "detail", "admin", "inquiry"];
+  const screens = ["home", "list", "detail", "admin", "login"];
 
 
   function renderLoginState() {
     $("login-sim").textContent = state.logged ? "로그아웃" : "로그인";
+    $("admin-gate").hidden = state.logged;
+    $("admin-ok").hidden = !state.logged;
     $("gate").hidden = state.logged;
     renderDetail();
     renderInquiry();
   }
 
   $("login-sim").onclick = () => { state.logged = !state.logged; renderLoginState(); };
+  $("admin-login").onclick = () => { state.logged = true; renderLoginState(); };
 
   // 보기 방식: 전체 스크롤 / 5개 화면 나눠 보기
   function setScreen(name) {

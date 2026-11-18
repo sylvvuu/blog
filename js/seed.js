@@ -38,8 +38,8 @@ export const SEED_POSTS = [
     imageCredit: "Photo by Campaign Creators on Unsplash",
     title: "[신입 공개채용] 연구원 모집",
     summary: "SY Electronics 연구원 신입 공개채용 안내입니다. 이름과 이메일로 바로 지원할 수 있습니다.",
-    location: "본사(서울) 및 지점 각 지역",
-    deadline: "추후 공지",
+    location: "서울 강남",
+    deadline: "2026-11-30",
     body: "SY Electronics에서 함께할 신입 연구원을 모집합니다.\n\n모집 분야: 연구원\n근무지: 본사(서울) 및 지점 각 지역\n지원 자격과 전형 절차는 채용 공고 확정 후 안내드리겠습니다.\n\n지원하기 버튼을 누르고 이름과 이메일을 입력하면 지원이 접수됩니다. 세부 내용은 인사팀에 문의해 주세요."
   },
   {
@@ -51,8 +51,8 @@ export const SEED_POSTS = [
     imageCredit: "Photo by ThisisEngineering on Unsplash",
     title: "[경력직 채용] 연구원 모집",
     summary: "관련 분야 경력을 가진 연구원을 모집합니다.",
-    location: "본사(서울) 및 지점 각 지역",
-    deadline: "추후 공지",
+    location: "서울 강남",
+    deadline: "2026-11-30",
     body: "SY Electronics에서 관련 경력을 갖춘 연구원을 모집합니다.\n\n모집 분야: 연구원 (경력직)\n근무지: 본사(서울) 및 지점 각 지역\n경력 요건과 우대 사항은 채용 공고 확정 후 안내드리겠습니다.\n\n지원 방법과 세부 내용은 인사팀에 문의해 주세요."
   }
 ];
