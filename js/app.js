@@ -136,7 +136,7 @@ function renderHome(posts) {
     <p>${esc(COMPANY_INTRO.body)}</p>
     <ul class="values">${COMPANY_INTRO.values.map(v => `<li><strong>${esc(v.title)}</strong><span>${esc(v.desc)}</span></li>`).join("")}</ul>
   </section>`;
-  app.innerHTML = `${intro}<section class="weather" id="weather" hidden></section><section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  app.innerHTML = `${intro}<section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
   <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
@@ -149,10 +149,9 @@ function renderHome(posts) {
       <div class="art">${ART.inquiry}</div>
     </section>
   </div>`;
-  loadSeoulWeather();
 }
 
-// 관리자 화면에서 저장한 OpenWeather 키를 읽어 날씨 위젯을 채운다
+// 관리자 화면에서 저장한 기상청 인증키를 읽어 헤더 아래 날씨 위젯을 채운다 (모든 페이지 공통)
 async function loadSeoulWeather() {
   const el = document.getElementById("weather");
   if (!el || !db) return;
@@ -623,3 +622,6 @@ if (isConfigured) {
 } else {
   route();
 }
+
+// 날씨 위젯은 페이지와 상관없이 항상 표시한다
+loadSeoulWeather();

@@ -58,7 +58,7 @@ async function getObservation(key) {
 function draw(el, { v, b }) {
   const pty = PTY[Number(v.PTY)] ?? "";
   el.innerHTML = `
-    <span class="weather-label">서울 실시간</span>
+    <span class="weather-label">날씨</span>
     <strong>${esc(v.T1H)}°C</strong>
     <span>${pty ? esc(pty) : "강수 없음"} · 습도 ${esc(v.REH)}% · 풍속 ${esc(v.WSD)} m/s</span>
     <span class="weather-time">${esc(b.label)} 기준 · 기상청</span>`;
