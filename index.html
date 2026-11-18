@@ -24,6 +24,8 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
+    // 관리자(소유자) 브라우저는 GA로 보내지 않는다
+    try { if (localStorage.getItem('sy_owner') === '1') window['ga-disable-G-BC6KK97MHL'] = true; } catch (e) {}
     gtag('config', 'G-BC6KK97MHL');
   </script>
   <link rel="stylesheet" href="styles.css">

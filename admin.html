@@ -40,6 +40,12 @@
         <button id="new-btn" class="ghost" style="width:100%;margin-bottom:12px;">+ 새 글 작성</button>
         <button id="seed-btn" hidden style="width:100%;margin-bottom:12px;">샘플 글 등록 (최초 1회)</button>
         <ul id="post-list" class="post-list"></ul>
+        <h2 style="margin-top:24px;">날씨 설정</h2>
+        <p class="msg" id="weather-state">저장된 키 확인 중...</p>
+        <label for="owm-key">기상청 단기예보 인증키 (일반 인증키, 비우고 저장하면 위젯이 숨겨집니다)</label>
+        <input id="owm-key" type="password" autocomplete="off" placeholder="인증키 붙여넣기">
+        <button id="owm-save" type="button" style="width:100%;margin-top:8px;">키 저장</button>
+        <p id="owm-msg" class="msg"></p>
       </aside>
 
       <section class="panel">

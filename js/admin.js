@@ -1,7 +1,7 @@
 import { firebaseConfig, ADMIN_EMAIL } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, orderBy, query, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { SEED_POSTS } from "./seed.js";
 
 const $ = id => document.getElementById(id);
@@ -45,7 +45,33 @@ onAuthStateChanged(auth, async user => {
   await loadPosts();
 });
 
+// ---- 날씨 설정 (OpenWeather 키) ----
+async function loadWeatherState() {
+  const snap = await getDoc(doc(db, "settings", "weather"));
+  const key = snap.exists() ? snap.data().kmaServiceKey : "";
+  $("weather-state").textContent = key
+    ? `저장됨: ••••${key.slice(-4)} (블로그 홈에 서울 실시간 날씨 표시 중)`
+    : "저장된 키가 없습니다. 위젯이 숨겨진 상태입니다.";
+}
+
+$("owm-save").addEventListener("click", async () => {
+  const key = $("owm-key").value.trim();
+  if (key && key.length < 20) {
+    $("owm-msg").textContent = "인증키가 너무 짧습니다. 공공데이터포털에서 복사한 일반 인증키를 넣으세요.";
+    return;
+  }
+  try {
+    await setDoc(doc(db, "settings", "weather"), { kmaServiceKey: key, updatedAt: serverTimestamp() }, { merge: true });
+    $("owm-key").value = "";
+    $("owm-msg").textContent = key ? "저장했습니다." : "키를 지웠습니다.";
+    await loadWeatherState();
+  } catch (e) {
+    $("owm-msg").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
 async function loadPosts() {
+  loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   // 공개 설정이 없던 기존 글은 공개로 한 번 정리 (공개 목록 조회에 필요)
