@@ -195,7 +195,7 @@ async function renderPost(posts, id) {
       ${isRec && p.deadline ? `<p class="job-period">마감 ${esc(p.deadline)}</p>` : ""}
       ${!isRec ? `<time>${fmtDate(p.createdAt)}</time>` : ""}
     </div>
-    <div class="job-actions">${applyBtn}</div></div>
+    <div class="job-actions">${applyBtn}${isRec && !user ? '<p class="who login-hint">지원은 Google 로그인 후 가능합니다. 버튼을 누르면 로그인 창이 열립니다.</p>' : ""}</div></div>
     ${applyPanel}
     <div class="body">${paras}</div>
 
