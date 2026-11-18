@@ -76,7 +76,68 @@ function syncJobType() {
 }
 $("f-category").addEventListener("change", syncJobType);
 
+// 본문에 붙여넣은 이미지: { id, data(JPEG data URL) }, 본문에는 [[img:id]] 로 표시
+let bodyImages = [];
+const MAX_IMAGE_BYTES = 900000; // Firestore 문서 한도(1MiB) 안에 맞추기 위한 여유
+
+function renderThumbs() {
+  const box = $("body-images");
+  box.innerHTML = bodyImages.map(im => `<div class="thumb"><img src="${im.data}" alt=""><button type="button" data-id="${im.id}">삭제</button></div>`).join("");
+  const total = bodyImages.reduce((n, im) => n + im.data.length, 0);
+  box.insertAdjacentHTML("beforeend", bodyImages.length ? `<p class="msg">이미지 ${bodyImages.length}장 · 약 ${Math.round(total / 1024)}KB</p>` : "");
+  box.querySelectorAll("button[data-id]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    bodyImages = bodyImages.filter(im => im.id !== id);
+    const ta = $("f-body");
+    ta.value = ta.value.replace(new RegExp(`\\n?\\[\\[img:${id}\\]\\]\\n?`, "g"), "\n");
+    renderThumbs();
+  }));
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1000 / img.naturalWidth);
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * scale);
+      c.height = Math.round(img.naturalHeight * scale);
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("이미지를 읽을 수 없습니다.")); };
+    img.src = url;
+  });
+}
+
+$("f-body").addEventListener("paste", async e => {
+  const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith("image/"));
+  if (!item) return; // 글자만 붙여넣을 때는 기본 동작 그대로
+  e.preventDefault();
+  const ta = e.target;
+  try {
+    const data = await compressImage(item.getAsFile());
+    const id = "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    bodyImages.push({ id, data });
+    const marker = `\n[[img:${id}]]\n`;
+    const s = ta.selectionStart, en = ta.selectionEnd;
+    ta.value = ta.value.slice(0, s) + marker + ta.value.slice(en);
+    ta.selectionStart = ta.selectionEnd = s + marker.length;
+    renderThumbs();
+    $("form-msg").textContent = "이미지가 본문에 추가되었습니다.";
+  } catch (err) {
+    $("form-msg").textContent = "이미지 추가 실패: " + err.message;
+  }
+});
+
 function fillForm(p = {}) {
+  bodyImages = Array.isArray(p.images) ? p.images.map(im => ({ id: im.id, data: im.data })) : [];
+  renderThumbs();
   $("f-id").value = p.id || "";
   $("f-visibility").value = p.visibility || "public";
   $("f-category").value = p.category || "education";
@@ -104,7 +165,13 @@ $("new-btn").addEventListener("click", () => fillForm({}));
 
 $("post-form").addEventListener("submit", async e => {
   e.preventDefault();
+  const imageBytes = bodyImages.reduce((n, im) => n + im.data.length, 0);
+  if (imageBytes > MAX_IMAGE_BYTES) {
+    $("form-msg").textContent = "이미지 용량이 너무 큽니다. 이미지를 줄여 주세요.";
+    return;
+  }
   const data = {
+    images: bodyImages.map(im => ({ id: im.id, data: im.data })),
     visibility: $("f-visibility").value === "private" ? "private" : "public",
     category: $("f-category").value,
     jobType: $("f-category").value === "recruit" ? $("f-jobType").value : null,

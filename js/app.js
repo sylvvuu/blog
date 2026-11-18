@@ -201,7 +201,19 @@ async function renderPost(posts, id) {
       </form>`
         : `<div class="login-box"><p>지원은 Google 로그인 후 가능합니다.</p><button class="btn primary" id="apply-login" type="button">Google 로그인</button></div>`}
     </section>` : "";
-  const paras = String(p.body || "").split(/\n\s*\n/).map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
+  // 본문 이미지: [[img:id]] 자리에 저장된 이미지를 넣는다 (데이터 URL은 형식 검사 후 사용)
+  const imgMap = Object.fromEntries((Array.isArray(p.images) ? p.images : [])
+    .filter(im => im && /^[\w-]+$/.test(im.id) && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(im.data))
+    .map(im => [im.id, im.data]));
+  const figure = id => imgMap[id] ? `<figure><img src="${imgMap[id]}" alt="" loading="lazy"></figure>` : "";
+  const paras = String(p.body || "").split(/\n\s*\n/).map(t => {
+    const parts = t.split(/\[\[img:([\w-]+)\]\]/);
+    // parts: 글자, id, 글자, id ... 순서로 나뉜다
+    return parts.map((seg, i) => {
+      if (i % 2) return figure(seg);
+      return seg.trim() ? `<p>${esc(seg.trim()).replace(/\n/g, "<br>")}</p>` : "";
+    }).join("");
+  }).join("");
 
   app.innerHTML = `<article class="post">
     <a class="back" href="#/${p.category}">&larr; ${esc(COLUMNS[p.category].title)} 목록</a>
