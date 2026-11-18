@@ -52,6 +52,23 @@ main { padding: 40px 0 80px; min-height: 70vh; }
 .notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
 footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
 
+/* 채용 상세 헤더 */
+.job-head { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.job-head h1 { margin: 10px 0 8px; font-size: 26px; }
+.job-sub { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
+.job-period { margin: 0; color: var(--muted); font-size: 14px; }
+.job-actions { display: flex; flex-direction: column; gap: 8px; min-width: 180px; }
+.job-actions .msg { min-height: 0; margin: 0; }
+.pill { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 12px; }
+.pill.open { background: #e6f2ea; color: #1d6b3a; }
+.pill.closed { background: #eceff2; color: #6b7785; }
+.btn { display: block; text-align: center; padding: 12px 16px; border-radius: 8px; border: 1px solid #cfd7e0; font-size: 15px; cursor: pointer; font-family: inherit; }
+.btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn.ghost { background: #fff; color: var(--text); }
+.btn.muted { background: #eef2f6; color: var(--muted); border-color: #eef2f6; cursor: default; }
+.bottom-nav { text-align: center; margin-top: 32px; }
+.bottom-nav .btn { display: inline-block; min-width: 180px; }
+
 /* 글 반응 버튼과 댓글 */
 .actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .act { display: inline-flex; gap: 6px; align-items: center; background: #fff; color: var(--text); border: 1px solid #cfd7e0; border-radius: 999px; padding: 8px 16px; font-size: 14px; }
@@ -144,6 +161,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
             <input id="f-location" placeholder="예: 본사(서울) 및 지점 각 지역">
             <label for="f-deadline">마감</label>
             <input id="f-deadline" placeholder="예: 2026-12-31 또는 추후 공지">
+            <label for="f-applyUrl">지원하기 링크 (https://로 시작, 비우면 버튼이 안내 문구로 바뀜)</label>
+            <input id="f-applyUrl" placeholder="https://">
           </div>
 
           <label for="f-title">제목</label>
@@ -301,6 +320,7 @@ function fillForm(p = {}) {
   $("f-summary").value = p.summary || "";
   $("f-location").value = p.location || "";
   $("f-deadline").value = p.deadline || "";
+  $("f-applyUrl").value = p.applyUrl || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
@@ -319,6 +339,7 @@ $("post-form").addEventListener("submit", async e => {
     summary: $("f-summary").value.trim(),
     location: $("f-location").value.trim(),
     deadline: $("f-deadline").value.trim(),
+    applyUrl: $("f-applyUrl").value.trim(),
     body: $("f-body").value
   };
   const id = $("f-id").value;

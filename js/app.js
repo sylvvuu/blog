@@ -50,28 +50,55 @@ function renderList(posts, title, desc) {
   app.innerHTML = `<section class="hero"><h1>${esc(title)}</h1><p>${esc(desc)}</p></section>${list}`;
 }
 
+// 접수 상태: 마감일이 지났으면 마감, 아니면 접수중
+function statusOf(p) {
+  const d = Date.parse(p.deadline);
+  if (!isNaN(d) && d < Date.now() - 86400000) return "마감";
+  return "접수중";
+}
+
+// 외부 지원 링크는 http(s)만 허용
+function safeUrl(u = "") {
+  return /^https?:\/\//i.test(u) ? u : "";
+}
+
 async function renderPost(posts, id) {
   const p = posts.find(x => x.id === id);
   if (!p) {
     app.innerHTML = `<p class="empty">글을 찾을 수 없습니다. <a href="#/">홈으로</a></p>`;
     return;
   }
-  const meta = p.category === "recruit"
-    ? `<dl class="meta">
-        <dt>구분</dt><dd>${esc(p.jobType || "-")}</dd>
-        <dt>근무지</dt><dd>${esc(p.location || "-")}</dd>
-        <dt>마감</dt><dd>${esc(p.deadline || "-")}</dd>
-      </dl>`
-    : "";
   const paras = String(p.body || "").split(/\n\s*\n/).map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
 
+  const head = p.category === "recruit"
+    ? (() => {
+        const status = statusOf(p);
+        const apply = safeUrl(p.applyUrl)
+          ? `<a class="btn primary" href="${esc(safeUrl(p.applyUrl))}" target="_blank" rel="noopener" id="apply-btn">지원하기</a>`
+          : `<span class="btn primary muted">지원 방법은 인사팀 문의</span>`;
+        return `<div class="job-head">
+          <div>
+            <span class="pill ${status === "접수중" ? "open" : "closed"}">${status}</span>
+            <h1>${esc(p.title)}</h1>
+            <p class="job-sub"><span class="tag">${esc(p.jobType || "채용")}</span> ${esc(p.location || "")}</p>
+            ${p.deadline ? `<p class="job-period">마감 ${esc(p.deadline)}</p>` : ""}
+          </div>
+          <div class="job-actions">
+            ${apply}
+            <button class="btn ghost" id="share-btn">공유하기</button>
+            <p class="msg" id="share-msg"></p>
+          </div>
+        </div>`;
+      })()
+    : `<span class="badge">교육</span>
+       <h1>${esc(p.title)}</h1>
+       <time>${fmtDate(p.createdAt)}</time>`;
+
   app.innerHTML = `<article class="post">
-    <a class="back" href="#/">&larr; 목록으로</a>
-    <span class="badge">${esc(badgeOf(p))}</span>
-    <h1>${esc(p.title)}</h1>
-    <time>${fmtDate(p.createdAt)}</time>
-    ${meta}
+    ${p.category === "recruit" ? "" : `<a class="back" href="#/">&larr; 목록으로</a>`}
+    ${head}
     <div class="body">${paras}</div>
+    <div class="bottom-nav"><a class="btn ghost" href="${p.category === "recruit" ? "#/recruit" : "#/education"}">목록으로</a></div>
 
     <div class="actions">
       <button class="act" id="like-btn" aria-pressed="${memo.get("like", id)}">
@@ -97,6 +124,21 @@ async function renderPost(posts, id) {
 
   const ref = doc(db, "posts", id);
   const base = { post_id: id, post_title: p.title, category: p.category || "education" };
+
+  // 공유하기: 현재 주소를 클립보드에 복사
+  document.getElementById("share-btn").addEventListener("click", async () => {
+    const msg = document.getElementById("share-msg");
+    try {
+      await navigator.clipboard.writeText(location.href);
+      msg.textContent = "주소를 복사했습니다.";
+      track("post_share", base);
+    } catch {
+      msg.textContent = "복사에 실패했습니다. 주소창의 주소를 직접 복사해 주세요.";
+    }
+  });
+
+  // 지원하기 클릭 기록
+  document.getElementById("apply-btn")?.addEventListener("click", () => track("post_apply", base));
 
   // 좋아요: 누르면 +1, 다시 누르면 -1 (같은 브라우저 기준)
   document.getElementById("like-btn").addEventListener("click", async e => {

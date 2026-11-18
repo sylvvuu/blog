@@ -79,6 +79,7 @@ function fillForm(p = {}) {
   $("f-summary").value = p.summary || "";
   $("f-location").value = p.location || "";
   $("f-deadline").value = p.deadline || "";
+  $("f-applyUrl").value = p.applyUrl || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
@@ -97,6 +98,7 @@ $("post-form").addEventListener("submit", async e => {
     summary: $("f-summary").value.trim(),
     location: $("f-location").value.trim(),
     deadline: $("f-deadline").value.trim(),
+    applyUrl: $("f-applyUrl").value.trim(),
     body: $("f-body").value
   };
   const id = $("f-id").value;
