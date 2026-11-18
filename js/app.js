@@ -97,7 +97,7 @@ async function signIn() {
 
 function featuredCard(p) {
   return `<a class="feature" href="#/post/${esc(p.id)}">
-    <div class="art">${artHtml(p)}</div>
+    <div class="art">${artHtml(p, true)}</div>
     ${p.category === "recruit" ? `<span class="pill ${statusOf(p) === "접수중" ? "open" : "closed"}">${statusOf(p)}</span>` : ""}
     <h3>${esc(p.title)}</h3>
     <p>${esc(p.summary)}</p>
