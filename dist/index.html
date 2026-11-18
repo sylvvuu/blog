@@ -176,6 +176,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* 우측 하단 문의하기 버튼 */
 .fab { position: fixed; right: 20px; bottom: 20px; z-index: 50; background: var(--brand); color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 18px rgba(31, 78, 121, .28); }
 .fab:hover { filter: brightness(1.08); }
+.login-hint { margin: 8px 0 0; font-size: 13px; max-width: 240px; }
 
 </style>
 </head>
@@ -219,7 +220,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, addDoc, updateDoc, doc,
-  query, orderBy, increment, serverTimestamp
+  query, where, increment, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = document.getElementById("app");
@@ -248,6 +249,7 @@ const ART = {
 const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.6 5 6.2 5c2 0 3.5 1.1 4.3 2.5h3C14.3 6.1 15.8 5 17.8 5c3.6 0 5.3 3.6 3.8 6.8C19.5 16.4 12 21 12 21z"/></svg>';
 const BOOK = '<svg class="book" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
 
+const SITE_TITLE = "SY Electronics Careers";
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = ts => (ts && ts.toDate ? ts.toDate().toLocaleDateString("ko-KR") : "");
 const artOf = p => ART[p.image] || ART[p.category === "recruit" ? "recruit" : "education"];
@@ -273,10 +275,17 @@ function safeUrl(u = "") {
 }
 
 let cache = null;
+let cacheUser = undefined;
+const isAdminUser = () => !!user && user.email === ADMIN_EMAIL && user.emailVerified;
+const tsOf = p => (p.createdAt && p.createdAt.toMillis ? p.createdAt.toMillis() : Date.now());
 async function loadPosts() {
-  if (cache) return cache;
-  const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
-  cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // 로그인 상태가 바뀌면 다시 불러옴
+  if (cache && cacheUser === (user ? user.uid : null)) return cache;
+  // 관리자는 모든 글, 일반 사용자는 공개 글만 조회 (보안 규칙과 같은 조건)
+  const base = collection(db, "posts");
+  const snap = await getDocs(isAdminUser() ? base : query(base, where("visibility", "==", "public")));
+  cache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsOf(b) - tsOf(a));
+  cacheUser = user ? user.uid : null;
   return cache;
 }
 
@@ -318,6 +327,7 @@ function columnBlock(key, list) {
 }
 
 function renderHome(posts) {
+  document.title = SITE_TITLE;
   const edu = posts.filter(p => p.category === "education");
   const rec = posts.filter(p => p.category === "recruit");
   app.innerHTML = `<section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
@@ -337,6 +347,7 @@ function renderHome(posts) {
 
 function renderList(key, posts) {
   const c = COLUMNS[key];
+  document.title = `${c.title} | ${SITE_TITLE}`;
   const list = posts.filter(p => p.category === key);
   const body = list.length
     ? `<div class="grid">${list.map(p => `<a class="card" href="#/post/${esc(p.id)}">
@@ -373,9 +384,11 @@ function heartPop(el) {
 async function renderPost(posts, id) {
   const p = posts.find(x => x.id === id);
   if (!p) {
+    document.title = SITE_TITLE;
     app.innerHTML = `<p class="empty">글을 찾을 수 없습니다. <a href="#/">홈으로</a></p>`;
     return;
   }
+  document.title = `${p.title} | ${SITE_TITLE}`;
   const base = { post_id: id, post_title: p.title, category: p.category };
   const isRec = p.category === "recruit";
   const st = isRec ? statusOf(p) : "";
@@ -432,6 +445,18 @@ async function renderPost(posts, id) {
   </article>`;
 
   track("post_view", base);
+
+  // 글을 끝까지 읽음: 글 하단이 보이면 한 번만 기록
+  const endMark = document.querySelector(".bottom-nav");
+  if (endMark && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(en => en.isIntersecting)) {
+        track("post_complete", base);
+        io.disconnect();
+      }
+    }, { threshold: 0.5 });
+    io.observe(endMark);
+  }
 
   // 내 상태 확인 (로그인한 경우에만)
   let liked = false, scraped = false, likeCount = p.likes || 0, scrapCount = p.scraps || 0;
@@ -608,6 +633,7 @@ async function renderPost(posts, id) {
 // ---------- 문의하기 ----------
 
 function renderInquiry() {
+  document.title = `${COLUMNS.inquiry.title} | ${SITE_TITLE}`;
   const body = user
     ? `<form id="inq-form" class="comment-form">
         <p class="who">${esc(user.email)} 계정으로 문의합니다.</p>
@@ -644,7 +670,7 @@ function renderInquiry() {
 
 // ---------- 라우팅 ----------
 
-async function route() {
+async function renderRoute() {
   if (!isConfigured) {
     app.innerHTML = `<div class="notice">Firebase 설정이 필요합니다. js/config.js의 값을 입력해 주세요.</div>`;
     return;
@@ -662,8 +688,28 @@ async function route() {
   }
 }
 
+// 화면 추적: 주소가 바뀔 때마다 page_view, 머문 시간은 page_time으로 보냄
+let view = null;
+function endView() {
+  if (!view) return;
+  track("page_time", { page_path: view.path, page_title: view.title, seconds: Math.round((Date.now() - view.start) / 1000) });
+  view = null;
+}
+function startView() {
+  const path = location.hash || "#/";
+  view = { path, title: document.title, start: Date.now() };
+  track("page_view", { page_path: path, page_title: document.title });
+}
+window.addEventListener("pagehide", endView);
+
+async function route(nav = false) {
+  if (nav) endView();
+  await renderRoute();
+  if (nav || !view) startView();
+}
+
 if (authBtn) authBtn.addEventListener("click", () => (user && isConfigured ? signOut(auth) : signIn()));
-window.addEventListener("hashchange", route);
+window.addEventListener("hashchange", () => route(true));
 
 if (isConfigured) {
   // 로그인 상태가 바뀌면 현재 화면을 다시 그린다

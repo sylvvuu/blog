@@ -61,3 +61,11 @@ git push
 ```
 
 Vercel은 `main` 브랜치에 push될 때마다 자동으로 다시 배포합니다.
+
+
+## 추가 설정 (공개 설정 · 사진 · 보안 규칙)
+
+- 글마다 **공개** 또는 **나만보기**를 고를 수 있습니다. 나만보기 글은 관리자만 볼 수 있습니다.
+- 글 사진은 Unsplash 등 무료 사진 주소를 `사진 주소`에 넣고, 출처를 `사진 출처 표기`에 적습니다.
+- Firestore 보안 규칙(`firestore.rules`)을 바꾸면 Firebase 콘솔 > Firestore > 규칙에 붙여 넣고 **게시**해야 적용됩니다.
+- GA4 이벤트: `page_view`, `page_time`, `post_view`, `post_complete`, `post_like`, `post_scrap`, `post_share`, `post_apply`, `post_apply_submit`, `post_comment`, `inquiry_submit`.

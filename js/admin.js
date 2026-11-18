@@ -48,6 +48,11 @@ onAuthStateChanged(auth, async user => {
 async function loadPosts() {
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // 공개 설정이 없던 기존 글은 공개로 한 번 정리 (공개 목록 조회에 필요)
+  for (const p of posts.filter(x => !x.visibility)) {
+    await updateDoc(doc(db, "posts", p.id), { visibility: "public" });
+    p.visibility = "public";
+  }
   $("seed-btn").hidden = posts.length > 0;
   renderList();
 }
@@ -55,7 +60,7 @@ async function loadPosts() {
 function renderList() {
   $("post-list").innerHTML = posts.length
     ? posts.map(p => `<li><button data-id="${esc(p.id)}" class="link">${esc(p.title)}</button>
-        <span class="tag">${p.category === "recruit" ? esc(p.jobType || "채용") : "교육"}</span></li>`).join("")
+        <span class="tag">${p.category === "recruit" ? esc(p.jobType || "채용") : "교육"}</span>${p.visibility === "private" ? ' <span class="tag">나만보기</span>' : ""}</li>`).join("")
     : `<li class="empty">등록된 글이 없습니다.</li>`;
 }
 
@@ -73,6 +78,7 @@ $("f-category").addEventListener("change", syncJobType);
 
 function fillForm(p = {}) {
   $("f-id").value = p.id || "";
+  $("f-visibility").value = p.visibility || "public";
   $("f-category").value = p.category || "education";
   $("f-jobType").value = p.jobType || "신입공채";
   $("f-title").value = p.title || "";
@@ -99,6 +105,7 @@ $("new-btn").addEventListener("click", () => fillForm({}));
 $("post-form").addEventListener("submit", async e => {
   e.preventDefault();
   const data = {
+    visibility: $("f-visibility").value === "private" ? "private" : "public",
     category: $("f-category").value,
     jobType: $("f-category").value === "recruit" ? $("f-jobType").value : null,
     title: $("f-title").value.trim(),
