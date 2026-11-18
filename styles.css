@@ -36,6 +36,23 @@ main { padding: 40px 0 80px; min-height: 70vh; }
 .notice { background: #fff8e6; border: 1px solid #f0d78c; padding: 16px; border-radius: 8px; }
 footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; background: #fff; }
 
+/* 글 반응 버튼과 댓글 */
+.actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.act { display: inline-flex; gap: 6px; align-items: center; background: #fff; color: var(--text); border: 1px solid #cfd7e0; border-radius: 999px; padding: 8px 16px; font-size: 14px; }
+.act strong { color: var(--brand); }
+.act[aria-pressed="true"] { background: #e8f0f8; border-color: var(--brand); }
+.comments { margin-top: 36px; }
+.comments h2 { font-size: 18px; margin: 0 0 14px; }
+.comment-list { list-style: none; padding: 0; margin: 0 0 24px; }
+.comment-list li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.c-head { font-size: 14px; margin-bottom: 4px; }
+.c-head time { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.comment-list p { margin: 0; font-size: 15px; white-space: pre-wrap; }
+.comment-form { display: grid; gap: 8px; }
+.comment-form input, .comment-form textarea { width: 100%; }
+.comment-form textarea { min-height: 100px; }
+.comment-form button { justify-self: start; }
+
 /* 관리자 */
 .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }

@@ -4,10 +4,30 @@ service cloud.firestore {
     // 누구나 글을 읽을 수 있음
     match /posts/{postId} {
       allow read: if true;
-      // 허용된 관리자 계정만 작성·수정·삭제 가능
-      allow write: if request.auth != null
-        && request.auth.token.email == "fkdna3@gmail.com"
-        && request.auth.token.email_verified == true;
+      // 관리자는 글 작성·수정·삭제 가능
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || onlyCountersChanged();
+      // 방문자는 좋아요·스크랩 카운터만 바꿀 수 있음 (증감 1회, 0 미만 금지)
+      function onlyCountersChanged() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'scraps'])
+          && request.resource.data.likes >= 0
+          && request.resource.data.scraps >= 0;
+      }
+      function isAdmin() {
+        return request.auth != null
+          && request.auth.token.email == "fkdna3@gmail.com"
+          && request.auth.token.email_verified == true;
+      }
+
+      // 댓글: 누구나 작성 가능 (이름 20자, 내용 500자 이하), 삭제는 관리자만
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500;
+        allow delete: if isAdmin();
+      }
     }
   }
 }
