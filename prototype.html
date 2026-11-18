@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SY Electronics Careers 화면 프로토타입 (5화면)</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --brand:#1f4e79; --brand2:#4a90c2; --text:#1d2733; --muted:#6b7785; --line:#dfe5ec; --bg:#f6f8fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif; color:var(--text); background:var(--bg); font-size:15px; }
+  header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 20px; }
+  .bar { display:flex; align-items:center; gap:24px; height:60px; }
+  .brand { font-weight:700; color:var(--text); text-decoration:none; }
+  nav.tabs { display:flex; gap:4px; flex-wrap:wrap; }
+  nav.tabs a { color:var(--muted); text-decoration:none; padding:8px 12px; border-radius:8px; font-size:14px; }
+  nav.tabs a.on { background:#e8f0f8; color:var(--brand); font-weight:600; }
+  .spacer { flex:1; }
+  .btn { display:inline-block; border:1px solid #cfd7e0; background:#fff; color:var(--text); padding:9px 16px; border-radius:8px; font-size:14px; cursor:pointer; font-family:inherit; text-decoration:none; }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .note { font-size:12px; color:var(--muted); margin:14px 0 0; }
+  .screen { display:none; padding:36px 0 80px; }
+  .screen.on { display:block; }
+  h1 { font-size:26px; margin:0 0 8px; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  .lead { color:var(--muted); margin:0 0 24px; }
+  .banner { background:linear-gradient(120deg,#16385a,#1f4e79 60%,#2f6ea3); color:#fff; border-radius:14px; padding:40px 36px; margin-bottom:28px; }
+  .banner .kicker { letter-spacing:.12em; font-size:12px; opacity:.8; margin:0 0 10px; }
+  .banner h1 { color:#fff; font-size:30px; }
+  .banner p { margin:0; opacity:.92; }
+  .columns { display:grid; grid-template-columns:repeat(3,1fr); background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .col { padding:26px 24px; }
+  .col + .col { border-left:1px solid var(--line); }
+  .col .more { color:var(--brand); font-size:14px; text-decoration:none; font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; color:inherit; text-decoration:none; display:block; }
+  .thumb { height:130px; border-radius:8px; background:#dbe8f5; margin-bottom:12px; overflow:hidden; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .photo { width:100%; height:260px; border-radius:10px; overflow:hidden; margin:18px 0 4px; }
+  .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .credit { font-size:12px; color:var(--muted); margin:0 0 18px; }
+  .badge { display:inline-block; font-size:12px; background:#e8f0f8; color:var(--brand); padding:3px 9px; border-radius:999px; margin-bottom:8px; }
+  .pill { display:inline-block; font-size:12px; padding:3px 9px; border-radius:999px; background:#e7f5ec; color:#1f7a45; }
+  .card h3, .col h3 { font-size:16px; margin:0 0 6px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .post { background:#fff; border:1px solid var(--line); border-radius:14px; padding:34px; max-width:760px; margin:0 auto; }
+  .post-head { display:flex; gap:20px; align-items:flex-start; justify-content:space-between; }
+  .acts { display:flex; gap:10px; margin:24px 0 10px; flex-wrap:wrap; }
+  .act { border:1px solid #cfd7e0; background:#fff; border-radius:999px; padding:8px 16px; font-size:14px; cursor:pointer; font-family:inherit; }
+  .act[aria-pressed="true"] { background:#e8f0f8; border-color:var(--brand); color:var(--brand); }
+  .login-box { background:#f3f7fb; border:1px dashed #b8cce0; border-radius:10px; padding:16px 18px; margin:16px 0; }
+  .form { display:grid; gap:10px; max-width:520px; }
+  input, textarea, select { width:100%; font:inherit; padding:10px 12px; border:1px solid #cfd7e0; border-radius:8px; background:#fff; }
+  textarea { min-height:110px; }
+  .apply { background:var(--bg); border-radius:10px; padding:20px; margin-top:18px; }
+  .panel { background:#fff; border:1px solid var(--line); border-radius:14px; padding:28px; max-width:820px; margin:0 auto; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .label { font-size:13px; color:var(--muted); margin:6px 0 -4px; }
+  .fab { position:fixed; right:20px; bottom:20px; background:var(--brand); color:#fff; border-radius:999px; padding:12px 20px; font-weight:600; text-decoration:none; box-shadow:0 6px 18px rgba(31,78,121,.28); }
+  .toast { display:inline-block; margin-top:10px; font-size:14px; color:var(--brand); }
+  @media (max-width:860px) { .columns, .grid, .row2 { grid-template-columns:1fr; } .col + .col { border-left:0; border-top:1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#home">SY Electronics Careers</a>
+    <nav class="tabs" id="tabs">
+      <a href="#home" data-s="home">1 홈</a>
+      <a href="#list" data-s="list">2 채용 목록</a>
+      <a href="#detail" data-s="detail">3 글 상세</a>
+      <a href="#admin" data-s="admin">4 관리자 글쓰기</a>
+      <a href="#inquiry" data-s="inquiry">5 문의하기</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn" id="login-sim" type="button">로그인</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 1. 홈 -->
+  <section class="screen" id="home">
+    <div class="banner">
+      <p class="kicker">SY ELECTRONICS CAREERS</p>
+      <h1>채용과 교육 소식</h1>
+      <p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p>
+    </div>
+    <div class="columns">
+      <div class="col">
+        <h2>교육</h2>
+        <p class="muted">임직원의 업무 역량을 키우는 교육 프로그램을 안내합니다.</p>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1675557009875-436f71457475?auto=format&fit=crop&w=800&q=80" alt="AI 칩 이미지"></div>
+        <h3>AI 활용 교육: 업무에 바로 쓰는 생성형 AI 실무 과정</h3>
+        <p class="muted">문서 작성, 데이터 정리, 보고서 요약 실습</p>
+        <p><a class="more" href="#list">전체 보기 (2) →</a></p>
+      </div>
+      <div class="col">
+        <h2>채용 공고</h2>
+        <p class="muted">SY Electronics와 함께할 인재를 찾습니다.</p>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=800&q=80" alt="팀 회의 이미지"></div>
+        <span class="pill">접수중</span>
+        <h3>[신입 공개채용] 연구원 모집</h3>
+        <p class="muted">이름과 이메일로 바로 지원</p>
+        <p><a class="more" href="#list">전체 보기 (2) →</a></p>
+      </div>
+      <div class="col">
+        <h2>문의하기</h2>
+        <p class="muted">채용이나 교육에 관해 궁금한 점을 남겨 주세요.</p>
+        <div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--brand);font-weight:700">문의</div>
+        <p class="muted">로그인 후 문의를 남기면 인사팀이 확인합니다.</p>
+        <p><a class="more" href="#inquiry">문의 작성하기 →</a></p>
+      </div>
+    </div>
+    <p class="note">화면 1 · 홈: 교육, 채용 공고, 문의하기 세 칼럼. 칼럼마다 최신 글 한 개와 전체 보기 버튼.</p>
+  </section>
+
+  <!-- 2. 채용 목록 -->
+  <section class="screen" id="list">
+    <h1>채용 공고</h1>
+    <p class="lead">SY Electronics와 함께할 인재를 찾습니다. 신입공채와 경력직 채용 공고를 확인해 보세요.</p>
+    <div class="grid">
+      <a class="card" href="#detail">
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=800&q=80" alt="팀 회의 이미지"></div>
+        <span class="badge">신입공채</span>
+        <h3>[신입 공개채용] 연구원 모집</h3>
+        <p class="muted">본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
+      </a>
+      <a class="card" href="#detail">
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1705579610353-ffd640d857e9?auto=format&fit=crop&w=800&q=80" alt="연구실에서 일하는 연구원"></div>
+        <span class="badge">경력직</span>
+        <h3>[경력직 채용] 연구원 모집</h3>
+        <p class="muted">본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
+      </a>
+      <a class="card" href="#list">
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1758518731457-5ef826b75b3b?auto=format&fit=crop&w=800&q=80" alt="팀 워크숍 이미지"></div>
+        <span class="badge">교육</span>
+        <h3>AI·AX 업무 혁신 교육 (교육 목록 예시)</h3>
+        <p class="muted">업무 자동화에서 조직 전환까지</p>
+      </a>
+    </div>
+    <p class="note">화면 2 · 목록: 카드 그리드. 글 종류(신입공채, 경력직, 교육) 표시. 카드를 누르면 상세 화면으로 이동.</p>
+  </section>
+
+  <!-- 3. 글 상세 -->
+  <section class="screen" id="detail">
+    <article class="post">
+      <a href="#list" class="muted" style="text-decoration:none">← 채용 공고 목록</a>
+      <div class="post-head" style="margin-top:14px">
+        <div>
+          <span class="pill">접수중</span>
+          <h1 style="margin-top:10px">[신입 공개채용] 연구원 모집</h1>
+          <p class="muted"><span class="badge">신입공채</span> 본사(서울) 및 지점 각 지역 · 마감 추후 공지</p>
+        </div>
+      </div>
+      <div class="photo"><img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=1200&q=80" alt="팀 회의 이미지"></div>
+      <p class="credit">Photo by Campaign Creators on Unsplash</p>
+      <button class="btn primary" id="apply-btn" type="button">지원하기</button>
+      <div class="login-box" id="gate" hidden>지원, 좋아요, 스크랩, 댓글은 Google 로그인 후 가능합니다. 상단의 로그인 버튼을 눌러 보세요.</div>
+
+      <div id="apply-box" class="apply" hidden>
+        <h2>신입 지원</h2>
+        <p class="muted">이름과 이메일만 입력하면 지원이 접수됩니다.</p>
+        <form class="form" id="apply-form">
+          <input id="ap-name" maxlength="20" placeholder="이름" required>
+          <input id="ap-email" type="email" maxlength="100" placeholder="이메일 (예: name@example.com)" required>
+          <div><button class="btn primary" type="submit">지원 완료하기</button></div>
+          <p class="toast" id="ap-out"></p>
+        </form>
+      </div>
+
+      <div class="acts">
+        <button class="act" id="like" aria-pressed="false">♥ 좋아요 <strong id="like-n">0</strong></button>
+        <button class="act" id="scrap" aria-pressed="false">스크랩 <strong id="scrap-n">0</strong></button>
+        <button class="act" id="share" type="button">공유하기</button>
+      </div>
+      <p class="toast" id="act-out"></p>
+
+      <h2 style="margin-top:28px">댓글 <span id="c-count">0</span></h2>
+      <div id="c-area"></div>
+    </article>
+    <p class="note">화면 3 · 글 상세: 사진, 지원하기(신입은 이름과 이메일 폼), 좋아요·스크랩·공유, 댓글. 로그인하지 않으면 안내만 나옵니다.</p>
+  </section>
+
+  <!-- 4. 관리자 글쓰기 -->
+  <section class="screen" id="admin">
+    <div class="panel">
+      <h1>관리자 · 글쓰기</h1>
+      <p class="lead">관리자 계정으로 로그인한 경우에만 열립니다. 글마다 공개 또는 나만보기를 고를 수 있습니다.</p>
+      <form class="form" id="admin-form">
+        <div class="row2">
+          <div>
+            <p class="label">분류</p>
+            <select><option>교육</option><option>채용 공고</option></select>
+          </div>
+          <div>
+            <p class="label">공개 설정</p>
+            <select id="vis">
+              <option value="public">공개 (누구나 읽기)</option>
+              <option value="private">나만보기 (관리자만 보기)</option>
+            </select>
+          </div>
+        </div>
+        <p class="label">제목</p>
+        <input placeholder="예: [신입 공개채용] 연구원 모집">
+        <p class="label">요약</p>
+        <input placeholder="목록 카드에 보이는 한 줄 설명">
+        <div class="row2">
+          <div><p class="label">근무지</p><input placeholder="본사(서울) 및 지점 각 지역"></div>
+          <div><p class="label">마감</p><input placeholder="2026-12-31 또는 추후 공지"></div>
+        </div>
+        <p class="label">사진 주소 (Unsplash 등 무료 사진 https 주소)</p>
+        <input placeholder="https://images.unsplash.com/...">
+        <p class="label">본문</p>
+        <textarea placeholder="본문을 입력하세요"></textarea>
+        <div><button class="btn primary" type="button" id="save">저장</button></div>
+        <p class="toast" id="save-out"></p>
+      </form>
+    </div>
+    <p class="note">화면 4 · 관리자 글쓰기: 공개 설정으로 공개 또는 나만보기를 고릅니다. 나만보기 글은 방문자 목록에 나오지 않습니다.</p>
+  </section>
+
+  <!-- 5. 문의하기 -->
+  <section class="screen" id="inquiry">
+    <div class="panel">
+      <h1>문의하기</h1>
+      <p class="lead">채용이나 교육에 관해 궁금한 점을 남겨 주세요. 로그인 후 문의를 남기면 인사팀이 확인합니다.</p>
+      <div id="inq-area"></div>
+    </div>
+    <p class="note">화면 5 · 문의하기: 로그인 전에는 안내와 로그인 버튼, 로그인 후에는 문의 폼.</p>
+  </section>
+
+</main>
+
+<a class="fab" href="#inquiry">문의하기</a>
+
+<script>
+  const state = { logged: false, liked: false, scraped: false, likes: 12, scraps: 5, comments: [
+    { name: "홍길동", text: "지원 자격을 조금 더 알고 싶습니다." }
+  ] };
+  const $ = id => document.getElementById(id);
+  const screens = ["home", "list", "detail", "admin", "inquiry"];
+
+  function show() {
+    const name = (location.hash || "#home").slice(1);
+    const s = screens.includes(name) ? name : "home";
+    screens.forEach(x => $(x).classList.toggle("on", x === s));
+    document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.s === s));
+    window.scrollTo(0, 0);
+    if (s === "inquiry") renderInquiry();
+    if (s === "detail") renderDetail();
+  }
+  window.addEventListener("hashchange", show);
+
+  function renderLoginState() {
+    $("login-sim").textContent = state.logged ? "로그아웃" : "로그인";
+    $("gate").hidden = state.logged;
+    renderDetail();
+    renderInquiry();
+  }
+
+  $("login-sim").onclick = () => { state.logged = !state.logged; renderLoginState(); };
+
+  $("apply-btn").onclick = () => {
+    if (!state.logged) { $("gate").hidden = false; $("apply-box").hidden = true; return; }
+    $("apply-box").hidden = false;
+  };
+
+  function renderDetail() {
+    $("like").setAttribute("aria-pressed", state.liked);
+    $("scrap").setAttribute("aria-pressed", state.scraped);
+    $("like-n").textContent = state.likes + (state.liked ? 1 : 0);
+    $("scrap-n").textContent = state.scraps + (state.scraped ? 1 : 0);
+    $("c-count").textContent = state.comments.length;
+    const list = state.comments.map(c => `<div class="card" style="margin-bottom:10px"><strong>${c.name}</strong><p style="margin:6px 0 0">${c.text}</p></div>`).join("");
+    $("c-area").innerHTML = list + (state.logged
+      ? `<form class="form" id="c-form" style="margin-top:12px"><textarea id="c-text" maxlength="500" placeholder="댓글을 남겨 주세요 (최대 500자)"></textarea><div><button class="btn primary" type="submit">댓글 등록</button></div></form>`
+      : `<div class="login-box">댓글은 Google 로그인 후 남길 수 있습니다.</div>`);
+    const form = $("c-form");
+    if (form) form.onsubmit = e => {
+      e.preventDefault();
+      const t = $("c-text").value.trim();
+      if (!t) return;
+      state.comments.push({ name: "나", text: t });
+      renderDetail();
+    };
+  }
+
+  $("like").onclick = () => {
+    if (!state.logged) { $("act-out").textContent = "좋아요는 로그인 후 가능합니다."; return; }
+    state.liked = !state.liked; $("act-out").textContent = ""; renderDetail();
+  };
+  $("scrap").onclick = () => {
+    if (!state.logged) { $("act-out").textContent = "스크랩은 로그인 후 가능합니다."; return; }
+    state.scraped = !state.scraped; $("act-out").textContent = state.scraped ? "내 계정에 스크랩했습니다." : "스크랩을 취소했습니다."; renderDetail();
+  };
+  $("share").onclick = () => { $("act-out").textContent = "공유 링크를 복사했습니다 (프로토타입)."; };
+
+  $("apply-form").onsubmit = e => {
+    e.preventDefault();
+    const email = $("ap-email").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("ap-out").textContent = "이메일 형식을 확인해 주세요."; return; }
+    $("ap-out").textContent = "지원이 접수되었습니다. 감사합니다. (프로토타입)";
+    e.target.reset();
+  };
+
+  function renderInquiry() {
+    $("inq-area").innerHTML = state.logged
+      ? `<form class="form"><p class="muted">로그인한 계정으로 문의합니다.</p><input placeholder="이름"><textarea placeholder="문의 내용 (최대 1000자)"></textarea><div><button class="btn primary" type="button" onclick="this.textContent='문의가 접수되었습니다'">문의 보내기</button></div></form>`
+      : `<div class="login-box"><p style="margin:0 0 10px">문의는 Google 로그인 후 남길 수 있습니다.</p><button class="btn primary" type="button" onclick="document.getElementById('login-sim').click()">Google 로그인</button></div>`;
+  }
+
+  $("save").onclick = () => { $("save-out").textContent = "저장되었습니다. (프로토타입: 실제 저장 없음)"; };
+
+  renderLoginState();
+  show();
+  if (!location.hash) location.hash = "home";
+</script>
+</body>
+</html>
