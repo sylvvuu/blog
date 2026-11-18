@@ -505,6 +505,9 @@ if (isConfigured) {
   onAuthStateChanged(auth, u => {
     user = u;
     if (authBtn) authBtn.textContent = u ? "로그아웃" : "로그인";
+    // 관리자 계정으로 로그인했을 때만 글쓰기 메뉴를 보여 준다
+    const adminLink = document.getElementById("admin-link");
+    if (adminLink) adminLink.hidden = !isAdminUser();
     route();
   });
 } else {

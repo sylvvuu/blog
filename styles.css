@@ -14,6 +14,7 @@ header.site .wrap { display: flex; align-items: center; justify-content: space-b
 .brand { font-weight: 700; font-size: 18px; color: var(--text); }
 nav a { margin-left: 22px; color: var(--muted); font-size: 15px; }
 nav a:hover { color: var(--brand); }
+nav a[hidden] { display: none; }
 main { padding: 40px 0 80px; min-height: 70vh; }
 .hero { margin-bottom: 28px; }
 .hero h1 { margin: 0 0 6px; font-size: 28px; }
