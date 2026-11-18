@@ -60,6 +60,10 @@ async function loadPosts() {
 }
 
 async function signIn() {
+  if (!isConfigured) {
+    alert("Firebase 설정값을 js/config.js에 입력한 뒤 사용할 수 있습니다.");
+    return;
+  }
   try {
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (e) {
@@ -421,7 +425,7 @@ async function route() {
   }
 }
 
-if (authBtn) authBtn.addEventListener("click", () => (user ? signOut(auth) : signIn()));
+if (authBtn) authBtn.addEventListener("click", () => (user && isConfigured ? signOut(auth) : signIn()));
 window.addEventListener("hashchange", route);
 
 if (isConfigured) {
