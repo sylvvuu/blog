@@ -20,6 +20,8 @@
   .btn { display:inline-block; border:1px solid #cfd7e0; background:#fff; color:var(--text); padding:9px 16px; border-radius:8px; font-size:14px; cursor:pointer; font-family:inherit; text-decoration:none; }
   .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
   .note { font-size:12px; color:var(--muted); margin:14px 0 0; }
+  body.paged .screen { display:none; }
+  body.paged .screen.on { display:block; }
   .screen { display:block; padding:56px 0; border-bottom:1px solid var(--line); scroll-margin-top:72px; }
   .screen:last-of-type { border-bottom:0; }
   .sec { font-size:12px; letter-spacing:.12em; color:var(--brand); font-weight:700; margin:0 0 10px; }
@@ -75,6 +77,7 @@
       <a href="#inquiry" data-s="inquiry">5 문의하기</a>
     </nav>
     <div class="spacer"></div>
+    <button class="btn" id="mode" type="button" style="font-size:13px">5개 화면으로 나눠 보기</button>
     <button class="btn" id="login-sim" type="button">로그인</button>
   </div>
 </header>
@@ -257,6 +260,24 @@
   }
 
   $("login-sim").onclick = () => { state.logged = !state.logged; renderLoginState(); };
+
+  // 보기 방식: 전체 스크롤 / 5개 화면 나눠 보기
+  function setScreen(name) {
+    screens.forEach(x => $(x).classList.toggle("on", x === name));
+    document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("on", a.dataset.s === name));
+    window.scrollTo(0, 0);
+  }
+  $("mode").onclick = () => {
+    const paged = document.body.classList.toggle("paged");
+    $("mode").textContent = paged ? "전체 스크롤로 보기" : "5개 화면으로 나눠 보기";
+    if (paged) setScreen("home");
+    else screens.forEach(x => $(x).classList.remove("on"));
+  };
+  document.querySelectorAll("#tabs a").forEach(a => a.addEventListener("click", e => {
+    if (!document.body.classList.contains("paged")) return;
+    e.preventDefault();
+    setScreen(a.dataset.s);
+  }));
 
   $("apply-btn").onclick = () => {
     if (!state.logged) { $("gate").hidden = false; $("apply-box").hidden = true; return; }
