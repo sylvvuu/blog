@@ -64,11 +64,18 @@ service cloud.firestore {
 
     // 사이트 설정 (날씨 위젯 기상청 인증키): 방문자가 읽고, 쓰기는 관리자만
     // 주의: 방문자 브라우저가 키를 받아야 하므로 이 키는 사실상 공개된다 (Firestore를 직접 읽으면 누구나 볼 수 있음)
-    match /settings/{settingId} {
+    match /settings/weather {
       allow read: if true;
       allow write: if isAdmin()
         && request.resource.data.kmaServiceKey is string
         && request.resource.data.kmaServiceKey.size() <= 200;
+    }
+    // 공공취업정보 인증키 (홈 맨 아래 목록용)
+    match /settings/jobs {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.serviceKey is string
+        && request.resource.data.serviceKey.size() <= 200;
     }
 
     // 명언: 방문자가 읽고, 관리자만 추가·삭제 (수정은 막음)
