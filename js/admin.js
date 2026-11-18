@@ -70,6 +70,31 @@ $("owm-save").addEventListener("click", async () => {
   }
 });
 
+// ---- 공공취업정보 인증키 ----
+async function loadJobsState() {
+  const snap = await getDoc(doc(db, "settings", "jobs"));
+  const key = snap.exists() ? snap.data().serviceKey : "";
+  $("jobs-state").textContent = key
+    ? `저장됨: ••••${key.slice(-4)} (홈 맨 아래 공공취업정보 표시 대상)`
+    : "저장된 키가 없습니다. 홈 목록이 숨겨진 상태입니다.";
+}
+
+$("jobs-save").addEventListener("click", async () => {
+  const key = $("jobs-key").value.trim();
+  if (key && key.length < 20) {
+    $("jobs-msg").textContent = "인증키가 너무 짧습니다. 공공데이터포털에서 복사한 키를 넣으세요.";
+    return;
+  }
+  try {
+    await setDoc(doc(db, "settings", "jobs"), { serviceKey: key, updatedAt: serverTimestamp() }, { merge: true });
+    $("jobs-key").value = "";
+    $("jobs-msg").textContent = key ? "저장했습니다." : "키를 지웠습니다.";
+    await loadJobsState();
+  } catch (e) {
+    $("jobs-msg").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
 // ---- 명언 관리 ----
 async function loadQuotes() {
   const snap = await getDocs(query(collection(db, "quotes"), orderBy("createdAt", "desc")));
@@ -110,6 +135,7 @@ $("quote-list").addEventListener("click", async (e) => {
 
 async function loadPosts() {
   loadQuotes().catch(() => { $("quote-msg").textContent = "명언 목록을 불러오지 못했습니다."; });
+  loadJobsState().catch(() => { $("jobs-state").textContent = "공공취업정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
