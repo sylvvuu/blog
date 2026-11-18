@@ -86,6 +86,56 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 .comment-form textarea { min-height: 100px; }
 .comment-form button { justify-self: start; }
 
+/* 메인 3개 칼럼: 칼럼 사이 세로선으로 구분 */
+.columns { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.col { padding: 28px 26px; min-height: 340px; }
+.col + .col { border-left: 1px solid var(--line); }
+.col-head h2 { margin: 0 0 6px; font-size: 22px; }
+.col-head p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.col-education .col-head h2 { color: var(--brand); }
+.col-recruit .col-head h2 { color: #1d6b5a; }
+.col-inquiry .col-head h2 { color: #6b4e9b; }
+.more { font-size: 14px; font-weight: 600; }
+.feature { display: block; background: var(--bg); border-radius: 10px; padding: 16px; margin-top: 16px; color: var(--text); }
+.feature h3 { margin: 10px 0 6px; font-size: 17px; line-height: 1.4; }
+.feature p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.feature time { color: var(--muted); font-size: 13px; }
+.art svg, .thumb svg, .post-art svg { display: block; width: 100%; height: auto; }
+.art { margin-top: 12px; max-width: 220px; }
+.thumb { background: var(--bg); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.thumb svg { height: 110px; width: 100%; }
+.post-art { max-width: 320px; margin: 0 0 24px; }
+.auth-btn { font: inherit; font-size: 14px; border: 1px solid var(--brand); color: var(--brand); background: #fff; border-radius: 999px; padding: 6px 14px; cursor: pointer; margin-left: 16px; }
+.login-box { text-align: center; background: var(--bg); border-radius: 10px; padding: 22px; }
+.login-box p { margin: 0 0 12px; color: var(--muted); }
+.who { font-size: 13px; color: var(--muted); margin: 0; }
+.inquiry { max-width: 620px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px; }
+.apply-box { margin-top: 28px; background: var(--bg); border-radius: 10px; padding: 22px; }
+.apply-box h2 { margin: 0 0 4px; font-size: 18px; }
+.apply-box[hidden] { display: none; }
+
+/* 좋아요 하트와 뾰로롱 효과 */
+.heart, .book { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; vertical-align: -3px; }
+.book { stroke-linejoin: round; }
+.act[aria-pressed="true"] .heart { fill: #e0457b; stroke: #e0457b; }
+.act[aria-pressed="true"] .book { fill: var(--brand); stroke: var(--brand); }
+.act { user-select: none; }
+.act.bump { animation: bump .35s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.pop { position: fixed; pointer-events: none; color: #e0457b; width: 20px; height: 20px; z-index: 50; animation: popup .9s ease-out forwards; }
+.pop svg { width: 100%; height: 100%; fill: currentColor; stroke: none; }
+@keyframes popup {
+  0% { transform: translate(0, 0) scale(.4); opacity: 0; }
+  15% { opacity: 1; transform: translate(0, -6px) scale(1.2); }
+  100% { transform: translate(var(--dx), -70px) rotate(var(--r)) scale(.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pop, .act.bump { display: none; animation: none; } }
+
+@media (max-width: 860px) {
+  .columns { grid-template-columns: 1fr; }
+  .col + .col { border-left: 0; border-top: 1px solid var(--line); }
+}
+
 /* 관리자 */
 .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
@@ -120,7 +170,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       <nav>
         <a href="#/education">교육</a>
         <a href="#/recruit">채용 공고</a>
+        <a href="#/inquiry">문의하기</a>
       </nav>
+      <button id="auth-btn" class="auth-btn" type="button">로그인</button>
     </div>
   </header>
   <main>
@@ -146,27 +198,56 @@ const COMPANY_NAME = "SY Electronics";
 
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, collection, getDocs, orderBy, query, doc, updateDoc, addDoc, increment, serverTimestamp
+  getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, addDoc, updateDoc, doc,
+  query, orderBy, increment, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = document.getElementById("app");
+const authBtn = document.getElementById("auth-btn");
 const isConfigured = !firebaseConfig.apiKey.startsWith("YOUR_");
-const db = isConfigured ? getFirestore(initializeApp(firebaseConfig)) : null;
+const fbApp = isConfigured ? initializeApp(firebaseConfig) : null;
+const db = fbApp ? getFirestore(fbApp) : null;
+const auth = fbApp ? getAuth(fbApp) : null;
+let user = null;
+
+const COLUMNS = {
+  education: { title: "교육", desc: "임직원의 업무 역량을 키우는 교육 프로그램을 안내합니다. 실무 중심으로 진행하며 본사와 지점 모두 참여할 수 있습니다." },
+  recruit: { title: "채용 공고", desc: "SY Electronics와 함께할 인재를 찾습니다. 신입공채와 경력직 채용 공고를 확인해 보세요." },
+  inquiry: { title: "문의하기", desc: "채용이나 교육에 관해 궁금한 점을 남겨 주세요. 로그인 후 문의를 남기면 인사팀이 확인합니다." }
+};
+
+// 글에 쓰는 그림 (직접 그린 SVG, 외부 이미지 없음)
+const ART = {
+  ai: '<svg viewBox="0 0 160 110" role="img" aria-label="AI 칩"><rect x="50" y="26" width="60" height="58" rx="8" fill="#1f4e79"/><rect x="63" y="39" width="34" height="32" rx="4" fill="#dbe8f5"/><circle cx="80" cy="55" r="6" fill="#4a90c2"/><path d="M36 40h14M36 55h14M36 70h14M110 40h14M110 55h14M110 70h14" stroke="#1f4e79" stroke-width="4" stroke-linecap="round"/></svg>',
+  ax: '<svg viewBox="0 0 160 110" role="img" aria-label="업무 혁신 톱니바퀴"><circle cx="62" cy="55" r="26" fill="none" stroke="#1f4e79" stroke-width="10" stroke-dasharray="8 6"/><circle cx="62" cy="55" r="14" fill="#1f4e79"/><circle cx="110" cy="50" r="18" fill="none" stroke="#4a90c2" stroke-width="8" stroke-dasharray="6 5"/><circle cx="110" cy="50" r="8" fill="#4a90c2"/></svg>',
+  recruit: '<svg viewBox="0 0 160 110" role="img" aria-label="팀"><circle cx="58" cy="38" r="12" fill="#1f4e79"/><path d="M38 92c0-22 40-22 40 0z" fill="#1f4e79"/><circle cx="102" cy="38" r="12" fill="#4a90c2"/><path d="M82 92c0-22 40-22 40 0z" fill="#4a90c2"/></svg>',
+  career: '<svg viewBox="0 0 160 110" role="img" aria-label="서류 가방"><path d="M62 38V28h36v10" fill="none" stroke="#1f4e79" stroke-width="6"/><rect x="42" y="38" width="76" height="54" rx="6" fill="#1f4e79"/><rect x="42" y="62" width="76" height="4" fill="#dbe8f5"/><rect x="72" y="56" width="16" height="12" rx="2" fill="#dbe8f5"/></svg>',
+  education: '<svg viewBox="0 0 160 110" role="img" aria-label="책"><path d="M28 34h52v54H28z" fill="#dbe8f5"/><path d="M80 34h52v54H80z" fill="#4a90c2"/><path d="M80 34v54" stroke="#1f4e79" stroke-width="2"/><path d="M38 50h30M38 62h24M92 50h30M92 62h24" stroke="#1f4e79" stroke-width="3" stroke-linecap="round"/></svg>',
+  inquiry: '<svg viewBox="0 0 160 110" role="img" aria-label="대화"><rect x="36" y="28" width="88" height="48" rx="12" fill="#1f4e79"/><path d="M58 76l-8 16 24-16z" fill="#1f4e79"/><rect x="58" y="44" width="44" height="5" rx="2" fill="#dbe8f5"/><rect x="58" y="56" width="28" height="5" rx="2" fill="#dbe8f5"/></svg>'
+};
+const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.6 5 6.2 5c2 0 3.5 1.1 4.3 2.5h3C14.3 6.1 15.8 5 17.8 5c3.6 0 5.3 3.6 3.8 6.8C19.5 16.4 12 21 12 21z"/></svg>';
+const BOOK = '<svg class="book" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
 
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = ts => (ts && ts.toDate ? ts.toDate().toLocaleDateString("ko-KR") : "");
+const artOf = p => ART[p.image] || ART[p.category === "recruit" ? "recruit" : "education"];
 
-// GA4 이벤트 전송 (index.html / admin.html의 gtag가 로드된 경우에만)
+// GA4 이벤트 전송 (index.html의 gtag가 로드된 경우)
 function track(name, params = {}) {
   if (typeof window.gtag === "function") window.gtag("event", name, params);
 }
 
-// 같은 브라우저에서 중복 좋아요·스크랩을 막기 위한 로컬 상태
-const memo = {
-  get: (kind, id) => localStorage.getItem(`hrblog:${kind}:${id}`) === "1",
-  set: (kind, id, on) => (on ? localStorage.setItem(`hrblog:${kind}:${id}`, "1") : localStorage.removeItem(`hrblog:${kind}:${id}`))
-};
+function statusOf(p) {
+  const d = Date.parse(p.deadline);
+  if (!isNaN(d) && d < Date.now() - 86400000) return "마감";
+  return "접수중";
+}
+
+function safeUrl(u = "") {
+  return /^https?:\/\//i.test(u) ? u : "";
+}
 
 let cache = null;
 async function loadPosts() {
@@ -176,36 +257,89 @@ async function loadPosts() {
   return cache;
 }
 
-function badgeOf(p) {
-  return p.category === "recruit" ? (p.jobType || "채용") : "교육";
+async function signIn() {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    console.error("로그인 실패", e);
+  }
 }
 
-function card(p) {
-  return `<a class="card" href="#/post/${esc(p.id)}">
-    <span class="badge">${esc(badgeOf(p))}</span>
+// ---------- 목록 화면 ----------
+
+function featuredCard(p) {
+  return `<a class="feature" href="#/post/${esc(p.id)}">
+    <div class="art">${artOf(p)}</div>
+    ${p.category === "recruit" ? `<span class="pill ${statusOf(p) === "접수중" ? "open" : "closed"}">${statusOf(p)}</span>` : ""}
     <h3>${esc(p.title)}</h3>
     <p>${esc(p.summary)}</p>
     <time>${fmtDate(p.createdAt)}</time>
   </a>`;
 }
 
-function renderList(posts, title, desc) {
-  const list = posts.length
-    ? `<div class="grid">${posts.map(card).join("")}</div>`
+function columnBlock(key, list) {
+  const c = COLUMNS[key];
+  const feat = list[0];
+  return `<section class="col col-${key}">
+    <header class="col-head">
+      <h2>${esc(c.title)}</h2>
+      <p>${esc(c.desc)}</p>
+      <a class="more" href="#/${key}">전체 보기 (${list.length}) &rarr;</a>
+    </header>
+    ${feat ? featuredCard(feat) : `<p class="empty">등록된 글이 없습니다.</p>`}
+  </section>`;
+}
+
+function renderHome(posts) {
+  const edu = posts.filter(p => p.category === "education");
+  const rec = posts.filter(p => p.category === "recruit");
+  app.innerHTML = `<div class="columns">
+    ${columnBlock("education", edu)}
+    ${columnBlock("recruit", rec)}
+    <section class="col col-inquiry">
+      <header class="col-head">
+        <h2>${esc(COLUMNS.inquiry.title)}</h2>
+        <p>${esc(COLUMNS.inquiry.desc)}</p>
+        <a class="more" href="#/inquiry">문의 작성하기 &rarr;</a>
+      </header>
+      <div class="art">${ART.inquiry}</div>
+    </section>
+  </div>`;
+}
+
+function renderList(key, posts) {
+  const c = COLUMNS[key];
+  const list = posts.filter(p => p.category === key);
+  const body = list.length
+    ? `<div class="grid">${list.map(p => `<a class="card" href="#/post/${esc(p.id)}">
+        <div class="thumb">${artOf(p)}</div>
+        ${p.category === "recruit" ? `<span class="badge">${esc(p.jobType || "채용")}</span>` : `<span class="badge">교육</span>`}
+        <h3>${esc(p.title)}</h3>
+        <p>${esc(p.summary)}</p>
+        <time>${fmtDate(p.createdAt)}</time>
+      </a>`).join("")}</div>`
     : `<p class="empty">등록된 글이 없습니다.</p>`;
-  app.innerHTML = `<section class="hero"><h1>${esc(title)}</h1><p>${esc(desc)}</p></section>${list}`;
+  app.innerHTML = `<section class="hero"><h1>${esc(c.title)}</h1><p>${esc(c.desc)}</p></section>${body}`;
 }
 
-// 접수 상태: 마감일이 지났으면 마감, 아니면 접수중
-function statusOf(p) {
-  const d = Date.parse(p.deadline);
-  if (!isNaN(d) && d < Date.now() - 86400000) return "마감";
-  return "접수중";
-}
+// ---------- 글 상세 ----------
 
-// 외부 지원 링크는 http(s)만 허용
-function safeUrl(u = "") {
-  return /^https?:\/\//i.test(u) ? u : "";
+function heartPop(el) {
+  const r = el.getBoundingClientRect();
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement("span");
+    s.className = "pop";
+    s.innerHTML = HEART;
+    s.style.left = (r.left + r.width / 2 - 10 + (i - 1) * 12) + "px";
+    s.style.top = (r.top - 4) + "px";
+    s.style.setProperty("--dx", ((i - 1) * 18 + (Math.random() * 10 - 5)) + "px");
+    s.style.setProperty("--r", ((i - 1) * 15) + "deg");
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 1000);
+  }
+  el.classList.remove("bump");
+  void el.offsetWidth;
+  el.classList.add("bump");
 }
 
 async function renderPost(posts, id) {
@@ -214,136 +348,258 @@ async function renderPost(posts, id) {
     app.innerHTML = `<p class="empty">글을 찾을 수 없습니다. <a href="#/">홈으로</a></p>`;
     return;
   }
+  const base = { post_id: id, post_title: p.title, category: p.category };
+  const isRec = p.category === "recruit";
+  const st = isRec ? statusOf(p) : "";
+  const isNew = isRec && p.jobType === "신입공채";
+  const applyBtn = !isRec ? "" : isNew
+    ? `<button class="btn primary" id="apply-open" type="button">지원하기</button>`
+    : (safeUrl(p.applyUrl)
+      ? `<a class="btn primary" href="${esc(safeUrl(p.applyUrl))}" target="_blank" rel="noopener" id="apply-btn">지원하기</a>`
+      : `<span class="btn muted">지원 방법은 인사팀 문의</span>`);
+  // 신입 지원: 이름과 전화번호만 입력
+  const applyPanel = isNew ? `<section id="apply-box" class="apply-box" hidden>
+      <h2>신입 지원</h2>
+      <p class="who">이름과 전화번호만 남기면 지원이 접수됩니다.</p>
+      <form id="apply-form" class="comment-form">
+        <input id="ap-name" maxlength="20" placeholder="이름" required>
+        <input id="ap-phone" type="tel" maxlength="20" placeholder="전화번호 (예: 010-1234-5678)" required>
+        <button type="submit">지원 완료하기</button>
+        <p class="msg" id="ap-msg"></p>
+      </form>
+    </section>` : "";
   const paras = String(p.body || "").split(/\n\s*\n/).map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
 
-  const head = p.category === "recruit"
-    ? (() => {
-        const status = statusOf(p);
-        const apply = safeUrl(p.applyUrl)
-          ? `<a class="btn primary" href="${esc(safeUrl(p.applyUrl))}" target="_blank" rel="noopener" id="apply-btn">지원하기</a>`
-          : `<span class="btn primary muted">지원 방법은 인사팀 문의</span>`;
-        return `<div class="job-head">
-          <div>
-            <span class="pill ${status === "접수중" ? "open" : "closed"}">${status}</span>
-            <h1>${esc(p.title)}</h1>
-            <p class="job-sub"><span class="tag">${esc(p.jobType || "채용")}</span> ${esc(p.location || "")}</p>
-            ${p.deadline ? `<p class="job-period">마감 ${esc(p.deadline)}</p>` : ""}
-          </div>
-          <div class="job-actions">
-            ${apply}
-            <button class="btn ghost" id="share-btn">공유하기</button>
-            <p class="msg" id="share-msg"></p>
-          </div>
-        </div>`;
-      })()
-    : `<span class="badge">교육</span>
-       <h1>${esc(p.title)}</h1>
-       <time>${fmtDate(p.createdAt)}</time>`;
-
   app.innerHTML = `<article class="post">
-    ${p.category === "recruit" ? "" : `<a class="back" href="#/">&larr; 목록으로</a>`}
-    ${head}
+    <a class="back" href="#/${p.category}">&larr; ${esc(COLUMNS[p.category].title)} 목록</a>
+    <div class="post-art">${artOf(p)}</div>
+    <div class="job-head"><div>
+      ${isRec ? `<span class="pill ${st === "접수중" ? "open" : "closed"}">${st}</span>` : `<span class="badge">교육</span>`}
+      <h1>${esc(p.title)}</h1>
+      ${isRec ? `<p class="job-sub"><span class="badge">${esc(p.jobType || "채용")}</span> ${esc(p.location || "")}</p>` : ""}
+      ${isRec && p.deadline ? `<p class="job-period">마감 ${esc(p.deadline)}</p>` : ""}
+      ${!isRec ? `<time>${fmtDate(p.createdAt)}</time>` : ""}
+    </div>
+    <div class="job-actions">${applyBtn}</div></div>
+    ${applyPanel}
     <div class="body">${paras}</div>
-    <div class="bottom-nav"><a class="btn ghost" href="${p.category === "recruit" ? "#/recruit" : "#/education"}">목록으로</a></div>
 
     <div class="actions">
-      <button class="act" id="like-btn" aria-pressed="${memo.get("like", id)}">
-        <span>좋아요</span> <strong id="like-count">${p.likes || 0}</strong>
-      </button>
-      <button class="act" id="scrap-btn" aria-pressed="${memo.get("scrap", id)}">
-        <span>스크랩</span> <strong id="scrap-count">${p.scraps || 0}</strong>
-      </button>
-      <a class="act" href="#comments"><span>댓글</span> <strong id="comment-count">0</strong></a>
+      <button class="act" id="like-btn" aria-pressed="false">${HEART}<span>좋아요</span> <strong id="like-count">0</strong></button>
+      <button class="act" id="scrap-btn" aria-pressed="false">${BOOK}<span>스크랩</span> <strong id="scrap-count">0</strong></button>
+      <button class="act" id="share-btn">공유하기</button>
     </div>
+    <p class="msg" id="action-msg"></p>
 
     <section id="comments" class="comments">
-      <h2>댓글</h2>
+      <h2>댓글 <span id="comment-count">0</span></h2>
       <ul id="comment-list" class="comment-list"><li class="empty">불러오는 중...</li></ul>
-      <form id="comment-form" class="comment-form">
-        <input id="c-name" maxlength="20" placeholder="이름" required>
-        <textarea id="c-text" maxlength="500" placeholder="댓글을 남겨 주세요 (최대 500자)" required></textarea>
-        <button type="submit">댓글 등록</button>
-        <p id="c-msg" class="msg"></p>
-      </form>
+      <div id="comment-box"></div>
     </section>
+
+    <div class="bottom-nav"><a class="btn ghost" href="#/${p.category}">목록으로</a></div>
   </article>`;
 
-  const ref = doc(db, "posts", id);
-  const base = { post_id: id, post_title: p.title, category: p.category || "education" };
+  track("post_view", base);
 
-  // 공유하기: 현재 주소를 클립보드에 복사
-  document.getElementById("share-btn").addEventListener("click", async () => {
-    const msg = document.getElementById("share-msg");
+  // 내 상태 확인 (로그인한 경우에만)
+  let liked = false, scraped = false, likeCount = p.likes || 0, scrapCount = p.scraps || 0;
+  if (user) {
+    const [l, s] = await Promise.all([
+      getDoc(doc(db, "posts", id, "likes", user.uid)),
+      getDoc(doc(db, "users", user.uid, "scraps", id))
+    ]);
+    liked = l.exists();
+    scraped = s.exists();
+  }
+
+  const likeBtn = document.getElementById("like-btn");
+  const scrapBtn = document.getElementById("scrap-btn");
+  const actionMsg = document.getElementById("action-msg");
+
+  function paint() {
+    likeBtn.setAttribute("aria-pressed", String(liked));
+    scrapBtn.setAttribute("aria-pressed", String(scraped));
+    document.getElementById("like-count").textContent = likeCount;
+    document.getElementById("scrap-count").textContent = scrapCount;
+  }
+  paint();
+
+  // 좋아요: 로그인 필요, 누를 때 하트 효과
+  likeBtn.onclick = async () => {
+    if (!user) return signIn();
+    likeBtn.disabled = true;
+    const on = !liked;
     try {
-      await navigator.clipboard.writeText(location.href);
-      msg.textContent = "주소를 복사했습니다.";
-      track("post_share", base);
-    } catch {
-      msg.textContent = "복사에 실패했습니다. 주소창의 주소를 직접 복사해 주세요.";
+      const ref = doc(db, "posts", id, "likes", user.uid);
+      if (on) await setDoc(ref, { at: serverTimestamp() });
+      else await deleteDoc(ref);
+      await updateDoc(doc(db, "posts", id), { likes: increment(on ? 1 : -1) });
+      liked = on;
+      likeCount = Math.max(0, likeCount + (on ? 1 : -1));
+      paint();
+      if (on) heartPop(likeBtn);
+      track(on ? "post_like" : "post_unlike", base);
+    } catch (e) {
+      actionMsg.textContent = "좋아요 처리에 실패했습니다: " + e.message;
+    } finally {
+      likeBtn.disabled = false;
     }
-  });
+  };
 
-  // 지원하기 클릭 기록
+  // 스크랩: 로그인(구글 계정 인증) 후 내 계정에 저장
+  scrapBtn.onclick = async () => {
+    if (!user) return signIn();
+    scrapBtn.disabled = true;
+    const on = !scraped;
+    try {
+      const ref = doc(db, "users", user.uid, "scraps", id);
+      if (on) await setDoc(ref, { title: p.title, at: serverTimestamp() });
+      else await deleteDoc(ref);
+      await updateDoc(doc(db, "posts", id), { scraps: increment(on ? 1 : -1) });
+      scraped = on;
+      scrapCount = Math.max(0, scrapCount + (on ? 1 : -1));
+      paint();
+      actionMsg.textContent = on ? "내 계정에 스크랩했습니다." : "스크랩을 취소했습니다.";
+      track(on ? "post_scrap" : "post_unscrap", base);
+    } catch (e) {
+      actionMsg.textContent = "스크랩 처리에 실패했습니다: " + e.message;
+    } finally {
+      scrapBtn.disabled = false;
+    }
+  };
+
+  // 공유하기: 현재 주소 공유 또는 복사
+  document.getElementById("share-btn").onclick = async () => {
+    const link = location.href.split("#")[0] + "#/post/" + id;
+    try {
+      if (navigator.share) await navigator.share({ title: p.title, url: link });
+      else await navigator.clipboard.writeText(link);
+      actionMsg.textContent = "공유 링크를 준비했습니다.";
+    } catch (e) {
+      actionMsg.textContent = "공유에 실패했습니다. 주소창의 주소를 직접 복사해 주세요.";
+    }
+    track("post_share", base);
+  };
+
   document.getElementById("apply-btn")?.addEventListener("click", () => track("post_apply", base));
 
-  // 좋아요: 누르면 +1, 다시 누르면 -1 (같은 브라우저 기준)
-  document.getElementById("like-btn").addEventListener("click", async e => {
-    const btn = e.currentTarget;
-    const on = !memo.get("like", id);
-    btn.disabled = true;
-    try {
-      await updateDoc(ref, { likes: increment(on ? 1 : -1) });
-      memo.set("like", id, on);
-      btn.setAttribute("aria-pressed", String(on));
-      const c = document.getElementById("like-count");
-      c.textContent = Math.max(0, Number(c.textContent) + (on ? 1 : -1));
-      track(on ? "post_like" : "post_unlike", base);
-    } finally { btn.disabled = false; }
-  });
+  const applyOpen = document.getElementById("apply-open");
+  if (applyOpen) {
+    applyOpen.onclick = () => {
+      const box = document.getElementById("apply-box");
+      box.hidden = false;
+      box.scrollIntoView({ behavior: "smooth" });
+      track("post_apply", base);
+    };
+    document.getElementById("apply-form").onsubmit = async e => {
+      e.preventDefault();
+      const out = document.getElementById("ap-msg");
+      const name = document.getElementById("ap-name").value.trim().slice(0, 20);
+      const phone = document.getElementById("ap-phone").value.trim();
+      if (!/^[0-9+\-\s]{9,20}$/.test(phone)) {
+        out.textContent = "전화번호 형식을 확인해 주세요. 숫자와 하이픈만 입력할 수 있습니다.";
+        return;
+      }
+      try {
+        await addDoc(collection(db, "applications"), {
+          postId: id,
+          postTitle: p.title,
+          name,
+          phone,
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+        out.textContent = "지원이 접수되었습니다. 감사합니다.";
+        track("post_apply_submit", base);
+      } catch (err) {
+        out.textContent = "지원 접수에 실패했습니다: " + err.message;
+      }
+    };
+  }
 
-  // 스크랩: 누르면 +1, 다시 누르면 -1 (같은 브라우저 기준)
-  document.getElementById("scrap-btn").addEventListener("click", async e => {
-    const btn = e.currentTarget;
-    const on = !memo.get("scrap", id);
-    btn.disabled = true;
-    try {
-      await updateDoc(ref, { scraps: increment(on ? 1 : -1) });
-      memo.set("scrap", id, on);
-      btn.setAttribute("aria-pressed", String(on));
-      const c = document.getElementById("scrap-count");
-      c.textContent = Math.max(0, Number(c.textContent) + (on ? 1 : -1));
-      track(on ? "post_scrap" : "post_unscrap", base);
-    } finally { btn.disabled = false; }
-  });
+  // 댓글: 로그인 필요
+  async function loadComments() {
+    const snap = await getDocs(query(collection(db, "posts", id, "comments"), orderBy("createdAt", "asc")));
+    const list = snap.docs.map(d => d.data());
+    document.getElementById("comment-count").textContent = list.length;
+    document.getElementById("comment-list").innerHTML = list.length
+      ? list.map(c => `<li><div class="c-head"><strong>${esc(c.name)}</strong> <time>${fmtDate(c.createdAt)}</time></div><p>${esc(c.text)}</p></li>`).join("")
+      : `<li class="empty">첫 댓글을 남겨 주세요.</li>`;
+  }
+  await loadComments();
 
-  await loadComments(id);
+  const box = document.getElementById("comment-box");
+  if (!user) {
+    box.innerHTML = `<div class="login-box"><p>댓글은 Google 로그인 후 남길 수 있습니다.</p><button class="btn primary" id="comment-login">Google 로그인</button></div>`;
+    document.getElementById("comment-login").onclick = signIn;
+  } else {
+    box.innerHTML = `<form id="comment-form" class="comment-form">
+      <p class="who">${esc(user.displayName || user.email)} 님으로 작성</p>
+      <textarea id="c-text" maxlength="500" placeholder="댓글을 남겨 주세요 (최대 500자)" required></textarea>
+      <button type="submit">댓글 등록</button>
+      <p class="msg" id="c-msg"></p>
+    </form>`;
+    document.getElementById("comment-form").onsubmit = async e => {
+      e.preventDefault();
+      const text = document.getElementById("c-text").value.trim();
+      if (!text) return;
+      try {
+        await addDoc(collection(db, "posts", id, "comments"), {
+          uid: user.uid,
+          name: String(user.displayName || user.email || "사용자").slice(0, 20),
+          text,
+          createdAt: serverTimestamp()
+        });
+        document.getElementById("c-text").value = "";
+        document.getElementById("c-msg").textContent = "댓글이 등록되었습니다.";
+        track("post_comment", { ...base, comment_length: text.length });
+        await loadComments();
+      } catch (err) {
+        document.getElementById("c-msg").textContent = "댓글 등록에 실패했습니다: " + err.message;
+      }
+    };
+  }
+}
 
-  document.getElementById("comment-form").addEventListener("submit", async e => {
+// ---------- 문의하기 ----------
+
+function renderInquiry() {
+  const body = user
+    ? `<form id="inq-form" class="comment-form">
+        <p class="who">${esc(user.email)} 계정으로 문의합니다.</p>
+        <input id="q-name" maxlength="20" value="${esc(user.displayName || "")}" placeholder="이름" required>
+        <textarea id="q-msg" maxlength="1000" placeholder="문의 내용 (최대 1000자)" required></textarea>
+        <button type="submit">문의 보내기</button>
+        <p class="msg" id="q-out"></p>
+      </form>`
+    : `<div class="login-box"><p>문의는 Google 로그인 후 남길 수 있습니다.</p><button class="btn primary" id="inq-login">Google 로그인</button></div>`;
+  app.innerHTML = `<section class="hero"><h1>${esc(COLUMNS.inquiry.title)}</h1><p>${esc(COLUMNS.inquiry.desc)}</p></section><div class="inquiry">${body}</div>`;
+  if (!user) {
+    document.getElementById("inq-login").onclick = signIn;
+    return;
+  }
+  document.getElementById("inq-form").onsubmit = async e => {
     e.preventDefault();
-    const name = document.getElementById("c-name").value.trim();
-    const text = document.getElementById("c-text").value.trim();
-    const msg = document.getElementById("c-msg");
-    if (!name || !text) return;
+    const out = document.getElementById("q-out");
     try {
-      await addDoc(collection(db, "posts", id, "comments"), { name, text, createdAt: serverTimestamp() });
-      document.getElementById("c-text").value = "";
-      msg.textContent = "댓글이 등록되었습니다.";
-      track("post_comment", { ...base, comment_length: text.length });
-      await loadComments(id);
+      await addDoc(collection(db, "inquiries"), {
+        uid: user.uid,
+        name: document.getElementById("q-name").value.trim().slice(0, 20),
+        email: user.email || "",
+        message: document.getElementById("q-msg").value.trim(),
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("q-msg").value = "";
+      out.textContent = "문의가 접수되었습니다. 확인 후 답변드리겠습니다.";
+      track("inquiry_submit");
     } catch (err) {
-      msg.textContent = "댓글 등록에 실패했습니다: " + err.message;
+      out.textContent = "문의 접수에 실패했습니다: " + err.message;
     }
-  });
+  };
 }
 
-async function loadComments(postId) {
-  const snap = await getDocs(query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc")));
-  const list = snap.docs.map(d => d.data());
-  document.getElementById("comment-count").textContent = list.length;
-  document.getElementById("comment-list").innerHTML = list.length
-    ? list.map(c => `<li><div class="c-head"><strong>${esc(c.name)}</strong> <time>${fmtDate(c.createdAt)}</time></div><p>${esc(c.text)}</p></li>`).join("")
-    : `<li class="empty">첫 댓글을 남겨 주세요.</li>`;
-}
+// ---------- 라우팅 ----------
 
 async function route() {
   if (!isConfigured) {
@@ -351,20 +607,31 @@ async function route() {
     return;
   }
   const hash = location.hash.replace(/^#/, "") || "/";
+  if (hash === "/inquiry") return renderInquiry();
   app.innerHTML = `<p class="loading">불러오는 중...</p>`;
   try {
     const posts = await loadPosts();
     if (hash.startsWith("/post/")) return await renderPost(posts, decodeURIComponent(hash.slice(6)));
-    if (hash === "/education") return renderList(posts.filter(p => p.category === "education"), "교육", "임직원 대상 교육 프로그램 안내");
-    if (hash === "/recruit") return renderList(posts.filter(p => p.category === "recruit"), "채용 공고", "SY Electronics 채용 공고");
-    renderList(posts, "최신 글", "인사팀이 전하는 채용과 교육 소식");
+    if (hash === "/education" || hash === "/recruit") return renderList(hash.slice(1), posts);
+    renderHome(posts);
   } catch (e) {
     app.innerHTML = `<div class="notice">글을 불러오지 못했습니다: ${esc(e.message)}</div>`;
   }
 }
 
+if (authBtn) authBtn.addEventListener("click", () => (user ? signOut(auth) : signIn()));
 window.addEventListener("hashchange", route);
-route();
+
+if (isConfigured) {
+  // 로그인 상태가 바뀌면 현재 화면을 다시 그린다
+  onAuthStateChanged(auth, u => {
+    user = u;
+    if (authBtn) authBtn.textContent = u ? "로그아웃" : "로그인";
+    route();
+  });
+} else {
+  route();
+}
 
 </script>
 </body>

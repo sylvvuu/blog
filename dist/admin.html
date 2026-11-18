@@ -86,6 +86,56 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 .comment-form textarea { min-height: 100px; }
 .comment-form button { justify-self: start; }
 
+/* 메인 3개 칼럼: 칼럼 사이 세로선으로 구분 */
+.columns { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.col { padding: 28px 26px; min-height: 340px; }
+.col + .col { border-left: 1px solid var(--line); }
+.col-head h2 { margin: 0 0 6px; font-size: 22px; }
+.col-head p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.col-education .col-head h2 { color: var(--brand); }
+.col-recruit .col-head h2 { color: #1d6b5a; }
+.col-inquiry .col-head h2 { color: #6b4e9b; }
+.more { font-size: 14px; font-weight: 600; }
+.feature { display: block; background: var(--bg); border-radius: 10px; padding: 16px; margin-top: 16px; color: var(--text); }
+.feature h3 { margin: 10px 0 6px; font-size: 17px; line-height: 1.4; }
+.feature p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.feature time { color: var(--muted); font-size: 13px; }
+.art svg, .thumb svg, .post-art svg { display: block; width: 100%; height: auto; }
+.art { margin-top: 12px; max-width: 220px; }
+.thumb { background: var(--bg); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.thumb svg { height: 110px; width: 100%; }
+.post-art { max-width: 320px; margin: 0 0 24px; }
+.auth-btn { font: inherit; font-size: 14px; border: 1px solid var(--brand); color: var(--brand); background: #fff; border-radius: 999px; padding: 6px 14px; cursor: pointer; margin-left: 16px; }
+.login-box { text-align: center; background: var(--bg); border-radius: 10px; padding: 22px; }
+.login-box p { margin: 0 0 12px; color: var(--muted); }
+.who { font-size: 13px; color: var(--muted); margin: 0; }
+.inquiry { max-width: 620px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px; }
+.apply-box { margin-top: 28px; background: var(--bg); border-radius: 10px; padding: 22px; }
+.apply-box h2 { margin: 0 0 4px; font-size: 18px; }
+.apply-box[hidden] { display: none; }
+
+/* 좋아요 하트와 뾰로롱 효과 */
+.heart, .book { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; vertical-align: -3px; }
+.book { stroke-linejoin: round; }
+.act[aria-pressed="true"] .heart { fill: #e0457b; stroke: #e0457b; }
+.act[aria-pressed="true"] .book { fill: var(--brand); stroke: var(--brand); }
+.act { user-select: none; }
+.act.bump { animation: bump .35s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.pop { position: fixed; pointer-events: none; color: #e0457b; width: 20px; height: 20px; z-index: 50; animation: popup .9s ease-out forwards; }
+.pop svg { width: 100%; height: 100%; fill: currentColor; stroke: none; }
+@keyframes popup {
+  0% { transform: translate(0, 0) scale(.4); opacity: 0; }
+  15% { opacity: 1; transform: translate(0, -6px) scale(1.2); }
+  100% { transform: translate(var(--dx), -70px) rotate(var(--r)) scale(.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pop, .act.bump { display: none; animation: none; } }
+
+@media (max-width: 860px) {
+  .columns { grid-template-columns: 1fr; }
+  .col + .col { border-left: 0; border-top: 1px solid var(--line); }
+}
+
 /* 관리자 */
 .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
@@ -165,6 +215,16 @@ button:disabled { opacity: .5; cursor: not-allowed; }
             <input id="f-applyUrl" placeholder="https://">
           </div>
 
+          <label for="f-image">그림</label>
+          <select id="f-image">
+            <option value="">자동 (분류에 맞게)</option>
+            <option value="education">교육</option>
+            <option value="ai">AI 교육</option>
+            <option value="ax">AX·업무 혁신</option>
+            <option value="recruit">신입·팀 채용</option>
+            <option value="career">경력직</option>
+          </select>
+
           <label for="f-title">제목</label>
           <input id="f-title" required>
 
@@ -207,6 +267,7 @@ const SEED_POSTS = [
   {
     category: "education",
     jobType: null,
+    image: "ai",
     title: "AI 활용 교육 안내: 임직원 생성형 AI 실무 과정",
     summary: "업무에 바로 쓸 수 있는 생성형 AI 활용법을 배우는 실무 중심 교육입니다.",
     location: "",
@@ -216,6 +277,7 @@ const SEED_POSTS = [
   {
     category: "education",
     jobType: null,
+    image: "ax",
     title: "AI·AX 업무 혁신 교육: 업무 자동화에서 조직 전환까지",
     summary: "AI 기반 업무 혁신(AX)의 개념과 실제 적용 사례를 함께 살펴보는 교육입니다.",
     location: "",
@@ -225,6 +287,7 @@ const SEED_POSTS = [
   {
     category: "recruit",
     jobType: "신입공채",
+    image: "recruit",
     title: "[신입 공개채용] 연구원 모집",
     summary: "SY Electronics 연구원 신입 공개채용 안내입니다.",
     location: "본사(서울) 및 지점 각 지역",
@@ -234,6 +297,7 @@ const SEED_POSTS = [
   {
     category: "recruit",
     jobType: "경력직",
+    image: "career",
     title: "[경력직 채용] 연구원 모집",
     summary: "관련 분야 경력을 가진 연구원을 모집합니다.",
     location: "본사(서울) 및 지점 각 지역",
@@ -321,6 +385,7 @@ function fillForm(p = {}) {
   $("f-location").value = p.location || "";
   $("f-deadline").value = p.deadline || "";
   $("f-applyUrl").value = p.applyUrl || "";
+  $("f-image").value = p.image || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
@@ -340,6 +405,7 @@ $("post-form").addEventListener("submit", async e => {
     location: $("f-location").value.trim(),
     deadline: $("f-deadline").value.trim(),
     applyUrl: $("f-applyUrl").value.trim(),
+    image: $("f-image").value || null,
     body: $("f-body").value
   };
   const id = $("f-id").value;

@@ -1,33 +1,72 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 누구나 글을 읽을 수 있음
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 관리자: 허용된 Google 계정 (이메일 인증 완료)
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email == "fkdna3@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    // 글: 누구나 읽기, 관리자만 작성·삭제
+    // 로그인한 사용자는 좋아요·스크랩 카운터 숫자만 바꿀 수 있음
     match /posts/{postId} {
       allow read: if true;
-      // 관리자는 글 작성·수정·삭제 가능
       allow create, delete: if isAdmin();
-      allow update: if isAdmin() || onlyCountersChanged();
-      // 방문자는 좋아요·스크랩 카운터만 바꿀 수 있음 (증감 1회, 0 미만 금지)
-      function onlyCountersChanged() {
-        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'scraps'])
-          && request.resource.data.likes >= 0
-          && request.resource.data.scraps >= 0;
-      }
-      function isAdmin() {
-        return request.auth != null
-          && request.auth.token.email == "fkdna3@gmail.com"
-          && request.auth.token.email_verified == true;
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'scraps'])
+        && request.resource.data.get('likes', 0) >= 0
+        && request.resource.data.get('scraps', 0) >= 0
+      );
+
+      // 좋아요: 사용자 본인 uid 문서로 기록 (한 사람당 1개)
+      match /likes/{uid} {
+        allow read: if true;
+        allow create, delete: if isSignedIn() && request.auth.uid == uid;
       }
 
-      // 댓글: 누구나 작성 가능 (이름 20자, 내용 500자 이하), 삭제는 관리자만
+      // 댓글: 로그인 사용자만 작성, 삭제는 관리자만
       match /comments/{commentId} {
         allow read: if true;
-        allow create: if request.resource.data.name is string
+        allow create: if isSignedIn()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.name is string
           && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500;
         allow delete: if isAdmin();
       }
+    }
+
+    // 스크랩: 본인 계정 아래에만 저장 (로그인 필요)
+    match /users/{uid}/scraps/{postId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // 신입 지원: 이름과 전화번호만 저장, 누구나 제출 가능, 읽기·삭제는 관리자만
+    match /applications/{applicationId} {
+      allow create: if request.resource.data.name is string
+        && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 9 && request.resource.data.phone.size() <= 20
+        && request.resource.data.postId is string && request.resource.data.postId.size() <= 100;
+      allow read, delete: if isAdmin();
+    }
+
+    // 문의: 로그인 사용자가 작성, 읽기·삭제는 관리자만
+    match /inquiries/{inquiryId} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 20
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 1000;
+      allow read, delete: if isAdmin();
     }
   }
 }

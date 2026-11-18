@@ -4,6 +4,7 @@ export const SEED_POSTS = [
   {
     category: "education",
     jobType: null,
+    image: "ai",
     title: "AI 활용 교육 안내: 임직원 생성형 AI 실무 과정",
     summary: "업무에 바로 쓸 수 있는 생성형 AI 활용법을 배우는 실무 중심 교육입니다.",
     location: "",
@@ -13,6 +14,7 @@ export const SEED_POSTS = [
   {
     category: "education",
     jobType: null,
+    image: "ax",
     title: "AI·AX 업무 혁신 교육: 업무 자동화에서 조직 전환까지",
     summary: "AI 기반 업무 혁신(AX)의 개념과 실제 적용 사례를 함께 살펴보는 교육입니다.",
     location: "",
@@ -22,6 +24,7 @@ export const SEED_POSTS = [
   {
     category: "recruit",
     jobType: "신입공채",
+    image: "recruit",
     title: "[신입 공개채용] 연구원 모집",
     summary: "SY Electronics 연구원 신입 공개채용 안내입니다.",
     location: "본사(서울) 및 지점 각 지역",
@@ -31,6 +34,7 @@ export const SEED_POSTS = [
   {
     category: "recruit",
     jobType: "경력직",
+    image: "career",
     title: "[경력직 채용] 연구원 모집",
     summary: "관련 분야 경력을 가진 연구원을 모집합니다.",
     location: "본사(서울) 및 지점 각 지역",
