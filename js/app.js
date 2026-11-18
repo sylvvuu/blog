@@ -626,17 +626,46 @@ if (isConfigured) {
 // 날씨 위젯은 페이지와 상관없이 항상 표시한다
 loadSeoulWeather();
 
-// 명언: 페이지를 열 때마다 등록된 명언 중 하나를 무작위로 보여 준다
+// 명언: 페이지를 열 때마다 외부 명언 API에서 새 명언을 받아 보여 준다.
+// API가 실패하면 관리자 화면에 등록된 명언 중 하나를 무작위로 보여 준다.
+const QUOTE_API = "https://random-quote.hyobb.com/";
+
+// 응답: [{result:"success"},{respond:"명언 - 작가"}]
+function parseApiQuote(data) {
+  const s = String(data?.[1]?.respond || "").trim();
+  const i = s.lastIndexOf(" - ");
+  return i > 0 ? { text: s.slice(0, i).trim(), author: s.slice(i + 3).trim() } : { text: s, author: "" };
+}
+
+async function fetchApiQuote() {
+  const res = await fetch(QUOTE_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const q = parseApiQuote(await res.json());
+  if (!q.text) throw new Error("empty quote");
+  return q;
+}
+
+async function fetchLocalQuote() {
+  const snap = await getDocs(collection(db, "quotes"));
+  const list = snap.docs.map(d => d.data()).filter(q => q.text);
+  return list.length ? list[Math.floor(Math.random() * list.length)] : null;
+}
+
+function drawQuote(el, q) {
+  el.innerHTML = `<span class="quote-text">“${esc(q.text)}”</span>${q.author ? ` <span class="quote-author">— ${esc(q.author)}</span>` : ""}`;
+  el.hidden = false;
+}
+
 async function loadRandomQuote() {
   const el = document.getElementById("quote");
-  if (!el || !db) return;
+  if (!el) return;
   try {
-    const snap = await getDocs(collection(db, "quotes"));
-    const list = snap.docs.map(d => d.data()).filter(q => q.text);
-    if (!list.length) { el.hidden = true; return; }
-    const q = list[Math.floor(Math.random() * list.length)];
-    el.innerHTML = `<span class="quote-text">“${esc(q.text)}”</span>${q.author ? ` <span class="quote-author">— ${esc(q.author)}</span>` : ""}`;
-    el.hidden = false;
+    drawQuote(el, await fetchApiQuote());
+    return;
+  } catch (e) { /* API 실패 시 아래 대체 명언 사용 */ }
+  try {
+    const q = db ? await fetchLocalQuote() : null;
+    if (q) drawQuote(el, q); else el.hidden = true;
   } catch (e) {
     el.hidden = true;
   }
