@@ -37,9 +37,18 @@ const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<":
 const fmtDate = ts => (ts && ts.toDate ? ts.toDate().toLocaleDateString("ko-KR") : "");
 const artOf = p => ART[p.image] || ART[p.category === "recruit" ? "recruit" : "education"];
 // 글 그림: 웹에서 찾은 사진(imageUrl)이 있으면 사진, 없으면 직접 그린 SVG
-const artHtml = p => p.imageUrl
-  ? `<img src="${esc(p.imageUrl)}" alt="" loading="lazy">`
-  : artOf(p);
+// 본문에서 처음 나오는 이미지(검사 통과한 것만)를 찾는다
+const bodyThumb = p => {
+  const m = String(p.body || "").match(/\[\[img:([\w-]+)\]\]/);
+  const im = m && (Array.isArray(p.images) ? p.images : []).find(i => i && i.id === m[1]);
+  return im && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(im.data) ? im.data : null;
+};
+// useBody: 목록 카드에서만 대표 이미지가 없으면 본문 첫 이미지를 쓴다
+const artHtml = (p, useBody = false) => {
+  if (p.imageUrl) return `<img src="${esc(p.imageUrl)}" alt="" loading="lazy">`;
+  const thumb = useBody ? bodyThumb(p) : null;
+  return thumb ? `<img src="${thumb}" alt="" loading="lazy">` : artOf(p);
+};
 const creditHtml = p => (p.imageCredit ? `<p class="credit">${esc(p.imageCredit)}</p>` : "");
 
 // GA4 이벤트 전송 (index.html의 gtag가 로드된 경우)
@@ -140,7 +149,7 @@ function renderList(key, posts) {
   const list = posts.filter(p => p.category === key);
   const body = list.length
     ? `<div class="grid">${list.map(p => `<a class="card" href="#/post/${esc(p.id)}">
-        <div class="thumb">${artHtml(p)}</div>
+        <div class="thumb">${artHtml(p, true)}</div>
         ${p.category === "recruit" ? `<span class="badge">${esc(p.jobType || "채용")}</span>` : `<span class="badge">교육</span>`}
         <h3>${esc(p.title)}</h3>
         <p>${esc(p.summary)}</p>
