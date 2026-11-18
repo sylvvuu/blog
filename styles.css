@@ -198,3 +198,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .quote-bar { padding:14px 16px; margin:12px 0 0; background:#fff; border:1px solid var(--line, #e5e7eb); border-radius:10px; font-size:15px; text-align:center; }
 .quote-bar[hidden] { display:none; }
 .quote-author { color:var(--muted, #6b7280); font-size:13px; }
+
+/* 명언: 화면 왼쪽 아래 고정 */
+.quote-bar { position:fixed; left:16px; bottom:16px; max-width:320px; margin:0; padding:12px 14px; text-align:left; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,.08); }
