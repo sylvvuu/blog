@@ -201,3 +201,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* 명언: 화면 왼쪽 아래 고정 */
 .quote-bar { position:fixed; left:16px; bottom:16px; max-width:320px; margin:0; padding:12px 14px; text-align:left; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,.08); }
+
+/* 홈 맨 아래 공공취업정보 */
+.jobs-panel { margin-top:24px; background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
+.jobs-panel[hidden] { display:none; }
+.jobs-panel h2 { font-size:17px; margin:0 0 12px; }
+.jobs-panel h2 span { font-size:13px; color:var(--muted); font-weight:400; margin-left:6px; }
+.jobs-panel ul { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.jobs-panel li { display:grid; gap:2px; padding:10px 12px; background:var(--bg); border-radius:8px; }
+.jobs-panel li span { font-size:13px; color:var(--muted); }
+.jobs-panel li em { font-style:normal; font-size:12px; color:var(--brand); }

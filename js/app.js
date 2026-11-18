@@ -148,7 +148,45 @@ function renderHome(posts) {
       </header>
       <div class="art">${ART.inquiry}</div>
     </section>
-  </div>`;
+  </div>
+  <section class="jobs-panel" id="jobs-panel" hidden></section>`;
+  loadPublicJobs();
+}
+
+// 공공취업정보 최신 5건 (인사혁신처 PblJobService /getList, 응답은 XML)
+const JOBS_API = "https://apis.data.go.kr/1760000/PblJobService/getList";
+async function loadPublicJobs() {
+  const el = document.getElementById("jobs-panel");
+  if (!el || !db) return;
+  try {
+    const snap = await getDoc(doc(db, "settings", "jobs"));
+    const key = snap.exists() ? snap.data().serviceKey : "";
+    if (!key) { el.hidden = true; return; }
+    let raw = key;
+    try { raw = decodeURIComponent(key); } catch (e) { /* 이미 디코딩된 키 */ }
+    const res = await fetch(`${JOBS_API}?serviceKey=${encodeURIComponent(raw)}&pageNo=1&numOfRows=50`);
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+    if (xml.getElementsByTagName("resultCode")[0]?.textContent !== "00") throw new Error("API 오류");
+    const items = Array.from(xml.getElementsByTagName("item")).map(n => ({
+      title: n.getElementsByTagName("title")[0]?.textContent || "",
+      insttname: n.getElementsByTagName("insttname")[0]?.textContent || "",
+      enddate: n.getElementsByTagName("enddate")[0]?.textContent || "",
+      regdate: n.getElementsByTagName("regdate")[0]?.textContent || ""
+    })).filter(j => j.title);
+    const latest = items.sort((a, b) => b.regdate.localeCompare(a.regdate)).slice(0, 5);
+    if (!latest.length) { el.hidden = true; return; }
+    el.innerHTML = `
+      <h2>공공취업정보 <span>최신 ${latest.length}건</span></h2>
+      <ul>${latest.map(j => `<li>
+        <strong>${esc(j.title)}</strong>
+        <span>${esc(j.insttname)}</span>
+        <em>마감 ${esc(fmtDate(j.enddate) || "추후 공지")}</em>
+      </li>`).join("")}</ul>`;
+    el.hidden = false;
+  } catch (e) {
+    el.hidden = true;
+  }
 }
 
 // 관리자 화면에서 저장한 기상청 인증키를 읽어 헤더 아래 날씨 위젯을 채운다 (모든 페이지 공통)
