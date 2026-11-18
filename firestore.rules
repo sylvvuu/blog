@@ -49,12 +49,15 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // 신입 지원: 이름과 전화번호만 저장, 누구나 제출 가능, 읽기·삭제는 관리자만
+    // 신입 지원: 로그인한 본인 계정으로만 제출 (이름과 이메일), 읽기·삭제는 관리자만
     match /applications/{applicationId} {
-      allow create: if request.resource.data.name is string
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
         && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
-        && request.resource.data.phone is string
-        && request.resource.data.phone.size() >= 9 && request.resource.data.phone.size() <= 20
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 3 && request.resource.data.email.size() <= 100
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && request.resource.data.postId is string && request.resource.data.postId.size() <= 100;
       allow read, delete: if isAdmin();
     }

@@ -81,11 +81,17 @@ function fillForm(p = {}) {
   $("f-deadline").value = p.deadline || "";
   $("f-applyUrl").value = p.applyUrl || "";
   $("f-image").value = p.image || "";
+  $("f-imageUrl").value = p.imageUrl || "";
+  $("f-imageCredit").value = p.imageCredit || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
   $("form-msg").textContent = "";
   syncJobType();
+}
+
+function safeHttps(u) {
+  return /^https:\/\//i.test(u) ? u : "";
 }
 
 $("new-btn").addEventListener("click", () => fillForm({}));
@@ -101,6 +107,8 @@ $("post-form").addEventListener("submit", async e => {
     deadline: $("f-deadline").value.trim(),
     applyUrl: $("f-applyUrl").value.trim(),
     image: $("f-image").value || null,
+    imageUrl: safeHttps($("f-imageUrl").value.trim()),
+    imageCredit: $("f-imageCredit").value.trim(),
     body: $("f-body").value
   };
   const id = $("f-id").value;

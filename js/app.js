@@ -35,6 +35,11 @@ const BOOK = '<svg class="book" viewBox="0 0 24 24" aria-hidden="true"><path d="
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = ts => (ts && ts.toDate ? ts.toDate().toLocaleDateString("ko-KR") : "");
 const artOf = p => ART[p.image] || ART[p.category === "recruit" ? "recruit" : "education"];
+// 글 그림: 웹에서 찾은 사진(imageUrl)이 있으면 사진, 없으면 직접 그린 SVG
+const artHtml = p => p.imageUrl
+  ? `<img src="${esc(p.imageUrl)}" alt="" loading="lazy">`
+  : artOf(p);
+const creditHtml = p => (p.imageCredit ? `<p class="credit">${esc(p.imageCredit)}</p>` : "");
 
 // GA4 이벤트 전송 (index.html의 gtag가 로드된 경우)
 function track(name, params = {}) {
@@ -75,7 +80,7 @@ async function signIn() {
 
 function featuredCard(p) {
   return `<a class="feature" href="#/post/${esc(p.id)}">
-    <div class="art">${artOf(p)}</div>
+    <div class="art">${artHtml(p)}</div>
     ${p.category === "recruit" ? `<span class="pill ${statusOf(p) === "접수중" ? "open" : "closed"}">${statusOf(p)}</span>` : ""}
     <h3>${esc(p.title)}</h3>
     <p>${esc(p.summary)}</p>
@@ -119,7 +124,7 @@ function renderList(key, posts) {
   const list = posts.filter(p => p.category === key);
   const body = list.length
     ? `<div class="grid">${list.map(p => `<a class="card" href="#/post/${esc(p.id)}">
-        <div class="thumb">${artOf(p)}</div>
+        <div class="thumb">${artHtml(p)}</div>
         ${p.category === "recruit" ? `<span class="badge">${esc(p.jobType || "채용")}</span>` : `<span class="badge">교육</span>`}
         <h3>${esc(p.title)}</h3>
         <p>${esc(p.summary)}</p>
@@ -159,27 +164,30 @@ async function renderPost(posts, id) {
   const isRec = p.category === "recruit";
   const st = isRec ? statusOf(p) : "";
   const isNew = isRec && p.jobType === "신입공채";
+  // 지원하기는 모두 Google 로그인 후 가능
   const applyBtn = !isRec ? "" : isNew
     ? `<button class="btn primary" id="apply-open" type="button">지원하기</button>`
     : (safeUrl(p.applyUrl)
-      ? `<a class="btn primary" href="${esc(safeUrl(p.applyUrl))}" target="_blank" rel="noopener" id="apply-btn">지원하기</a>`
+      ? `<button class="btn primary" id="apply-ext" type="button">지원하기</button>`
       : `<span class="btn muted">지원 방법은 인사팀 문의</span>`);
-  // 신입 지원: 이름과 전화번호만 입력
+  // 신입 지원: 로그인 계정으로 이름과 이메일만 입력
   const applyPanel = isNew ? `<section id="apply-box" class="apply-box" hidden>
       <h2>신입 지원</h2>
-      <p class="who">이름과 전화번호만 남기면 지원이 접수됩니다.</p>
+      ${user
+        ? `<p class="who">이름과 이메일만 입력하면 지원이 접수됩니다.</p>
       <form id="apply-form" class="comment-form">
         <input id="ap-name" maxlength="20" placeholder="이름" required>
-        <input id="ap-phone" type="tel" maxlength="20" placeholder="전화번호 (예: 010-1234-5678)" required>
+        <input id="ap-email" type="email" maxlength="100" placeholder="이메일 (예: name@example.com)" required>
         <button type="submit">지원 완료하기</button>
         <p class="msg" id="ap-msg"></p>
-      </form>
+      </form>`
+        : `<div class="login-box"><p>지원은 Google 로그인 후 가능합니다.</p><button class="btn primary" id="apply-login" type="button">Google 로그인</button></div>`}
     </section>` : "";
   const paras = String(p.body || "").split(/\n\s*\n/).map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
 
   app.innerHTML = `<article class="post">
     <a class="back" href="#/${p.category}">&larr; ${esc(COLUMNS[p.category].title)} 목록</a>
-    <div class="post-art">${artOf(p)}</div>
+    <div class="post-art">${artHtml(p)}${creditHtml(p)}</div>
     <div class="job-head"><div>
       ${isRec ? `<span class="pill ${st === "접수중" ? "open" : "closed"}">${st}</span>` : `<span class="badge">교육</span>`}
       <h1>${esc(p.title)}</h1>
@@ -289,31 +297,43 @@ async function renderPost(posts, id) {
     track("post_share", base);
   };
 
-  document.getElementById("apply-btn")?.addEventListener("click", () => track("post_apply", base));
+  // 경력직 등 외부 지원 링크: 로그인 후 새 창으로 이동
+  const applyExt = document.getElementById("apply-ext");
+  if (applyExt) {
+    applyExt.onclick = () => {
+      if (!user) return signIn();
+      track("post_apply", base);
+      window.open(safeUrl(p.applyUrl), "_blank", "noopener");
+    };
+  }
 
+  // 신입 지원 폼 열기 (로그인 필요)
   const applyOpen = document.getElementById("apply-open");
   if (applyOpen) {
     applyOpen.onclick = () => {
+      if (!user) return signIn();
       const box = document.getElementById("apply-box");
       box.hidden = false;
       box.scrollIntoView({ behavior: "smooth" });
       track("post_apply", base);
     };
-    document.getElementById("apply-form").onsubmit = async e => {
+    document.getElementById("apply-login")?.addEventListener("click", signIn);
+    document.getElementById("apply-form")?.addEventListener("submit", async e => {
       e.preventDefault();
       const out = document.getElementById("ap-msg");
       const name = document.getElementById("ap-name").value.trim().slice(0, 20);
-      const phone = document.getElementById("ap-phone").value.trim();
-      if (!/^[0-9+\-\s]{9,20}$/.test(phone)) {
-        out.textContent = "전화번호 형식을 확인해 주세요. 숫자와 하이픈만 입력할 수 있습니다.";
+      const email = document.getElementById("ap-email").value.trim().slice(0, 100);
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        out.textContent = "이메일 형식을 확인해 주세요.";
         return;
       }
       try {
         await addDoc(collection(db, "applications"), {
+          uid: user.uid,
           postId: id,
           postTitle: p.title,
           name,
-          phone,
+          email,
           createdAt: serverTimestamp()
         });
         e.target.reset();
@@ -322,7 +342,7 @@ async function renderPost(posts, id) {
       } catch (err) {
         out.textContent = "지원 접수에 실패했습니다: " + err.message;
       }
-    };
+    });
   }
 
   // 댓글: 로그인 필요
