@@ -153,24 +153,40 @@ function renderHome(posts) {
   loadPublicJobs();
 }
 
-// 공공취업정보 최신 5건 (인사혁신처 PblJobService /getList, 응답은 XML)
-const JOBS_API = "https://apis.data.go.kr/1760000/PblJobService/getList";
-const fmtYmd = s => (s && s.length === 8) ? `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}` : "";
+// 채용정보 최신 5건 (고용24 채용정보 Open-API, 채용정보 목록 callOpenApiSvcInfo210L01, 응답은 XML)
+const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo210L01.do";
+const WORK24_HOME = "https://www.work24.go.kr";
 
-// 한 페이지를 가져와 항목과 전체 건수를 돌려준다
-async function fetchJobPage(raw, pageNo, rows) {
-  const res = await fetch(`${JOBS_API}?serviceKey=${encodeURIComponent(raw)}&pageNo=${pageNo}&numOfRows=${rows}`);
+// 워크넷이 주는 상세 링크가 http(s)일 때만 사용한다
+const safeUrl = u => (u && /^https?:\/\//.test(u)) ? u : (u ? `${WORK24_HOME}${u.startsWith("/") ? "" : "/"}${u}` : "");
+
+// 목록을 가져와 채용정보 항목을 돌려준다 (sortOrderBy=DESC: 등록일 기준 정렬)
+async function fetchLatestJobs(raw, display) {
+  const params = new URLSearchParams({
+    authKey: raw,
+    callTp: "L",
+    returnType: "XML",
+    startPage: "1",
+    display: String(display),
+    sortOrderBy: "DESC"
+  });
+  const res = await fetch(`${JOBS_API}?${params.toString()}`);
   if (!res.ok) throw new Error(`status ${res.status}`);
   const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-  if (xml.getElementsByTagName("resultCode")[0]?.textContent !== "00") throw new Error("API 오류");
-  const total = Number(xml.getElementsByTagName("totalCount")[0]?.textContent || 0);
-  const items = Array.from(xml.getElementsByTagName("item")).map(n => ({
-    title: n.getElementsByTagName("title")[0]?.textContent || "",
-    insttname: n.getElementsByTagName("insttname")[0]?.textContent || "",
-    enddate: n.getElementsByTagName("enddate")[0]?.textContent || "",
-    regdate: n.getElementsByTagName("regdate")[0]?.textContent || ""
-  })).filter(j => j.title);
-  return { items, total };
+  if (xml.getElementsByTagName("parsererror").length || !xml.getElementsByTagName("wantedRoot").length) {
+    throw new Error("API 응답 오류");
+  }
+  return Array.from(xml.getElementsByTagName("wanted")).map(n => {
+    const get = tag => n.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
+    return {
+      title: get("title"),
+      company: get("company"),
+      regDt: get("regDt"),
+      closeDt: get("closeDt"),
+      region: get("region"),
+      url: safeUrl(get("wantedInfoUrl"))
+    };
+  }).filter(j => j.title);
 }
 
 async function loadPublicJobs() {
@@ -183,21 +199,20 @@ async function loadPublicJobs() {
     let raw = key;
     try { raw = decodeURIComponent(key); } catch (e) { /* 이미 디코딩된 키 */ }
 
-    // API는 오래된 공고부터 순서대로 주므로, 마지막 페이지(와 그 앞 페이지)에서 최신을 고른다
-    const first = await fetchJobPage(raw, 1, 1);
-    const pages = Math.max(1, Math.ceil(first.total / 50));
-    const last = await fetchJobPage(raw, pages, 50);
-    const prev = pages > 1 ? await fetchJobPage(raw, pages - 1, 50) : { items: [] };
-    const latest = [...prev.items, ...last.items]
-      .sort((a, b) => b.regdate.localeCompare(a.regdate))
+    // 등록일 내림차순으로 받은 뒤, 혹시 모를 순서 차이에 대비해 한 번 더 정렬해 5건만 쓴다
+    const items = await fetchLatestJobs(raw, 20);
+    const latest = items
+      .sort((a, b) => b.regDt.localeCompare(a.regDt))
       .slice(0, 5);
     if (!latest.length) { el.hidden = true; return; }
     el.innerHTML = `
-      <h2>공공취업정보 <span>최신 ${latest.length}건</span></h2>
+      <h2>채용정보 <span>최신 ${latest.length}건</span></h2>
       <ul>${latest.map(j => `<li>
-        <strong>${esc(j.title)}</strong>
-        <span>${esc(j.insttname)}</span>
-        <em>마감 ${esc(fmtYmd(j.enddate) || "추후 공지")}</em>
+        ${j.url
+          ? `<a href="${esc(j.url)}" target="_blank" rel="noopener"><strong>${esc(j.title)}</strong></a>`
+          : `<strong>${esc(j.title)}</strong>`}
+        <span>${esc(j.company)}${j.region ? ` · ${esc(j.region)}` : ""}</span>
+        <em>마감 ${esc(j.closeDt || "추후 공지")}</em>
       </li>`).join("")}</ul>`;
     el.hidden = false;
   } catch (e) {
@@ -253,6 +268,25 @@ function heartPop(el) {
   el.classList.add("bump");
 }
 
+// 조회수 집계: 글의 누적 조회수(posts.views)와 날짜별 조회수(posts/{id}/daily/{날짜})를 1씩 올린다
+// 같은 브라우저 탭 세션에서 같은 글은 한 번만 센다. 관리자 브라우저는 세지 않는다.
+const localDay = (d = new Date()) => d.toLocaleDateString("sv-SE");
+async function countView(id) {
+  if (isOwnerBrowser() || !db) return;
+  try {
+    const key = `viewed:${id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+  } catch (e) { /* 저장소를 못 쓰는 환경이면 매번 센다 */ }
+  const day = localDay();
+  try {
+    await Promise.all([
+      updateDoc(doc(db, "posts", id), { views: increment(1) }),
+      setDoc(doc(db, "posts", id, "daily", day), { count: increment(1), date: day }, { merge: true })
+    ]);
+  } catch (e) { /* 집계 실패는 글 읽기에 영향을 주지 않는다 */ }
+}
+
 async function renderPost(posts, id) {
   const p = posts.find(x => x.id === id);
   if (!p) {
@@ -261,6 +295,7 @@ async function renderPost(posts, id) {
     return;
   }
   document.title = `${p.title} | ${SITE_TITLE}`;
+  countView(id);
   const base = { post_id: id, post_title: p.title, category: p.category, content_group: COLUMNS[p.category].title };
   const isRec = p.category === "recruit";
   const st = isRec ? statusOf(p) : "";
