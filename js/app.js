@@ -192,10 +192,11 @@ async function renderPost(posts, id) {
   const st = isRec ? statusOf(p) : "";
   const isNew = isRec && p.jobType === "신입공채";
   // 지원하기는 모두 Google 로그인 후 가능
+  const applyLabel = user ? "지원하기" : "지원하기 (Google 로그인 필요)";
   const applyBtn = !isRec ? "" : isNew
-    ? `<button class="btn primary" id="apply-open" type="button">지원하기</button>`
+    ? `<button class="btn primary" id="apply-open" type="button">${applyLabel}</button>`
     : (safeUrl(p.applyUrl)
-      ? `<button class="btn primary" id="apply-ext" type="button">지원하기</button>`
+      ? `<button class="btn primary" id="apply-ext" type="button">${applyLabel}</button>`
       : `<span class="btn muted">지원 방법은 인사팀 문의</span>`);
   // 신입 지원: 로그인 계정으로 이름과 이메일만 입력
   const applyPanel = isNew ? `<section id="apply-box" class="apply-box" hidden>
