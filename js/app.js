@@ -153,14 +153,16 @@ function renderHome(posts) {
   loadPublicJobs();
 }
 
-// 채용정보 최신 5건 (고용24 채용정보 Open-API, 채용정보 목록 callOpenApiSvcInfo210L01, 응답은 XML)
-const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo210L01.do";
-const WORK24_HOME = "https://www.work24.go.kr";
+// 공채속보 최신 5건 (고용24 공채속보 Open-API, callOpenApiSvcInfo210L21, 응답은 XML)
+// 개인회원도 이용 가능한 API이며, 등록일 내림차순으로 내려온다
+const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo210L21.do";
 
-// 워크넷이 주는 상세 링크가 http(s)일 때만 사용한다
-const workUrl = u => (u && /^https?:\/\//.test(u)) ? u : (u ? `${WORK24_HOME}${u.startsWith("/") ? "" : "/"}${u}` : "");
+// 응답 날짜(YYYYMMDD)를 2026.11.27 형식으로 바꾼다
+const fmtYmd = s => (s && s.length === 8) ? `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}` : "";
+// 공채속보가 준 채용 홈페이지 주소가 http(s)일 때만 사용한다
+const safeJobUrl = u => (u && /^https?:\/\//.test(u)) ? u : "";
 
-// 목록을 가져와 채용정보 항목을 돌려준다 (sortOrderBy=DESC: 등록일 기준 정렬)
+// 공채속보 목록을 가져온다 (sortField=regDt, sortOrderBy=desc: 등록일 내림차순)
 async function fetchLatestJobs(raw, display) {
   const params = new URLSearchParams({
     authKey: raw,
@@ -168,23 +170,23 @@ async function fetchLatestJobs(raw, display) {
     returnType: "XML",
     startPage: "1",
     display: String(display),
-    sortOrderBy: "DESC"
+    sortField: "regDt",
+    sortOrderBy: "desc"
   });
   const res = await fetch(`${JOBS_API}?${params.toString()}`);
   if (!res.ok) throw new Error(`status ${res.status}`);
   const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-  if (xml.getElementsByTagName("parsererror").length || !xml.getElementsByTagName("wantedRoot").length) {
+  if (xml.getElementsByTagName("parsererror").length || !xml.getElementsByTagName("dhsOpenEmpInfoList").length) {
     throw new Error("API 응답 오류");
   }
-  return Array.from(xml.getElementsByTagName("wanted")).map(n => {
+  return Array.from(xml.getElementsByTagName("dhsOpenEmpInfo")).map(n => {
     const get = tag => n.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
     return {
-      title: get("title"),
-      company: get("company"),
-      regDt: get("regDt"),
-      closeDt: get("closeDt"),
-      region: get("region"),
-      url: workUrl(get("wantedInfoUrl"))
+      title: get("empWantedTitle"),
+      company: get("empBusiNm"),
+      kind: get("coClcdNm"),
+      endDate: get("empWantedEndt"),
+      url: safeJobUrl(get("empWantedHomepgDetail"))
     };
   }).filter(j => j.title);
 }
@@ -199,20 +201,16 @@ async function loadPublicJobs() {
     let raw = key;
     try { raw = decodeURIComponent(key); } catch (e) { /* 이미 디코딩된 키 */ }
 
-    // 등록일 내림차순으로 받은 뒤, 혹시 모를 순서 차이에 대비해 한 번 더 정렬해 5건만 쓴다
-    const items = await fetchLatestJobs(raw, 20);
-    const latest = items
-      .sort((a, b) => b.regDt.localeCompare(a.regDt))
-      .slice(0, 5);
+    const latest = (await fetchLatestJobs(raw, 5));
     if (!latest.length) { el.hidden = true; return; }
     el.innerHTML = `
-      <h2>채용정보 <span>최신 ${latest.length}건</span></h2>
+      <h2>공채속보 <span>최신 ${latest.length}건</span></h2>
       <ul>${latest.map(j => `<li>
         ${j.url
           ? `<a href="${esc(j.url)}" target="_blank" rel="noopener"><strong>${esc(j.title)}</strong></a>`
           : `<strong>${esc(j.title)}</strong>`}
-        <span>${esc(j.company)}${j.region ? ` · ${esc(j.region)}` : ""}</span>
-        <em>마감 ${esc(j.closeDt || "추후 공지")}</em>
+        <span>${esc(j.company)}${j.kind ? ` · ${esc(j.kind)}` : ""}</span>
+        <em>마감 ${esc(fmtYmd(j.endDate) || "추후 공지")}</em>
       </li>`).join("")}</ul>`;
     el.hidden = false;
   } catch (e) {
