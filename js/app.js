@@ -129,7 +129,6 @@ function columnBlock(key, list) {
 function renderHome(posts) {
   document.title = SITE_TITLE;
   app.innerHTML = `<section class="home-hero">
-    <p class="eyebrow">SV CAREER</p>
     <h1>취업도, 내 인생도.<br>다음은 나답게.</h1>
     <p>고용24 채용·교육 정보를 한곳에서 확인하고, 궁금한 점은 질문 도우미에게 물어보세요.</p>
   </section>
