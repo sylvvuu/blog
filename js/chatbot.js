@@ -55,6 +55,27 @@ export function chatSearch(question, posts) {
     .map(x => x.p);
 }
 
+// 캐릭터는 두 명이며, 선택은 이 브라우저에만 저장한다. 기본값은 남성 캐릭터.
+const CHARACTERS = {
+  male: { src: "assets/chatbot/male.webp" },
+  female: { src: "assets/chatbot/female.webp" }
+};
+const CHARACTER_KEY = "sv_chat_character";
+const DEFAULT_CHARACTER = "male";
+
+function readCharacter() {
+  try {
+    const v = localStorage.getItem(CHARACTER_KEY);
+    return CHARACTERS[v] ? v : DEFAULT_CHARACTER;
+  } catch (e) {
+    return DEFAULT_CHARACTER;
+  }
+}
+
+function saveCharacter(v) {
+  try { localStorage.setItem(CHARACTER_KEY, v); } catch (e) { /* 저장 불가 환경은 무시 */ }
+}
+
 export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
   const fab = document.createElement("button");
   fab.type = "button";
@@ -67,11 +88,19 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
   panel.setAttribute("aria-label", "질문 챗봇");
   panel.innerHTML = `
     <header class="chat-head">
+      <img class="chat-head-avatar" alt="">
       <strong>무엇이 궁금하세요?</strong>
+      <div class="chat-switch" role="group" aria-label="캐릭터 선택">
+        <button type="button" data-character="male">남성</button>
+        <button type="button" data-character="female">여성</button>
+      </div>
       <button type="button" class="chat-close" aria-label="챗봇 닫기">×</button>
     </header>
     <div class="chat-log">
-      <p class="chat-bot">교육과 채용 글에서 답을 찾아 드립니다. 예: "신입 교육 과정 알려줘"</p>
+      <div class="chat-bot chat-row">
+        <img class="chat-avatar chat-greet-avatar" alt="">
+        <div class="chat-text"><p>교육과 채용 글에서 답을 찾아 드립니다. 예: "신입 교육 과정 알려줘"</p></div>
+      </div>
     </div>
     <form class="chat-form">
       <input type="text" maxlength="200" placeholder="질문을 입력하세요" aria-label="질문 입력" required>
@@ -83,6 +112,27 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
   const form = panel.querySelector(".chat-form");
   const input = panel.querySelector("input");
   let opened = false;
+  let character = readCharacter();
+
+  // 선택한 캐릭터를 헤더와 인사 말풍선에 반영한다
+  function paintCharacter() {
+    const src = CHARACTERS[character].src;
+    panel.querySelector(".chat-head-avatar").src = src;
+    panel.querySelectorAll(".chat-greet-avatar").forEach(img => { img.src = src; });
+    panel.querySelectorAll(".chat-switch button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.character === character));
+    });
+  }
+  paintCharacter();
+
+  panel.querySelector(".chat-switch").addEventListener("click", e => {
+    const b = e.target.closest("button[data-character]");
+    if (!b || b.dataset.character === character) return;
+    character = b.dataset.character;
+    saveCharacter(character);
+    paintCharacter();
+    track("chatbot_character_change", { character });
+  });
 
   fab.addEventListener("click", () => {
     panel.hidden = false;
@@ -143,8 +193,8 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
         html = `<p>글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
       }
     }
-    wait.outerHTML = `<div class="chat-bot">${html}</div>`;
-    track("chatbot_question", { matched: matched.length });
+    wait.outerHTML = `<div class="chat-bot chat-row"><img class="chat-avatar" src="${CHARACTERS[character].src}" alt=""><div class="chat-text">${html}</div></div>`;
+    track("chatbot_question", { matched: matched.length, character });
     log.scrollTop = log.scrollHeight;
   });
 }

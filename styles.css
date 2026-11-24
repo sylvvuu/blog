@@ -183,6 +183,17 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .chat-form { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #eee; }
 .chat-form input { flex: 1; min-width: 0; padding: 8px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
 .chat-form button { border: 0; background: var(--brand); color: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.chat-head { gap: 8px; }
+.chat-head strong { flex: 1; font-size: 14px; }
+.chat-head-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; flex: none; }
+.chat-switch { display: flex; gap: 2px; background: rgba(255, 255, 255, .18); border-radius: 999px; padding: 2px; }
+.chat-switch button { border: 0; background: transparent; color: #fff; font-size: 12px; padding: 4px 9px; border-radius: 999px; cursor: pointer; }
+.chat-switch button[aria-pressed="true"] { background: #fff; color: var(--brand); font-weight: 600; }
+.chat-row { display: flex; gap: 8px; align-items: flex-start; }
+.chat-row.chat-bot { margin-right: 0 !important; }
+.chat-avatar { width: 36px; height: 36px; border-radius: 50%; flex: none; background: #fff; }
+.chat-text { min-width: 0; flex: 1; }
+.chat-text p { margin: 0 0 8px; }
 .login-hint { margin: 8px 0 0; font-size: 13px; max-width: 240px; }
 
 /* 홈 회사 소개 */
