@@ -23,7 +23,14 @@
 3. 공고 글 열기 → `post_read` 조건 확인 (테스트는 로그아웃 상태에서)
 4. 공채속보 링크 클릭 → `job_item_click` 확인 (GA 실시간 보고서)
 
-> 스크린샷 첨부는 다음 단계에서 추가합니다.
+### 스크린샷 증거
+| 단계 | 스크린샷 | 확인 내용 |
+|---|---|---|
+| 홈 변경 전 | ![변경 전 홈](screenshots/01-home-before.png) | 회사 소개 블록이 먼저 보이고 공고 목록은 아래에 있음 |
+| 홈 변경 후 | ![변경 후 홈](screenshots/02-home-after.png) | 소개 블록 제거 후 공고 카드가 첫 화면 근처에 보임 |
+| GA 이벤트 목록 | ![GA 이벤트](screenshots/03-ga-event-names.png) | 11/18 이전 이벤트 이름(`post_view`, `post_complete`)이 기록되어 있음 |
+| GA 스트림 이름 변경 | ![GA 스트림](screenshots/04-ga-stream-renamed.png) | 스트림 `sv-career-web`, 공개 주소 연결, 측정 ID 확인 |
+| 향상된 측정 설정 | ![향상된 측정](screenshots/05-ga-enhanced-measurement.png) | 페이지 조회, 스크롤, 외부 링크 클릭 켜짐 |
 
 ## 4. 확인하지 못한 항목
 - 공고 API 실패 상황 (키가 없거나 응답 오류일 때 목록이 사라지는지)
