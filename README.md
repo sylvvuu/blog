@@ -18,7 +18,7 @@
 
 ## 1. Firebase 설정
 
-1. Firebase 콘솔에서 프로젝트 `sylvi-electronic`을 엽니다.
+1. Firebase 콘솔에서 프로젝트 `sylvi-electronic`을 엽니다. 프로젝트 표시 이름은 `SV Career`, 웹 앱 닉네임은 `sv-career-web`입니다. 프로젝트 ID는 바꿀 수 없으므로 그대로 둡니다.
 2. **Firestore Database**를 만들고 위치를 `asia-northeast3 (서울)`로 선택합니다.
 3. **Authentication > 시작하기 > Google**을 사용 설정하고 지원 이메일을 `fkdna3@gmail.com`으로 지정합니다.
 4. **프로젝트 설정 > 일반 > 내 앱 > 웹 앱 추가**를 하고 표시되는 `firebaseConfig` 값을 `js/config.js`에 붙여넣습니다.
