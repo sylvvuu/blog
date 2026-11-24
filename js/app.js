@@ -135,7 +135,7 @@ function renderHome(posts) {
   <section class="roadmap-card" aria-label="나의 로드맵 안내">
     <p class="eyebrow">MAKE YOUR NEXT MOVE</p>
     <ol>
-      <li><span>01</span>나를 발견하기</li>
+      <li><a href="https://www.work.go.kr/consltJobCarpa/jobPsyExam/jobPsyExamIntro.do" target="_blank" rel="noopener"><span>01</span>나를 발견하기</a></li>
       <li><span>02</span>경험을 쌓아가기</li>
       <li><span>03</span>다음 기회로 연결하기</li>
     </ol>

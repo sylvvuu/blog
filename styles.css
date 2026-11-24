@@ -337,3 +337,5 @@ main { padding-top: 0; }
 @media (min-width: 601px) {
   .chat-panel:not(.chat-inline) { top: 96px; transform: none; }
 }
+.roadmap-card li a { display: block; color: inherit; }
+.roadmap-card li a:hover { text-decoration: underline; }
