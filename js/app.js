@@ -200,8 +200,6 @@ function getApiKey() {
   return jobsKeyPromise;
 }
 
-// 공고 제목 앞의 [신입], [경력] 같은 태그를 꺼낸다 (없으면 기타)
-const tagOf = title => { const m = title.match(/\[(.+?)\]/); return m ? m[1].trim() : "기타"; };
 
 let jobsAll = [];
 const JOBS_SHOW = 5;
@@ -228,7 +226,8 @@ async function loadPublicJobs() {
     const raw = await getApiKey();
     if (!raw) { el.hidden = true; return; }
 
-    jobsAll = (await fetchLatestJobs(raw, 20)).map(j => ({ ...j, tag: tagOf(j.title) }));
+    // 드롭다운 기준은 공고 제목 대괄호가 아니라 API의 기업 구분 값(coClcdNm, 예: 중견기업)을 쓴다
+    jobsAll = (await fetchLatestJobs(raw, 20)).map(j => ({ ...j, tag: j.kind || "기타" }));
     if (!jobsAll.length) { el.hidden = true; return; }
 
     // 드롭다운 옵션: 전체보기 + 태그별 건수
