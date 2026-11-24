@@ -131,7 +131,11 @@ function renderHome(posts) {
   document.title = SITE_TITLE;
   const edu = posts.filter(p => p.category === "education");
   const rec = posts.filter(p => p.category === "recruit");
-  app.innerHTML = `<section class="banner"><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  app.innerHTML = `<div class="home-title"><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></div>
+  <div class="home-api">
+    <section class="jobs-panel" id="jobs-panel" hidden></section>
+    <section class="jobs-panel edu-panel" id="edu-panel" hidden></section>
+  </div>
   <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
@@ -143,9 +147,9 @@ function renderHome(posts) {
       </header>
       <div class="art">${ART.inquiry}</div>
     </section>
-  </div>
-  <section class="jobs-panel" id="jobs-panel" hidden></section>`;
+  </div>`;
   loadPublicJobs();
+  loadEducationPrograms();
 }
 
 // 공채속보 최신 5건 (고용24 공채속보 Open-API, callOpenApiSvcInfo210L21, 응답은 XML)
@@ -186,32 +190,133 @@ async function fetchLatestJobs(raw, display) {
   }).filter(j => j.title);
 }
 
-async function loadPublicJobs() {
-  const el = document.getElementById("jobs-panel");
-  if (!el || !db) return;
-  try {
-    const snap = await getDoc(doc(db, "settings", "jobs"));
-    const key = snap.exists() ? snap.data().serviceKey : "";
-    if (!key) { el.hidden = true; return; }
-    let raw = key;
-    try { raw = decodeURIComponent(key); } catch (e) { /* 이미 디코딩된 키 */ }
+// settings/jobs에 저장된 고용24 인증키를 한 번만 읽어 공채속보와 교육 API가 함께 쓴다
+let jobsKeyPromise = null;
+function getApiKey() {
+  if (!db) return Promise.resolve("");
+  if (!jobsKeyPromise) {
+    jobsKeyPromise = getDoc(doc(db, "settings", "jobs")).then(snap => {
+      const key = snap.exists() ? snap.data().serviceKey : "";
+      if (!key) return "";
+      try { return decodeURIComponent(key); } catch (e) { return key; }
+    });
+  }
+  return jobsKeyPromise;
+}
 
-    const latest = (await fetchLatestJobs(raw, 5));
-    if (!latest.length) { el.hidden = true; return; }
-    el.innerHTML = `
-      <h2>공채속보 <span>최신 ${latest.length}건</span></h2>
-      <ul>${latest.map((j, i) => `<li>
+// 공고 제목 앞의 [신입], [경력] 같은 태그를 꺼낸다 (없으면 기타)
+const tagOf = title => { const m = title.match(/\[(.+?)\]/); return m ? m[1].trim() : "기타"; };
+
+let jobsAll = [];
+const JOBS_SHOW = 5;
+
+function renderJobsList(tag) {
+  const el = document.getElementById("jobs-list");
+  if (!el) return;
+  const list = (tag === "전체" ? jobsAll : jobsAll.filter(j => j.tag === tag)).slice(0, JOBS_SHOW);
+  el.innerHTML = list.length
+    ? list.map((j, i) => `<li>
         ${j.url
           ? `<a href="${esc(j.url)}" target="_blank" rel="noopener" data-job="${i}"><strong>${esc(j.title)}</strong></a>`
           : `<strong>${esc(j.title)}</strong>`}
         <span>${esc(j.company)}${j.kind ? ` · ${esc(j.kind)}` : ""}</span>
         <em>마감 ${esc(fmtYmd(j.endDate) || "추후 공지")}</em>
-      </li>`).join("")}</ul>`;
+      </li>`).join("")
+    : `<li class="empty">이 조건에 맞는 공고가 없습니다.</li>`;
+}
+
+async function loadPublicJobs() {
+  const el = document.getElementById("jobs-panel");
+  if (!el || !db) return;
+  try {
+    const raw = await getApiKey();
+    if (!raw) { el.hidden = true; return; }
+
+    jobsAll = (await fetchLatestJobs(raw, 20)).map(j => ({ ...j, tag: tagOf(j.title) }));
+    if (!jobsAll.length) { el.hidden = true; return; }
+
+    // 드롭다운 옵션: 전체보기 + 태그별 건수
+    const counts = {};
+    jobsAll.forEach(j => { counts[j.tag] = (counts[j.tag] || 0) + 1; });
+    const options = [`<option value="전체">전체보기 (${jobsAll.length})</option>`]
+      .concat(Object.keys(counts).map(t => `<option value="${esc(t)}">${esc(t)} (${counts[t]})</option>`))
+      .join("");
+
+    el.innerHTML = `
+      <div class="jobs-head">
+        <h2>공채속보 <span>최신 채용 공고</span></h2>
+        <select id="jobs-filter" aria-label="공고 구분 선택">${options}</select>
+      </div>
+      <ul id="jobs-list"></ul>`;
     el.hidden = false;
-    track("job_list_view", { job_count: latest.length });
+    renderJobsList("전체");
+    track("job_list_view", { job_count: jobsAll.length });
+
+    document.getElementById("jobs-filter").onchange = e => {
+      renderJobsList(e.target.value);
+      track("job_filter_change", { tag: e.target.value });
+    };
     el.onclick = e => {
       const link = e.target.closest("a[data-job]");
       if (link) track("job_item_click", { job_index: Number(link.dataset.job) + 1 });
+    };
+  } catch (e) {
+    el.hidden = true;
+  }
+}
+
+// 국민내일배움카드 훈련과정 목록 (callOpenApiSvcInfo310L01), 오늘부터 석 달 안에 시작하는 과정
+const EDU_API = "https://www.work24.go.kr/cm/openApi/call/hr/callOpenApiSvcInfo310L01.do";
+async function fetchEducationPrograms(raw) {
+  const today = new Date();
+  const end = new Date(today);
+  end.setMonth(end.getMonth() + 3);
+  const ymd = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  const params = new URLSearchParams({
+    authKey: raw,
+    returnType: "XML",
+    outType: "1",
+    pageNum: "1",
+    pageSize: "5",
+    srchTraStDt: ymd(today),
+    srchTraEndDt: ymd(end)
+  });
+  const res = await fetch(`${EDU_API}?${params.toString()}`);
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+  if (xml.getElementsByTagName("parsererror").length) throw new Error("API 응답 오류");
+  return Array.from(xml.getElementsByTagName("scn_list")).map(n => {
+    const get = tag => n.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
+    return {
+      title: get("TITLE"),
+      start: get("TRA_START_DATE"),
+      end: get("TRA_END_DATE"),
+      url: safeJobUrl(get("TITLE_LINK"))
+    };
+  }).filter(p => p.title);
+}
+
+async function loadEducationPrograms() {
+  const el = document.getElementById("edu-panel");
+  if (!el || !db) return;
+  try {
+    const raw = await getApiKey();
+    if (!raw) { el.hidden = true; return; }
+    const list = await fetchEducationPrograms(raw);
+    if (!list.length) { el.hidden = true; return; }
+    el.innerHTML = `
+      <h2>교육 과정 <span>석 달 안에 시작하는 과정</span></h2>
+      <ul>${list.map((p, i) => `<li>
+        ${p.url
+          ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" data-edu="${i}"><strong>${esc(p.title)}</strong></a>`
+          : `<strong>${esc(p.title)}</strong>`}
+        <em>${esc(fmtYmd(p.start) || "")} ~ ${esc(fmtYmd(p.end) || "")}</em>
+      </li>`).join("")}</ul>`;
+    el.hidden = false;
+    track("edu_list_view", { program_count: list.length });
+    el.onclick = e => {
+      const link = e.target.closest("a[data-edu]");
+      if (link) track("edu_item_click", { program_index: Number(link.dataset.edu) + 1 });
     };
   } catch (e) {
     el.hidden = true;

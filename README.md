@@ -85,6 +85,7 @@ git push
   - 글: `post_read`(완독), `post_like`, `post_unlike`, `post_scrap`, `post_unscrap`, `post_comment`, `share`
   - 지원: `post_apply`, `post_apply_submit`
   - 문의: `inquiry_submit`
-  - 공채속보: `job_list_view`, `job_item_click`
+  - 공채속보: `job_list_view`, `job_item_click`, `job_filter_change`
+  - 교육 과정: `edu_list_view`, `edu_item_click`
   - 챗봇: `chatbot_open`, `chatbot_question`(찾은 글 수만), `chatbot_link_click`
 - 11/18 이전에는 완독 이벤트 이름이 `post_complete`였고, 글 조회 이벤트 `post_view`도 있었습니다. 이전 데이터를 볼 때 이 이름 변경을 고려합니다.
