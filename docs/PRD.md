@@ -67,7 +67,7 @@
 - 사이트 안 지원 폼은 이름과 이메일을 저장한다. 접근 권한과 보관 기간 정리가 필요하다.
 
 ## 8. 출시 및 운영
-- 배포 방식: 같은 main 코드를 Vercel(sylvieee.vercel.app)과 GitHub Pages(sylvvuu.github.io/blog)에 함께 배포한다. sylvielectronics.vercel.app은 Vercel 주소로 307 리다이렉트된다.
+- 배포 방식: 같은 main 코드를 Vercel(sylvieee.vercel.app)과 GitHub Pages(sylvvuu.github.io/blog)에 함께 배포한다. 이전 주소(sylvielectronics.vercel.app)은 Vercel 주소로 307 리다이렉트된다.
 - 일정
   - 11/24 10:30: PRD 초안 업로드 (완료)
   - 11/24 11:00: PRD 초안 제출 마감
