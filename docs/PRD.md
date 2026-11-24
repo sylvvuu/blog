@@ -1,7 +1,7 @@
 # PRD: SV Career (채용·교육 블로그)
 
 ## 1. 기본 정보
-- 문서 버전: v1.0 제출본 (11/24, 결정 문서로 재구성)
+- 문서 버전: v1.0 제출본
 - 작성일: 2026-11-24
 - 작성자: 이은정
 - 관련 자료: 공개 배포 주소 2곳 (같은 main 코드) — https://sylvieee.vercel.app/ (Vercel), https://sylvvuu.github.io/blog/ (GitHub Pages), 저장소 https://github.com/sylvvuu/blog
