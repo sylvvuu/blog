@@ -463,6 +463,27 @@ function setupJobSearch() {
   };
 }
 
+// AI 상담: settings/chat에서 켜져 있을 때만 Vercel /api/chat을 호출한다. 실패하면 null을 돌려 기존 답변을 쓴다
+const CHAT_API = "https://sylvieee.vercel.app/api/chat";
+let chatConfigPromise = null;
+async function askAI(question) {
+  if (!db) return null;
+  if (!chatConfigPromise) {
+    chatConfigPromise = getDoc(doc(db, "settings", "chat"))
+      .then(snap => (snap.exists() ? snap.data() : {}))
+      .catch(() => ({}));
+  }
+  const cfg = await chatConfigPromise;
+  if (cfg.enabled !== true) return null;
+  const res = await fetch(CHAT_API, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question })
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 // 관리자 화면에서 저장한 기상청 인증키를 읽어 헤더 아래 날씨 위젯을 채운다 (모든 페이지 공통)
 async function loadSeoulWeather() {
   const el = document.getElementById("weather");
@@ -1036,5 +1057,5 @@ async function loadRandomQuote() {
 loadRandomQuote();
 
 // 질문 챗봇: 키 없이 블로그 글을 검색한다 (js/chatbot.js)
-setupChatbot({ loadPosts, track, esc, isConfigured });
+setupChatbot({ loadPosts, track, esc, isConfigured, askAI });
 mountChatbot(document.getElementById("chat-slot"));

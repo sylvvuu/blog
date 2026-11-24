@@ -95,6 +95,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // AI 상담 설정 (관리자만 쓰기, 화면과 서버 함수가 함께 읽음)
+    match /settings/chat {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.enabled is bool
+        && request.resource.data.model in ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]
+        && request.resource.data.extraRules is string
+        && request.resource.data.extraRules.size() <= 1000;
+    }
+
     match /settings/education {
       allow read: if true;
       allow write: if isAdmin()

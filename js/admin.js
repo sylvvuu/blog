@@ -160,7 +160,39 @@ $("work24-save").addEventListener("click", async () => {
   }
 });
 
+// ---- AI 상담 설정 (settings/chat) ----
+async function loadChatState() {
+  const snap = await getDoc(doc(db, "settings", "chat"));
+  const d = snap.exists() ? snap.data() : {};
+  $("chat-enabled").checked = d.enabled === true;
+  $("chat-model").value = d.model || "claude-haiku-5-5";
+  const sources = Array.isArray(d.sources) ? d.sources : ["jobs", "education", "job"];
+  document.querySelectorAll(".chat-source").forEach(c => { c.checked = sources.includes(c.value); });
+  $("chat-rules").value = d.extraRules || "";
+  $("chat-state").textContent = d.enabled === true
+    ? "AI 답변이 켜져 있습니다."
+    : "AI 답변이 꺼져 있습니다. 홈 챗봇은 글 검색 답변을 씁니다.";
+}
+
+$("chat-save").addEventListener("click", async () => {
+  const sources = [...document.querySelectorAll(".chat-source")].filter(c => c.checked).map(c => c.value);
+  try {
+    await setDoc(doc(db, "settings", "chat"), {
+      enabled: $("chat-enabled").checked,
+      model: $("chat-model").value,
+      sources,
+      extraRules: $("chat-rules").value.trim().slice(0, 1000),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    $("chat-msg").textContent = "저장했습니다. 홈에서 새로고침하면 반영됩니다.";
+    await loadChatState();
+  } catch (e) {
+    $("chat-msg").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
 async function loadPosts() {
+  loadChatState().catch(() => { $("chat-state").textContent = "AI 설정을 불러오지 못했습니다."; });
   loadWork24State().catch(() => { $("work24-state").textContent = "추가 키 설정을 불러오지 못했습니다."; });
   loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
   loadEduState().catch(() => { $("edu-state").textContent = "교육정보 설정을 불러오지 못했습니다."; });
