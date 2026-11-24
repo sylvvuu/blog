@@ -205,7 +205,26 @@ async function loadPosts() {
     p.visibility = "public";
   }
   renderList();
+  loadGa();
   loadViews(currentViewDays).catch(() => { $("views-msg").textContent = "조회수를 불러오지 못했습니다."; });
+}
+
+// ---------- GA4 방문자·공고 클릭 (api/analytics.js, 관리자 ID 토큰으로 호출) ----------
+const ANALYTICS_API = "https://sylvieee.vercel.app/api/analytics";
+async function loadGa() {
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch(`${ANALYTICS_API}?days=1`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error("ga");
+    const d = await res.json();
+    const today = dayKey(new Date());
+    const valueOf = arr => ((arr || []).find(x => x.date === today) || { value: 0 }).value;
+    $("ga-visitors").textContent = valueOf(d.visitors).toLocaleString("ko-KR");
+    $("ga-clicks").textContent = valueOf(d.clicks).toLocaleString("ko-KR");
+  } catch (err) {
+    $("ga-visitors").textContent = "연결 전";
+    $("ga-clicks").textContent = "연결 전";
+  }
 }
 
 // ---------- 조회수 ----------
