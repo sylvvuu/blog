@@ -350,3 +350,7 @@ header.site .auth-btn { margin-left: 8px; }
 .job-form { display: flex; gap: 8px; margin-bottom: 12px; }
 .job-form input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
 .job-form button { font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--brand); background: var(--brand); color: #fff; cursor: pointer; }
+
+/* 직업 정보 칸: 좌우 전체 너비 사용, 검색 결과는 두 줄로 */
+#job-panel { grid-column: 1 / -1; }
+@media (min-width: 761px) { #job-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
