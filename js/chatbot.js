@@ -114,7 +114,7 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
       </div>
     </div>
     <form class="chat-form">
-      <input type="text" maxlength="200" placeholder="질문을 입력하세요" aria-label="질문 입력" required>
+      <input type="text" maxlength="200" placeholder="질문을 입력하세요" aria-label="질문 입력">
       <button type="submit">보내기</button>
     </form>`;
   chatPanel = panel;
