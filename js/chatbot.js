@@ -89,7 +89,7 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
   panel.innerHTML = `
     <header class="chat-head">
       <img class="chat-head-avatar" alt="">
-      <strong>무엇이 궁금하세요?</strong>
+      <strong>질문 도우미</strong>
       <div class="chat-switch" role="group" aria-label="캐릭터 선택">
         <button type="button" data-character="male">남성</button>
         <button type="button" data-character="female">여성</button>
