@@ -1,4 +1,4 @@
-# SV 인사팀 블로그
+# SV 블로그
 
 채용 공고와 교육 소식을 올리는 정적 블로그입니다. HTML과 JavaScript로 만들었고, 데이터는 Firebase Firestore에 저장합니다.
 
