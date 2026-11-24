@@ -260,7 +260,7 @@ async function loadPublicJobs() {
 
     el.innerHTML = `
       <div class="jobs-head">
-        <h2>채용 공고 <span>최신 공고</span></h2>
+        <h2>채용 공고</h2>
         <select id="jobs-filter" aria-label="공고 구분 선택">${options}</select>
       </div>
       <ul id="jobs-list"></ul>`;
