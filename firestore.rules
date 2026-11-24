@@ -89,6 +89,12 @@ service cloud.firestore {
     }
 
     // 교육(국민내일배움카드 훈련과정) 서비스 인증키: 채용 키와 별도
+    // 고용24 추가 API 인증키 (교육 추가 과정, 직업정보 검색)
+    match /settings/work24 {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /settings/education {
       allow read: if true;
       allow write: if isAdmin()

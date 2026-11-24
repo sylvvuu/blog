@@ -144,9 +144,13 @@ function renderHome(posts) {
   <div class="home-api">
     <section class="jobs-panel" id="jobs-panel" hidden></section>
     <section class="jobs-panel edu-panel" id="edu-panel" hidden></section>
-    <section class="jobs-panel etc-panel" id="etc-panel">
-      <h2>직업·직무 정보 <span>준비 중</span></h2>
-      <p class="etc-note">고용24 직업정보와 직무정보는 활용신청이 승인되는 대로 이 칸에 연결합니다.</p>
+    <section class="jobs-panel etc-panel" id="job-panel">
+      <div class="jobs-head"><h2>직업 정보</h2></div>
+      <form id="job-form" class="job-form">
+        <input id="job-keyword" type="text" maxlength="30" placeholder="직업명 검색 (예: 컨설턴트, 환경)" aria-label="직업명 검색">
+        <button type="submit">검색</button>
+      </form>
+      <ul id="job-list"><li class="empty">직업명을 입력하면 고용24 직업정보를 보여 드립니다.</li></ul>
     </section>
   </div>
   <div class="columns">
@@ -162,6 +166,7 @@ function renderHome(posts) {
   mountChatbot(document.getElementById("chat-slot"));
   loadPublicJobs();
   loadEducationPrograms();
+  setupJobSearch();
 }
 
 // 공채속보 최신 5건 (고용24 공채속보 Open-API, callOpenApiSvcInfo210L21, 응답은 XML)
@@ -281,9 +286,29 @@ async function loadPublicJobs() {
   }
 }
 
-// 국민내일배움카드 훈련과정 목록 (callOpenApiSvcInfo310L01), 오늘부터 석 달 안에 시작하는 과정
-const EDU_API = "https://www.work24.go.kr/cm/openApi/call/hr/callOpenApiSvcInfo310L01.do";
-async function fetchEducationPrograms(raw) {
+// 교육 칸: 훈련과정 API 4종과 구직자 취업역량 프로그램(217L01)을 한 목록으로 합친다
+// 키: 310L01은 settings/education, 나머지는 settings/work24 (관리자 페이지에서 저장)
+const WORK24_BASE = "https://www.work24.go.kr/cm/openApi/call";
+
+// 여러 이름 중 값이 있는 첫 항목을 읽는다 (태그 이름은 대소문자를 구분하지 않는다)
+const pick = (n, names) => {
+  for (const name of names) {
+    const el = Array.from(n.getElementsByTagName("*")).find(e => e.localName.toLowerCase() === name.toLowerCase());
+    if (el && el.textContent.trim()) return el.textContent.trim();
+  }
+  return "";
+};
+const byLocalName = (xml, name) => Array.from(xml.getElementsByTagName("*")).filter(e => e.localName.toLowerCase() === name.toLowerCase());
+async function parseXmlResponse(res) {
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+  if (xml.getElementsByTagName("parsererror").length) throw new Error("API 응답 오류");
+  if (byLocalName(xml, "error").length) throw new Error("API 오류 응답");
+  return xml;
+}
+
+// 훈련과정 API(310L01, 311L01, 313L01, 312L01)는 응답 형식이 같다. 오늘부터 석 달 안에 시작하는 과정
+async function fetchTraining(url, raw) {
   const today = new Date();
   const end = new Date(today);
   end.setMonth(end.getMonth() + 3);
@@ -295,48 +320,107 @@ async function fetchEducationPrograms(raw) {
     pageNum: "1",
     pageSize: "5",
     srchTraStDt: ymd(today),
-    srchTraEndDt: ymd(end)
+    srchTraEndDt: ymd(end),
+    sort: "ASC",
+    sortCol: "2"
   });
-  const res = await fetch(`${EDU_API}?${params.toString()}`);
-  if (!res.ok) throw new Error(`status ${res.status}`);
-  const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-  if (xml.getElementsByTagName("parsererror").length) throw new Error("API 응답 오류");
-  const all = Array.from(xml.getElementsByTagName("*"));
-  if (all.some(e => e.localName.toLowerCase() === "error")) throw new Error("API 오류 응답");
-  // 태그 이름은 대소문자가 섞일 수 있어 소문자로 비교하고, 여러 이름 중 값이 있는 것을 쓴다
-  const text = (n, names) => {
-    for (const name of names) {
-      const el = Array.from(n.getElementsByTagName("*")).find(e => e.localName.toLowerCase() === name.toLowerCase());
-      if (el && el.textContent.trim()) return el.textContent.trim();
-    }
-    return "";
-  };
-  return all.filter(e => e.localName.toLowerCase() === "scn_list").map(n => ({
-    title: text(n, ["TITLE", "title", "trainTitle"]),
-    start: text(n, ["TRA_START_DATE", "traStartDate"]),
-    end: text(n, ["TRA_END_DATE", "traEndDate"]),
-    url: safeJobUrl(text(n, ["TITLE_LINK", "titleLink"]))
+  const xml = await parseXmlResponse(await fetch(`${url}?${params.toString()}`));
+  return byLocalName(xml, "scn_list").map(n => ({
+    title: pick(n, ["title"]),
+    sub: pick(n, ["subTitle"]),
+    start: pick(n, ["traStartDate"]),
+    end: pick(n, ["traEndDate"]),
+    url: safeJobUrl(pick(n, ["titleLink"]))
   })).filter(p => p.title);
+}
+
+// 구직자 취업역량 강화프로그램(217L01): 항목 이름이 훈련과정과 달라서 따로 읽는다
+async function fetchJobProgram(raw) {
+  const params = new URLSearchParams({ authKey: raw, returnType: "XML", startPage: "1", display: "5" });
+  const xml = await parseXmlResponse(await fetch(`${WORK24_BASE}/wk/callOpenApiSvcInfo217L01.do?${params.toString()}`));
+  // 항목 하나는 pgmNm을 직접 자식으로 가진 요소다 (목록 요소 자신은 제외)
+  return Array.from(xml.getElementsByTagName("*"))
+    .filter(n => Array.from(n.children).some(c => c.localName.toLowerCase() === "pgmnm"))
+    .map(n => ({
+      title: pick(n, ["pgmNm"]),
+      sub: pick(n, ["orgNm"]),
+      start: pick(n, ["pgmStdt"]),
+      end: pick(n, ["pgmEndt"]),
+      url: ""
+    }))
+    .filter(p => p.title);
+}
+
+// settings/work24에 저장한 고용24 추가 인증키를 한 번만 읽는다
+let work24Promise = null;
+function work24Key(name) {
+  if (!db) return Promise.resolve("");
+  if (!work24Promise) {
+    work24Promise = getDoc(doc(db, "settings", "work24"))
+      .then(snap => (snap.exists() ? snap.data() : {}))
+      .catch(() => ({}));
+  }
+  return work24Promise.then(d => {
+    const k = d[name] || "";
+    try { return decodeURIComponent(k); } catch (e) { return k; }
+  });
+}
+
+const EDU_SOURCES = [
+  { label: "국민내일배움카드", key: () => getApiKey("education"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo310L01.do`, raw) },
+  { label: "사업주훈련", key: () => work24Key("edu311"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo311L01.do`, raw) },
+  { label: "일학습병행", key: () => work24Key("edu313"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo313L01.do`, raw) },
+  { label: "국가인적자원개발 컨소시엄", key: () => work24Key("edu312"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo312L01.do`, raw) },
+  { label: "구직자 취업역량", key: () => work24Key("edu217"), load: fetchJobProgram }
+];
+
+// 키가 없거나 호출이 실패한 API는 건너뛰고, 나머지를 시작일 순서로 합친다
+async function fetchAllEducation() {
+  const groups = await Promise.all(EDU_SOURCES.map(async s => {
+    try {
+      const raw = await s.key();
+      if (!raw) return [];
+      return (await s.load(raw)).map(p => ({ ...p, source: s.label }));
+    } catch (e) {
+      return [];
+    }
+  }));
+  const startKey = d => String(d || "").replace(/\D/g, "") || "99999999";
+  return groups.flat().sort((a, b) => startKey(a.start).localeCompare(startKey(b.start)));
+}
+
+// 교육 구분 드롭다운: 전체보기가 기본, 나머지는 API별로 나눠 본다
+function eduFilterHtml(all, id) {
+  const labels = [...new Set(all.map(p => p.source))];
+  return `<select id="${id}" aria-label="교육 구분 선택"><option value="전체">전체보기 (${all.length})</option>${labels.map(l => `<option value="${esc(l)}">${esc(l)} (${all.filter(p => p.source === l).length})</option>`).join("")}</select>`;
+}
+
+function eduItemHtml(p, i) {
+  const title = p.url
+    ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" data-edu="${i}"><strong>${esc(p.title)}</strong></a>`
+    : `<strong>${esc(p.title)}</strong>`;
+  const period = [fmtYmd(p.start), fmtYmd(p.end)].filter(Boolean).join(" ~ ");
+  return `<li>${title}<span>${esc(p.source)}${p.sub ? ` · ${esc(p.sub)}` : ""}</span>${period ? `<em>${esc(period)}</em>` : ""}</li>`;
 }
 
 async function loadEducationPrograms() {
   const el = document.getElementById("edu-panel");
   if (!el || !db) return;
   try {
-    const raw = await getApiKey("education");
-    if (!raw) { el.hidden = true; return; }
-    const list = await fetchEducationPrograms(raw);
-    if (!list.length) { el.hidden = true; return; }
-    el.innerHTML = `
-      <h2>교육 과정 <span>석 달 안에 시작하는 과정</span></h2>
-      <ul>${list.map((p, i) => `<li>
-        ${p.url
-          ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" data-edu="${i}"><strong>${esc(p.title)}</strong></a>`
-          : `<strong>${esc(p.title)}</strong>`}
-        <em>${esc(fmtYmd(p.start) || "")} ~ ${esc(fmtYmd(p.end) || "")}</em>
-      </li>`).join("")}</ul>`;
+    const all = await fetchAllEducation();
+    if (!all.length) { el.hidden = true; return; }
+    el.innerHTML = `<div class="jobs-head"><h2>교육 과정</h2>${eduFilterHtml(all, "edu-filter")}</div><ul id="edu-list"></ul>`;
     el.hidden = false;
-    track("edu_list_view", { program_count: list.length });
+    const draw = tag => {
+      const list = (tag === "전체" ? all : all.filter(p => p.source === tag)).slice(0, 5);
+      document.getElementById("edu-list").innerHTML = list.map(eduItemHtml).join("");
+    };
+    draw("전체");
+    document.getElementById("edu-filter").onchange = e => {
+      draw(e.target.value);
+      track("edu_filter_change", { tag: e.target.value });
+    };
+    track("edu_list_view", { program_count: all.length });
     el.onclick = e => {
       const link = e.target.closest("a[data-edu]");
       if (link) track("edu_item_click", { program_index: Number(link.dataset.edu) + 1 });
@@ -344,6 +428,39 @@ async function loadEducationPrograms() {
   } catch (e) {
     el.hidden = true;
   }
+}
+
+// 직업 정보 칸: 직업정보 API(212L01)를 키워드(K)로 검색한다
+const JOB_SEARCH_API = `${WORK24_BASE}/wk/callOpenApiSvcInfo212L01.do`;
+async function searchJobInfo(raw, keyword) {
+  const params = new URLSearchParams({ authKey: raw, returnType: "XML", target: "JOBCD", srchType: "K", keyword });
+  const xml = await parseXmlResponse(await fetch(`${JOB_SEARCH_API}?${params.toString()}`));
+  return byLocalName(xml, "jobList")
+    .map(n => ({ name: pick(n, ["jobNm"]), category: pick(n, ["jobClcdNM"]) }))
+    .filter(j => j.name);
+}
+
+function setupJobSearch() {
+  const form = document.getElementById("job-form");
+  const list = document.getElementById("job-list");
+  if (!form || !list) return;
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const keyword = document.getElementById("job-keyword").value.trim();
+    if (!keyword) { list.innerHTML = `<li class="empty">직업명을 입력해 주세요.</li>`; return; }
+    list.innerHTML = `<li class="empty">검색 중...</li>`;
+    try {
+      const raw = await work24Key("job212");
+      if (!raw) { list.innerHTML = `<li class="empty">직업정보 인증키가 아직 설정되지 않았습니다.</li>`; return; }
+      const jobs = await searchJobInfo(raw, keyword);
+      list.innerHTML = jobs.length
+        ? jobs.slice(0, 10).map(j => `<li><strong>${esc(j.name)}</strong><span>${esc(j.category)}</span></li>`).join("")
+        : `<li class="empty">검색 결과가 없습니다.</li>`;
+      track("job_search", { result_count: jobs.length });
+    } catch (err) {
+      list.innerHTML = `<li class="empty">검색하지 못했습니다. 잠시 후 다시 시도해 주세요.</li>`;
+    }
+  };
 }
 
 // 관리자 화면에서 저장한 기상청 인증키를 읽어 헤더 아래 날씨 위젯을 채운다 (모든 페이지 공통)
@@ -379,18 +496,26 @@ async function renderApiList(key) {
       });
       app.innerHTML = head + (cards.length ? `<div class="grid">${cards.join("")}</div>` : `<p class="empty">등록된 공고가 없습니다.</p>`);
     } else {
-      const raw = await getApiKey("education");
-      if (!raw) { app.innerHTML = head + `<p class="empty">교육 정보 인증키가 아직 설정되지 않았습니다.</p>`; return; }
-      const list = await fetchEducationPrograms(raw);
-      const cards = list.map(p => {
-        const inner = `<span class="badge">교육</span>
-          <h3>${esc(p.title)}</h3>
-          <time>${esc(fmtYmd(p.start) || "")} ~ ${esc(fmtYmd(p.end) || "")}</time>`;
-        return p.url
-          ? `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>`
-          : `<div class="card">${inner}</div>`;
-      });
-      app.innerHTML = head + (cards.length ? `<div class="grid">${cards.join("")}</div>` : `<p class="empty">등록된 과정이 없습니다.</p>`);
+      const all = await fetchAllEducation();
+      if (!all.length) { app.innerHTML = head + `<p class="empty">등록된 과정이 없거나 인증키가 설정되지 않았습니다.</p>`; return; }
+      app.innerHTML = head + `<div class="jobs-head">${eduFilterHtml(all, "edu-page-filter")}</div><div class="grid" id="edu-grid"></div>`;
+      const draw = tag => {
+        const list = tag === "전체" ? all : all.filter(p => p.source === tag);
+        document.getElementById("edu-grid").innerHTML = list.length
+          ? list.map(p => {
+              const period = [fmtYmd(p.start), fmtYmd(p.end)].filter(Boolean).join(" ~ ");
+              const inner = `<span class="badge">${esc(p.source)}</span>
+                <h3>${esc(p.title)}</h3>
+                ${p.sub ? `<p>${esc(p.sub)}</p>` : ""}
+                ${period ? `<time>${esc(period)}</time>` : ""}`;
+              return p.url
+                ? `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>`
+                : `<div class="card">${inner}</div>`;
+            }).join("")
+          : `<p class="empty">이 구분에 등록된 과정이 없습니다.</p>`;
+      };
+      draw("전체");
+      document.getElementById("edu-page-filter").onchange = e => draw(e.target.value);
     }
   } catch (e) {
     app.innerHTML = head + `<p class="empty">정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;

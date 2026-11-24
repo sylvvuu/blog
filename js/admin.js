@@ -118,7 +118,50 @@ $("jobs-save").addEventListener("click", async () => {
   }
 });
 
+// ---- 고용24 추가 API 키 (settings/work24) ----
+const WORK24_FIELDS = [
+  ["edu311", "사업주훈련 311L01"],
+  ["edu313", "일학습병행 313L01"],
+  ["edu312", "국가인적자원개발 컨소시엄 312L01"],
+  ["edu217", "구직자 취업역량 217L01"],
+  ["job212", "직업정보 212L01"]
+];
+
+async function loadWork24State() {
+  const snap = await getDoc(doc(db, "settings", "work24"));
+  const data = snap.exists() ? snap.data() : {};
+  $("work24-state").textContent = WORK24_FIELDS
+    .map(([k, label]) => `${label}: ${data[k] ? `••••${data[k].slice(-4)}` : "없음"}`)
+    .join(" / ");
+}
+
+$("work24-save").addEventListener("click", async () => {
+  const payload = {};
+  for (const [k] of WORK24_FIELDS) {
+    const v = $(`k-${k}`).value.trim();
+    if (!v) continue;
+    if (v.length < 20) {
+      $("work24-msg").textContent = "인증키가 너무 짧습니다. 입력한 키를 다시 확인하세요.";
+      return;
+    }
+    payload[k] = v;
+  }
+  if (!Object.keys(payload).length) {
+    $("work24-msg").textContent = "입력된 키가 없습니다. 저장할 키를 넣으세요.";
+    return;
+  }
+  try {
+    await setDoc(doc(db, "settings", "work24"), { ...payload, updatedAt: serverTimestamp() }, { merge: true });
+    WORK24_FIELDS.forEach(([k]) => { $(`k-${k}`).value = ""; });
+    $("work24-msg").textContent = "저장했습니다.";
+    await loadWork24State();
+  } catch (e) {
+    $("work24-msg").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
 async function loadPosts() {
+  loadWork24State().catch(() => { $("work24-state").textContent = "추가 키 설정을 불러오지 못했습니다."; });
   loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
   loadEduState().catch(() => { $("edu-state").textContent = "교육정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });

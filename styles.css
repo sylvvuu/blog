@@ -344,3 +344,9 @@ main { padding-top: 0; }
 header.site .header-weather { display: grid; grid-template-columns: auto auto auto; column-gap: 6px; align-items: center; flex: 0 0 auto; max-width: none; width: auto; margin: 0 0 0 auto; padding: 2px 0; }
 header.site .header-weather > span:last-child { grid-column: 1 / -1; }
 header.site .auth-btn { margin-left: 8px; }
+
+/* 교육 구분 드롭다운, 직업 검색 칸 */
+#edu-filter, #edu-page-filter { font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid var(--brand); border-radius: 999px; background: #fff; color: var(--brand); font-weight: 600; }
+.job-form { display: flex; gap: 8px; margin-bottom: 12px; }
+.job-form input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.job-form button { font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--brand); background: var(--brand); color: #fff; cursor: pointer; }
