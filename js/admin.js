@@ -74,7 +74,7 @@ async function loadJobsState() {
   const snap = await getDoc(doc(db, "settings", "jobs"));
   const key = snap.exists() ? snap.data().serviceKey : "";
   $("jobs-state").textContent = key
-    ? `저장됨: ••••${key.slice(-4)} (홈 맨 아래 공공취업정보 표시 대상)`
+    ? `저장됨: ••••${key.slice(-4)} (홈의 채용·교육 목록에 사용 중)`
     : "저장된 키가 없습니다. 홈 목록이 숨겨진 상태입니다.";
 }
 
