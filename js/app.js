@@ -187,17 +187,18 @@ async function fetchLatestJobs(raw, display) {
 }
 
 // settings/jobs에 저장된 고용24 인증키를 한 번만 읽어 공채속보와 교육 API가 함께 쓴다
-let jobsKeyPromise = null;
-function getApiKey() {
+// 서비스마다 인증키가 다르다: 채용(210L21)은 settings/jobs, 교육(310L01)은 settings/education
+const keyPromises = {};
+function getApiKey(name = "jobs") {
   if (!db) return Promise.resolve("");
-  if (!jobsKeyPromise) {
-    jobsKeyPromise = getDoc(doc(db, "settings", "jobs")).then(snap => {
+  if (!keyPromises[name]) {
+    keyPromises[name] = getDoc(doc(db, "settings", name)).then(snap => {
       const key = snap.exists() ? snap.data().serviceKey : "";
       if (!key) return "";
       try { return decodeURIComponent(key); } catch (e) { return key; }
     });
   }
-  return jobsKeyPromise;
+  return keyPromises[name];
 }
 
 
@@ -295,7 +296,7 @@ async function loadEducationPrograms() {
   const el = document.getElementById("edu-panel");
   if (!el || !db) return;
   try {
-    const raw = await getApiKey();
+    const raw = await getApiKey("education");
     if (!raw) { el.hidden = true; return; }
     const list = await fetchEducationPrograms(raw);
     if (!list.length) { el.hidden = true; return; }

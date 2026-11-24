@@ -88,6 +88,14 @@ service cloud.firestore {
         && request.resource.data.serviceKey.size() <= 200;
     }
 
+    // 교육(국민내일배움카드 훈련과정) 서비스 인증키: 채용 키와 별도
+    match /settings/education {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.serviceKey is string
+        && request.resource.data.serviceKey.size() <= 200;
+    }
+
     // 명언: 방문자가 읽고, 관리자만 추가·삭제 (수정은 막음)
     match /quotes/{quoteId} {
       allow read: if true;

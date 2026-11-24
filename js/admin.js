@@ -78,6 +78,30 @@ async function loadJobsState() {
     : "저장된 키가 없습니다. 홈 목록이 숨겨진 상태입니다.";
 }
 
+async function loadEduState() {
+  const snap = await getDoc(doc(db, "settings", "education"));
+  const key = snap.exists() ? snap.data().serviceKey : "";
+  $("edu-state").textContent = key
+    ? `저장됨: ••••${key.slice(-4)} (홈의 교육 목록에 사용 중)`
+    : "저장된 키가 없습니다. 홈 교육 목록이 숨겨진 상태입니다.";
+}
+
+$("edu-save").addEventListener("click", async () => {
+  const key = $("edu-key").value.trim();
+  if (key && key.length < 20) {
+    $("edu-msg").textContent = "인증키가 너무 짧습니다. 교육 서비스 인증키를 넣으세요.";
+    return;
+  }
+  try {
+    await setDoc(doc(db, "settings", "education"), { serviceKey: key, updatedAt: serverTimestamp() }, { merge: true });
+    $("edu-key").value = "";
+    $("edu-msg").textContent = key ? "저장했습니다." : "키를 지웠습니다.";
+    await loadEduState();
+  } catch (e) {
+    $("edu-msg").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
 $("jobs-save").addEventListener("click", async () => {
   const key = $("jobs-key").value.trim();
   if (key && key.length < 20) {
@@ -96,6 +120,7 @@ $("jobs-save").addEventListener("click", async () => {
 
 async function loadPosts() {
   loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
+  loadEduState().catch(() => { $("edu-state").textContent = "교육정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
