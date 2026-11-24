@@ -16,7 +16,7 @@ export const COMPANY_NAME = "SV";
 
 // 홈 화면 회사 소개. 아래 문구는 초안이므로 확정된 소개 문구로 바꿔 주세요.
 export const COMPANY_INTRO = {
-  kicker: "ABOUT SY ELECTRONICS",
+  kicker: "ABOUT SV",
   title: "사람이 기술을 완성합니다",
   body: "SV는 본사 서울과 전국 지점이 함께 일하는 회사입니다. 임직원이 실무 역량을 키울 수 있도록 교육을 지원하고, 함께 성장할 인재를 찾고 있습니다.",
   values: [

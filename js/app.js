@@ -136,7 +136,7 @@ function renderHome(posts) {
     <p>${esc(COMPANY_INTRO.body)}</p>
     <ul class="values">${COMPANY_INTRO.values.map(v => `<li><strong>${esc(v.title)}</strong><span>${esc(v.desc)}</span></li>`).join("")}</ul>
   </section>`;
-  app.innerHTML = `${intro}<section class="banner"><p class="kicker">SY ELECTRONICS CAREERS</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
+  app.innerHTML = `${intro}<section class="banner"><p class="kicker">SV CAREER</p><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></section>
   <div class="columns">
     ${columnBlock("education", edu)}
     ${columnBlock("recruit", rec)}
