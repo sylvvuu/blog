@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot } from "./chatbot.js";
+import { setupChatbot, mountChatbot } from "./chatbot.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -47,7 +47,6 @@ const bodyThumb = p => {
 };
 // useBody: 목록 카드에서만 대표 이미지가 없으면 본문 첫 이미지를 쓴다
 const artHtml = (p, useBody = false) => {
-  if (p.imageUrl) return `<img src="${esc(p.imageUrl)}" alt="" loading="lazy">`;
   const thumb = useBody ? bodyThumb(p) : null;
   return thumb ? `<img src="${thumb}" alt="" loading="lazy">` : artOf(p);
 };
@@ -130,9 +129,14 @@ function columnBlock(key, list) {
 function renderHome(posts) {
   document.title = SITE_TITLE;
   app.innerHTML = `<div class="home-title"><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></div>
+  <div id="chat-slot" class="chat-slot"></div>
   <div class="home-api">
     <section class="jobs-panel" id="jobs-panel" hidden></section>
     <section class="jobs-panel edu-panel" id="edu-panel" hidden></section>
+    <section class="jobs-panel etc-panel" id="etc-panel">
+      <h2>직업·직무 정보 <span>준비 중</span></h2>
+      <p class="etc-note">고용24 직업정보와 직무정보는 활용신청이 승인되는 대로 이 칸에 연결합니다.</p>
+    </section>
   </div>
   <div class="columns">
     <section class="col col-inquiry">
@@ -144,6 +148,7 @@ function renderHome(posts) {
       <div class="art">${ART.inquiry}</div>
     </section>
   </div>`;
+  mountChatbot(document.getElementById("chat-slot"));
   loadPublicJobs();
   loadEducationPrograms();
 }
@@ -862,3 +867,4 @@ loadRandomQuote();
 
 // 질문 챗봇: 키 없이 블로그 글을 검색한다 (js/chatbot.js)
 setupChatbot({ loadPosts, track, esc, isConfigured });
+mountChatbot(document.getElementById("chat-slot"));

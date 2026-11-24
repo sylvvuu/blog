@@ -264,8 +264,6 @@ function fillForm(p = {}) {
   $("f-visibility").value = p.visibility || "public";
   $("f-title").value = p.title || "";
   $("f-summary").value = p.summary || "";
-  $("f-imageUrl").value = p.imageUrl || "";
-  $("f-imageCredit").value = p.imageCredit || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
@@ -290,8 +288,6 @@ $("post-form").addEventListener("submit", async e => {
     visibility: $("f-visibility").value === "private" ? "private" : "public",
     title: $("f-title").value.trim(),
     summary: $("f-summary").value.trim(),
-    imageUrl: safeHttps($("f-imageUrl").value.trim()),
-    imageCredit: $("f-imageCredit").value.trim(),
     body: $("f-body").value
   };
   const id = $("f-id").value;

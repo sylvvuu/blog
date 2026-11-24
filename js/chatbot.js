@@ -76,6 +76,15 @@ function saveCharacter(v) {
   try { localStorage.setItem(CHARACTER_KEY, v); } catch (e) { /* 저장 불가 환경은 무시 */ }
 }
 
+let chatPanel = null;
+
+// 홈 화면의 질문 칸(슬롯)에 패널을 붙이고 펼쳐 둔다
+export function mountChatbot(slot) {
+  if (!chatPanel || !slot) return;
+  chatPanel.hidden = false;
+  slot.append(chatPanel);
+}
+
 export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
   const fab = document.createElement("button");
   fab.type = "button";
@@ -108,7 +117,7 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
       <input type="text" maxlength="200" placeholder="질문을 입력하세요" aria-label="질문 입력" required>
       <button type="submit">보내기</button>
     </form>`;
-  document.body.append(fab, panel);
+  chatPanel = panel;
 
   const log = panel.querySelector(".chat-log");
   const form = panel.querySelector(".chat-form");
