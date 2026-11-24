@@ -23,7 +23,7 @@
 3. **Authentication > 시작하기 > Google**을 사용 설정하고 지원 이메일을 `fkdna3@gmail.com`으로 지정합니다.
 4. **프로젝트 설정 > 일반 > 내 앱 > 웹 앱 추가**를 하고 표시되는 `firebaseConfig` 값을 `js/config.js`에 붙여넣습니다.
 5. **Firestore > 규칙** 탭에 `firestore.rules` 내용을 붙여넣고 게시합니다.
-6. **Authentication > 설정 > 승인된 도메인**에 배포 도메인을 추가합니다. 현재 공개 주소는 `https://sylvvuu.github.io/blog/`입니다.
+6. **Authentication > 설정 > 승인된 도메인**에 배포 도메인을 추가합니다. 공식 주소는 `sylvieee.vercel.app`입니다.
 
 ## 2. Google Analytics 연결
 
@@ -59,9 +59,10 @@ npx serve .
 
 ## 6. 배포
 
-- 현재 공개 주소: `https://sylvvuu.github.io/blog/` (GitHub Pages)
-- `main` 브랜치에 push하면 반영됩니다. 반영까지 몇 분 걸릴 수 있습니다.
-- Vercel 배포 이력은 확인이 필요합니다. 배포 대상을 정하면 이 항목을 갱신합니다.
+- 공식 배포 주소: `https://sylvieee.vercel.app/` (Vercel Production)
+- `sylvielectronics.vercel.app`은 위 주소로 307 리다이렉트됩니다.
+- GitHub Pages 주소 `https://sylvvuu.github.io/blog/`도 함께 공개되어 있습니다.
+- `main` 브랜치에 push하면 두 곳 모두 반영되는지 배포 후 확인합니다.
 
 ## 7. GitHub 업데이트
 

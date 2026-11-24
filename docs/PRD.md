@@ -4,7 +4,7 @@
 - 문서 버전: v0.1
 - 작성일: 2026-11-24
 - 작성자: 이은정
-- 관련 자료: https://sylvvuu.github.io/blog/ , https://github.com/sylvvuu/blog
+- 관련 자료: 공식 배포 주소 https://sylvieee.vercel.app/ (Vercel Production), 보조 주소 https://sylvvuu.github.io/blog/ (GitHub Pages), 저장소 https://github.com/sylvvuu/blog
 
 ## 2. 개요
 - 핵심 문제: 청년 구직자가 홈에 들어와도 채용 공고 글까지 가는 경로가 길어서, 공고를 열어 보지 못하고 떠날 수 있다. GA 기준 방문 44명 중 공고 글을 연 사람은 6명(13.6%)이다.
@@ -67,7 +67,7 @@
 - 사이트 안 지원 폼은 이름과 이메일을 저장한다. 접근 권한과 보관 기간 정리가 필요하다.
 
 ## 8. 출시 및 운영
-- 배포 방식: GitHub Pages (main 푸시 시 반영). 공개 주소 기준이며, Vercel 배포 여부는 확인 필요
+- 배포 방식: Vercel Production (sylvieee.vercel.app). sylvielectronics.vercel.app은 여기로 307 리다이렉트된다. GitHub Pages(sylvvuu.github.io/blog)도 함께 공개되어 있다.
 - 일정
   - 11/24 10:30: PRD 초안 업로드 (완료)
   - 11/24 11:00: PRD 초안 제출 마감
