@@ -294,16 +294,18 @@
 1. 제목 영역: "채용과 교육 소식" 한 줄과 짧은 설명
 2. 질문 도우미 카드: 현재는 오른쪽 중간 떠 있는 버튼 (목표: 제목 아래 카드, 미구현)
 3. 두 칸 영역 (모바일은 한 칸)
-   - 왼쪽 "공채속보 최신 채용 공고": 드롭다운 + 목록 5건 (제목, 회사, 기업 구분, 마감일)
-   - 오른쪽 "교육 과정": 석 달 안에 시작하는 과정 5건 (제목, 기간). 키가 없으면 숨김
+   - 왼쪽 "채용 공고": 드롭다운 + 목록 5건 (제목, 회사, 기업 구분, 마감일). 키가 없으면 숨김
+   - 오른쪽 "교육 과정": 기본은 전체보기, 드롭다운으로 API별 분류. 시작일 순 5건 (제목, 출처, 기간). 키가 없는 API는 건너뜀
+   - 아래 전체 너비 "직업 정보": 검색창에 직업명을 넣으면 고용24 직업정보(212L01) 결과 목록 (직무 칸은 이번 범위에서 제외)
 4. 문의 영역
 
 ### 15.2 데이터 호출
 | 대상 | 주소 | 주요 조건 | 키 저장 위치 |
 |---|---|---|---|
 | 채용 목록 | `callOpenApiSvcInfo210L21.do` (XML) | callTp=L, display=20, sortField=regDt, sortOrderBy=desc | Firestore `settings/jobs` |
-| 교육 목록 | `callOpenApiSvcInfo310L01.do` (XML) | outType=1, pageSize=5, srchTraStDt, srchTraEndDt (오늘부터 석 달) | Firestore `settings/education` |
-| AI 상담 | Vercel `/api/chat` (POST) | body `{ question }`, 1~200자 | Vercel 환경 변수 `JOBS_API_KEY`, `ANTHROPIC_API_KEY` |
+| 교육 목록 | `callOpenApiSvcInfo310L01.do`, `311L01`, `313L01`, `312L01` (XML), 구직자 프로그램 `217L01` (XML) | 훈련 4종: outType=1, pageSize=5, srchTraStDt/EndDt (오늘부터 석 달), sort=ASC, sortCol=2. 217L01: startPage=1, display=10. 훈련 4종은 crseTracseSe를 생략해 해당 API 전체 유형을 조회 | 310L01은 `settings/education`, 나머지는 `settings/work24` |
+| 직업 정보 | `callOpenApiSvcInfo212L01.do` (XML) | target=JOBCD, srchType=K, keyword (사용자 입력) | `settings/work24` (`job212`) |
+| AI 상담 | Vercel `https://sylvieee.vercel.app/api/chat` (POST) | body `{ question }`, 1~200자. 설정 `settings/chat`(사용 여부, 모델, 근거 데이터, 추가 규칙)을 읽음. 근거 목록은 채용·교육·직업정보 중 관리자가 고른 것 | Vercel 환경 변수 `ANTHROPIC_API_KEY` (필수), `JOBS_API_KEY` (선택, 없으면 `settings/jobs` 사용) |
 
 ### 15.3 이벤트 목록 (GA4)
 | 이벤트 | 보내는 값 | 발생 시점 |
@@ -322,18 +324,23 @@
 - 관리자 브라우저에서는 이벤트를 보내지 않는다.
 
 ### 15.4 관리자 화면
-- 키 저장: 날씨(`settings/weather`), 채용(`settings/jobs`), 교육(`settings/education`)
+- 키 저장: 날씨(`settings/weather`), 채용(`settings/jobs`), 교육(`settings/education`), 추가 고용24 키 5종(`settings/work24`: 311L01, 313L01, 312L01, 217L01, 212L01)
+- AI 상담 설정(`settings/chat`): 사용 여부(기본 꺼짐), 모델(Haiku, Sonnet, Opus), 근거 데이터(채용, 교육, 직업정보), 추가 답변 규칙 1,000자. 핵심 규칙은 서버에 고정되어 관리자가 바꿀 수 없음
 - 글 작성: 공개 설정, 제목, 요약, 본문, 사진 주소, 사진 출처 (교육과 채용 분류 없음)
 - 조회수 확인 기능 유지
 
 ### 15.5 완료 기준
 - [x] 홈에서 채용 목록과 드롭다운이 보인다 (배포 확인).
-- [ ] 교육 키를 넣으면 교육 목록이 보이고, 키를 지우면 숨는다 (승인 대기).
+- [ ] 교육 키를 넣으면 교육 목록이 보이고, 키를 지우면 숨는다 (배포 후 확인).
+- [ ] 교육 구분 드롭다운에서 기본은 전체보기이고, API를 고르면 그 과정만 보인다 (배포 후 확인).
+- [ ] 직업 정보 칸에서 검색어를 넣으면 212L01 결과 목록이 보인다 (배포 후 확인).
 - [x] 관리자 화면에서 교육과 채용 글 작성 칸이 없다 (로컬 완료, 배포 대기).
-- [ ] `/api/chat`이 공고 근거로 답하고, 근거가 없으면 "찾을 수 없다"고 답한다 (키 대기).
+- [ ] 관리자에서 AI 답변을 켜면 홈 챗봇이 Claude 답변과 근거 항목을 보여준다 (Vercel 배포와 `ANTHROPIC_API_KEY` 확인 후).
+- [ ] 근거가 없으면 "목록에서 찾을 수 없습니다"라고 답한다 (10문항 평가로 확인).
+- [ ] AI 답변을 끄거나 호출이 실패하면 기존 글 검색 답변으로 돌아간다 (배포 후 확인).
 - [x] AI 키가 브라우저, 저장소, Firestore에 없다 (서버 환경 변수 설계).
 - [ ] 이벤트 9개가 GA4 실시간 보고서에 들어온다 (배포 후 확인).
 - [ ] 평가 질문 10개의 결과가 `TEST_REPORT.md`에 있다 (미실시).
 
 ### 15.6 미구현과 다음 단계
-- 자동 슬라이드, 챗봇 홈 상단 이동, API 실패 안내, 직업정보와 직무정보 API, 청년정책 API, 기업 재무 정보, 갭이어 안내
+- 자동 슬라이드, 챗봇 홈 상단 이동, API 실패 안내, 직무정보(215L01) 칸 (활용신청 승인 대기), 청년정책 API, 기업 재무 정보, 갭이어 안내
