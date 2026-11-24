@@ -199,14 +199,19 @@ async function loadPublicJobs() {
     if (!latest.length) { el.hidden = true; return; }
     el.innerHTML = `
       <h2>공채속보 <span>최신 ${latest.length}건</span></h2>
-      <ul>${latest.map(j => `<li>
+      <ul>${latest.map((j, i) => `<li>
         ${j.url
-          ? `<a href="${esc(j.url)}" target="_blank" rel="noopener"><strong>${esc(j.title)}</strong></a>`
+          ? `<a href="${esc(j.url)}" target="_blank" rel="noopener" data-job="${i}"><strong>${esc(j.title)}</strong></a>`
           : `<strong>${esc(j.title)}</strong>`}
         <span>${esc(j.company)}${j.kind ? ` · ${esc(j.kind)}` : ""}</span>
         <em>마감 ${esc(fmtYmd(j.endDate) || "추후 공지")}</em>
       </li>`).join("")}</ul>`;
     el.hidden = false;
+    track("job_list_view", { job_count: latest.length });
+    el.onclick = e => {
+      const link = e.target.closest("a[data-job]");
+      if (link) track("job_item_click", { job_index: Number(link.dataset.job) + 1 });
+    };
   } catch (e) {
     el.hidden = true;
   }
