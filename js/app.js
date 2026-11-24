@@ -128,7 +128,19 @@ function columnBlock(key, list) {
 
 function renderHome(posts) {
   document.title = SITE_TITLE;
-  app.innerHTML = `<div class="home-title"><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></div>
+  app.innerHTML = `<section class="home-hero">
+    <p class="eyebrow">SV CAREER</p>
+    <h1>취업도, 내 인생도.<br>다음은 나답게.</h1>
+    <p>고용24 채용·교육 정보를 한곳에서 확인하고, 궁금한 점은 질문 도우미에게 물어보세요.</p>
+  </section>
+  <section class="roadmap-card" aria-label="나의 로드맵 안내">
+    <p class="eyebrow">MAKE YOUR NEXT MOVE</p>
+    <ol>
+      <li><span>01</span>나를 발견하기</li>
+      <li><span>02</span>경험을 쌓아가기</li>
+      <li><span>03</span>다음 기회로 연결하기</li>
+    </ol>
+  </section>
   <div id="chat-slot" class="chat-slot"></div>
   <div class="home-api">
     <section class="jobs-panel" id="jobs-panel" hidden></section>
@@ -336,20 +348,43 @@ async function loadSeoulWeather() {
   }
 }
 
-function renderList(key, posts) {
+// 교육·채용 목록은 가상 글(Firestore posts)을 쓰지 않고 고용24 API 응답만 보여준다
+async function renderApiList(key) {
   const c = COLUMNS[key];
   document.title = `${c.title} | ${SITE_TITLE}`;
-  const list = posts.filter(p => p.category === key);
-  const body = list.length
-    ? `<div class="grid">${list.map(p => `<a class="card" href="#/post/${esc(p.id)}">
-        <div class="thumb">${artHtml(p, true)}</div>
-        ${p.category === "recruit" ? `<span class="badge">${esc(p.jobType || "채용")}</span>` : `<span class="badge">교육</span>`}
-        <h3>${esc(p.title)}</h3>
-        <p>${esc(p.summary)}</p>
-        <time>${fmtDate(p.createdAt)}</time>
-      </a>`).join("")}</div>`
-    : `<p class="empty">등록된 글이 없습니다.</p>`;
-  app.innerHTML = `<section class="hero"><h1>${esc(c.title)}</h1><p>${esc(c.desc)}</p></section>${body}`;
+  const head = `<section class="hero"><h1>${esc(c.title)}</h1><p>${esc(c.desc)}</p></section>`;
+  app.innerHTML = head + `<p class="loading">불러오는 중...</p>`;
+  try {
+    if (key === "recruit") {
+      const raw = await getApiKey();
+      if (!raw) { app.innerHTML = head + `<p class="empty">채용 정보 인증키가 아직 설정되지 않았습니다.</p>`; return; }
+      const jobs = await fetchLatestJobs(raw, 20);
+      const cards = jobs.map(j => {
+        const inner = `<span class="badge">${esc(j.kind || "기타")}</span>
+          <h3>${esc(j.title)}</h3><p>${esc(j.company)}</p>
+          <time>마감 ${esc(fmtYmd(j.endDate) || "미정")}</time>`;
+        return j.url
+          ? `<a class="card" href="${esc(j.url)}" target="_blank" rel="noopener">${inner}</a>`
+          : `<div class="card">${inner}</div>`;
+      });
+      app.innerHTML = head + (cards.length ? `<div class="grid">${cards.join("")}</div>` : `<p class="empty">등록된 공고가 없습니다.</p>`);
+    } else {
+      const raw = await getApiKey("education");
+      if (!raw) { app.innerHTML = head + `<p class="empty">교육 정보 인증키가 아직 설정되지 않았습니다.</p>`; return; }
+      const list = await fetchEducationPrograms(raw);
+      const cards = list.map(p => {
+        const inner = `<span class="badge">교육</span>
+          <h3>${esc(p.title)}</h3>
+          <time>${esc(fmtYmd(p.start) || "")} ~ ${esc(fmtYmd(p.end) || "")}</time>`;
+        return p.url
+          ? `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>`
+          : `<div class="card">${inner}</div>`;
+      });
+      app.innerHTML = head + (cards.length ? `<div class="grid">${cards.join("")}</div>` : `<p class="empty">등록된 과정이 없습니다.</p>`);
+    }
+  } catch (e) {
+    app.innerHTML = head + `<p class="empty">정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+  }
 }
 
 // ---------- 글 상세 ----------
@@ -695,10 +730,10 @@ async function renderRoute() {
   const hash = location.hash.replace(/^#/, "") || "/";
   if (hash === "/inquiry") return renderInquiry();
   app.innerHTML = `<p class="loading">불러오는 중...</p>`;
+  if (hash === "/education" || hash === "/recruit") return renderApiList(hash.slice(1));
   try {
     const posts = await loadPosts();
     if (hash.startsWith("/post/")) return await renderPost(posts, decodeURIComponent(hash.slice(6)));
-    if (hash === "/education" || hash === "/recruit") return renderList(hash.slice(1), posts);
     renderHome(posts);
   } catch (e) {
     app.innerHTML = `<div class="notice">글을 불러오지 못했습니다: ${esc(e.message)}</div>`;
