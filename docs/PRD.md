@@ -339,6 +339,7 @@
 | chatbot_question | matched, character | 질문 전송 |
 | chatbot_link_click | post_id, category | 답에서 글 링크 클릭 |
 | chatbot_character_change | character | 캐릭터 변경 |
+| chatbot_source_click | source_index (순번) | AI 답변의 추천 공고 링크 클릭 (H3 측정용) |
 
 - 공고 제목, 질문 원문, 개인 정보는 보내지 않는다.
 - 관리자 브라우저에서는 이벤트를 보내지 않는다.
@@ -359,7 +360,7 @@
 - [ ] 근거가 없으면 "목록에서 찾을 수 없습니다"라고 답한다 (10문항 평가로 확인).
 - [ ] AI 답변을 끄거나 호출이 실패하면 기존 글 검색 답변으로 돌아간다 (배포 후 확인).
 - [x] AI 키가 브라우저, 저장소, Firestore에 없다 (서버 환경 변수 설계).
-- [ ] 이벤트 9개가 GA4 실시간 보고서에 들어온다 (배포 후 확인).
+- [ ] 이벤트 10개가 GA4 실시간 보고서에 들어온다 (배포 후 확인).
 - [ ] 평가 질문 10개의 결과가 `TEST_REPORT.md`에 있다 (미실시).
 
 ### C.6 미구현과 다음 단계

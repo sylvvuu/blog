@@ -164,6 +164,9 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
   log.addEventListener("click", e => {
     const a = e.target.closest("a[data-chat-link]");
     if (a) track("chatbot_link_click", { post_id: a.dataset.postId, category: a.dataset.category });
+    // 추천 공고 링크는 순번만 기록한다 (공고 제목과 질문 원문은 보내지 않음)
+    const s = e.target.closest("a[data-chat-source]");
+    if (s) track("chatbot_source_click", { source_index: Number(s.dataset.chatSource) + 1 });
   });
 
   const postLink = p => `<li><a href="#/post/${encodeURIComponent(p.id)}" data-chat-link data-post-id="${esc(p.id)}" data-category="${esc(p.category || "")}">${esc(p.title)}</a></li>`;
@@ -188,7 +191,8 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
       // 추천 공고 카드: 회사, 지역, 고용형태, 마감일은 서버가 공고 데이터에서 가져온 값이다
       const card = s => {
         const meta = [s.source, s.company, s.region, s.employType, s.endDate ? `마감 ${s.endDate}` : ""].filter(Boolean).join(" · ");
-        const title = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title);
+        const i = ai.sources.indexOf(s);
+        const title = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener" data-chat-source="${i}">${esc(s.title)}</a>` : esc(s.title);
         return `<li>${title}<br><span>${esc(meta)}</span></li>`;
       };
       const sourceList = ai.sources.length
