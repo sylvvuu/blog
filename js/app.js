@@ -129,16 +129,12 @@ function columnBlock(key, list) {
 
 function renderHome(posts) {
   document.title = SITE_TITLE;
-  const edu = posts.filter(p => p.category === "education");
-  const rec = posts.filter(p => p.category === "recruit");
   app.innerHTML = `<div class="home-title"><h1>채용과 교육 소식</h1><p>교육과 채용 소식을 한곳에서 확인하고, 궁금한 점은 문의하기로 남겨 주세요.</p></div>
   <div class="home-api">
     <section class="jobs-panel" id="jobs-panel" hidden></section>
     <section class="jobs-panel edu-panel" id="edu-panel" hidden></section>
   </div>
   <div class="columns">
-    ${columnBlock("education", edu)}
-    ${columnBlock("recruit", rec)}
     <section class="col col-inquiry">
       <header class="col-head">
         <h2>${esc(COLUMNS.inquiry.title)}</h2>

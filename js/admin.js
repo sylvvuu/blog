@@ -2,7 +2,6 @@ import { firebaseConfig, ADMIN_EMAIL } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { SEED_POSTS } from "./seed.js";
 
 const $ = id => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -105,7 +104,6 @@ async function loadPosts() {
     await updateDoc(doc(db, "posts", p.id), { visibility: "public" });
     p.visibility = "public";
   }
-  $("seed-btn").hidden = posts.length > 0;
   renderList();
   loadViews(currentViewDays).catch(() => { $("views-msg").textContent = "조회수를 불러오지 못했습니다."; });
 }
@@ -310,14 +308,6 @@ $("delete-btn").addEventListener("click", async () => {
   await deleteDoc(doc(db, "posts", id));
   await loadPosts();
   fillForm({});
-});
-
-$("seed-btn").addEventListener("click", async () => {
-  if (!confirm("샘플 글 " + SEED_POSTS.length + "개를 등록할까요?")) return;
-  for (const p of SEED_POSTS) {
-    await addDoc(collection(db, "posts"), { ...p, createdAt: serverTimestamp() });
-  }
-  await loadPosts();
 });
 
 syncJobType();
