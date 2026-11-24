@@ -110,3 +110,13 @@ SY Electronics 인사팀 블로그(https://sylvvuu.github.io/blog/)의 작업 �
 - **브라우저 캐시:** GitHub Pages는 `js/app.js`를 약 10분간 캐시합니다. 배포 직후에는 강력 새로고침(Ctrl+Shift+R)이 필요합니다.
 - **채용 목록 숨김:** API 오류가 나면 목록을 조용히 숨깁니다. 원인을 화면에서 보려면 오류 문구를 표시하도록 바꿀 수 있습니다.
 - **dist/ 폴더:** `dist/index.html`, `dist/admin.html`은 예전 사본이라 배포 대상이 아닙니다. 사용하지 않습니다.
+
+## 9. 2026-11-24 진행 상황 (GA4·관리자 데이터 연결)
+
+- 완료: GCP Workload Identity Pool `vercel`과 OIDC Provider `vercel` 생성 (issuer `https://oidc.vercel.com/sylvia-7050`, 허용 audience `https://vercel.com/sylvia-7050`, 조건은 production 토큰의 sub로 제한)
+- 완료: 서비스 계정 `ga-reader`에 WIF 주체 부여(Workload Identity User), GA4 속성 `564927790`에 `ga-reader` Viewer 추가
+- 완료: Vercel Production 환경변수 6개 저장 (`GA_PROPERTY_ID`, `GCP_PROJECT_NUMBER`, `GCP_WORKLOAD_IDENTITY_POOL_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER_ID`, `GCP_SERVICE_ACCOUNT_EMAIL`, `FIREBASE_API_KEY`). 키 파일은 만들지 않음
+- 완료: Production 재배포 (`dpl_FpgM7jpBPDR5AsqA2YomkDprCFXE`) READY 상태 확인
+- 미확인: 관리자 화면에서 방문자·공고 클릭 카드에 실제 숫자가 나오는지. 다음 확인 항목
+- 미해결: 챗봇에서 "청년정책 연결해줘"를 물으면 "관련 글을 찾지 못했습니다"라고 답함. 청년정책 훑어보기 페이지 연결과 키워드 인식 수정 필요
+- 미완: 측정 ID(G-) 일치 확인, 홈 하단 목록 Vercel 환경변수 이전, AI 10문항 평가(TEST_REPORT 4-1)
