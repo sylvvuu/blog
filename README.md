@@ -10,6 +10,8 @@
 | `admin.html` | 관리자 페이지 (Google 로그인, 글 작성·수정·삭제, 외부 API 키 설정) |
 | `js/config.js` | Firebase 설정값, 관리자 이메일, 회사명 |
 | `js/app.js` | 블로그 화면 로직, GA4 이벤트 전송 |
+| `js/chatbot.js` | 신입 구직자용 질문 챗봇 (규칙 기반 글 검색, 외부 키 없음) |
+| `tests/chatbot.test.mjs` | 챗봇 검색 단위 테스트 (`node --test tests/chatbot.test.mjs`) |
 | `js/admin.js` | 관리자 화면 로직 |
 | `js/seed.js` | 초기 샘플 글 |
 | `firestore.rules` | 읽기는 공개 글만, 쓰기는 관리자만 허용 |
@@ -84,4 +86,5 @@ git push
   - 지원: `post_apply`, `post_apply_submit`
   - 문의: `inquiry_submit`
   - 공채속보: `job_list_view`, `job_item_click`
+  - 챗봇: `chatbot_open`, `chatbot_question`(찾은 글 수만), `chatbot_link_click`
 - 11/18 이전에는 완독 이벤트 이름이 `post_complete`였고, 글 조회 이벤트 `post_view`도 있었습니다. 이전 데이터를 볼 때 이 이름 변경을 고려합니다.

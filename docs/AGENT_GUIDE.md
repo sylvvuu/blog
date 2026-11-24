@@ -26,7 +26,7 @@
 
 ## 3. 이벤트 이름
 - **이벤트 이름은 반드시 `js/app.js`의 실제 `track()` 호출을 기준으로 합니다.** README나 옛 문서의 이름을 믿지 않습니다.
-- 현재 이름: `page_view`, `page_time`, `post_read`, `post_like`, `post_unlike`, `post_scrap`, `post_unscrap`, `post_comment`, `share`, `post_apply`, `post_apply_submit`, `inquiry_submit`, `job_list_view`, `job_item_click`
+- 현재 이름: `page_view`, `page_time`, `post_read`, `post_like`, `post_unlike`, `post_scrap`, `post_unscrap`, `post_comment`, `share`, `post_apply`, `post_apply_submit`, `inquiry_submit`, `chatbot_open`, `chatbot_question`, `chatbot_link_click`, `job_list_view`, `job_item_click`
 - 옛 이름: `post_complete`(11/18 이전 완독), `post_view`(11/18 이전 조회). 과거 데이터를 볼 때만 참고합니다.
 - 관리자 브라우저에서는 이벤트를 보내지 않습니다(`isOwnerBrowser` 규칙). 테스트는 로그아웃 상태나 시크릿 창에서 합니다.
 
