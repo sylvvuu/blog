@@ -1,0 +1,150 @@
+// 신입 구직자용 질문 챗봇 (규칙 기반)
+// - AI 키를 쓰지 않는다. 블로그의 공개 글(제목, 요약, 본문)에서 질문 단어가 많이 들어간 글을 찾아 보여 준다.
+// - 답변은 찾은 글의 요약과 글 링크다. 자격 조건, 연봉처럼 글에 없는 내용은 상세 공고에서 확인하라고 안내한다.
+// - 질문 원문은 측정 이벤트에 보내지 않는다(개인정보 보호). 이벤트에는 찾은 글 수만 보낸다.
+
+const STOP_WORDS = new Set([
+  "은", "는", "이", "가", "을", "를", "에", "의", "도", "로", "와", "과", "좀", "어떻게", "무엇",
+  "뭐", "알려줘", "알려주세요", "있나요", "있어요", "있는", "하나요", "해줘", "관련", "대해", "대한", "것", "어떤", "방법", "안내"
+]);
+// 한국어 조사를 단어 끝에서 떼어 낸다 (예: "교육은" → "교육")
+const SUFFIXES = ["으로", "에서", "까지", "은", "는", "이", "가", "을", "를", "에", "의", "도", "로", "와", "과"];
+const CONDITION_RE = /자격|조건|연봉|학력|경력|급여|우대/;
+const EDU_RE = /교육|강좌|과정|수업|강의/;
+const REC_RE = /채용|공고|모집|지원|입사|구직|취업|인턴/;
+
+export function chatTokens(question) {
+  return question
+    .toLowerCase()
+    .split(/[^0-9a-z가-힣]+/)
+    .filter(Boolean)
+    .map(token => {
+      for (const s of SUFFIXES) {
+        if (token.length > s.length + 1 && token.endsWith(s)) return token.slice(0, -s.length);
+      }
+      return token;
+    })
+    .filter(token => token.length >= 2 && !STOP_WORDS.has(token));
+}
+
+// 질문과 글의 단어 겹침으로 점수를 매기고, 점수가 높은 글 최대 3개를 돌려준다
+export function chatSearch(question, posts) {
+  const tokens = chatTokens(question);
+  if (!tokens.length) return [];
+  const wantEdu = EDU_RE.test(question);
+  const wantRec = REC_RE.test(question);
+  return posts
+    .map(p => {
+      const title = (p.title || "").toLowerCase();
+      const summary = (p.summary || "").toLowerCase();
+      const body = (p.body || "").toLowerCase();
+      let hit = 0;
+      for (const t of tokens) {
+        if (title.includes(t)) hit += 3;
+        if (summary.includes(t)) hit += 2;
+        if (body.includes(t)) hit += 1;
+      }
+      // 단어가 하나라도 맞은 글에만 분류 가산점을 준다
+      if (hit > 0 && wantEdu && p.category === "education") hit += 1;
+      if (hit > 0 && wantRec && p.category === "recruit") hit += 1;
+      return { p, score: hit };
+    })
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(x => x.p);
+}
+
+export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
+  const fab = document.createElement("button");
+  fab.type = "button";
+  fab.className = "chat-fab";
+  fab.textContent = "질문하기";
+
+  const panel = document.createElement("section");
+  panel.className = "chat-panel";
+  panel.hidden = true;
+  panel.setAttribute("aria-label", "질문 챗봇");
+  panel.innerHTML = `
+    <header class="chat-head">
+      <strong>무엇이 궁금하세요?</strong>
+      <button type="button" class="chat-close" aria-label="챗봇 닫기">×</button>
+    </header>
+    <div class="chat-log">
+      <p class="chat-bot">교육과 채용 글에서 답을 찾아 드립니다. 예: "신입 교육 과정 알려줘"</p>
+    </div>
+    <form class="chat-form">
+      <input type="text" maxlength="200" placeholder="질문을 입력하세요" aria-label="질문 입력" required>
+      <button type="submit">보내기</button>
+    </form>`;
+  document.body.append(fab, panel);
+
+  const log = panel.querySelector(".chat-log");
+  const form = panel.querySelector(".chat-form");
+  const input = panel.querySelector("input");
+  let opened = false;
+
+  fab.addEventListener("click", () => {
+    panel.hidden = false;
+    fab.hidden = true;
+    if (!opened) {
+      opened = true;
+      track("chatbot_open");
+    }
+    input.focus();
+  });
+
+  panel.querySelector(".chat-close").addEventListener("click", () => {
+    panel.hidden = true;
+    fab.hidden = false;
+  });
+
+  // 답변 안의 글 링크를 누르면 연결 클릭으로 기록한다
+  log.addEventListener("click", e => {
+    const a = e.target.closest("a[data-chat-link]");
+    if (a) track("chatbot_link_click", { post_id: a.dataset.postId, category: a.dataset.category });
+  });
+
+  const postLink = p => `<li><a href="#/post/${encodeURIComponent(p.id)}" data-chat-link data-post-id="${esc(p.id)}" data-category="${esc(p.category || "")}">${esc(p.title)}</a></li>`;
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = "";
+    log.insertAdjacentHTML("beforeend", `<p class="chat-user">${esc(question)}</p>`);
+    log.insertAdjacentHTML("beforeend", `<p class="chat-bot chat-wait">찾는 중...</p>`);
+    const wait = log.querySelector(".chat-wait");
+
+    let html;
+    let matched = [];
+    if (!isConfigured) {
+      html = `<p>챗봇을 쓰려면 Firebase 설정이 필요합니다.</p>`;
+    } else {
+      try {
+        const posts = (await loadPosts()).filter(p => p.visibility === "public");
+        matched = chatSearch(question, posts);
+        if (matched.length) {
+          const top = matched[0];
+          html = `<p>가장 관련 있는 글의 요약입니다. ${esc(top.summary || "")}</p>
+            <p>관련 글</p><ul class="chat-links">${matched.map(postLink).join("")}</ul>`;
+        } else {
+          const latest = posts.slice(0, 3);
+          html = `<p>관련 글을 찾지 못했습니다. 최신 글을 확인해 보세요.</p>
+            <ul class="chat-links">${latest.map(postLink).join("")}</ul>`;
+        }
+        if (CONDITION_RE.test(question)) {
+          html += `<p>자격 조건과 급여는 블로그 글에 없을 수 있습니다. 상세 공고에서 확인해 주세요.</p>`;
+        }
+        if (REC_RE.test(question)) {
+          html += `<p><a href="#/recruit" data-chat-link data-post-id="list" data-category="recruit">채용 공고 전체 보기</a></p>`;
+        }
+      } catch (err) {
+        html = `<p>글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+      }
+    }
+    wait.outerHTML = `<div class="chat-bot">${html}</div>`;
+    track("chatbot_question", { matched: matched.length });
+    log.scrollTop = log.scrollHeight;
+  });
+}

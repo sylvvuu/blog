@@ -1,5 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
+import { setupChatbot } from "./chatbot.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -757,3 +758,6 @@ async function loadRandomQuote() {
   }
 }
 loadRandomQuote();
+
+// 질문 챗봇: 키 없이 블로그 글을 검색한다 (js/chatbot.js)
+setupChatbot({ loadPosts, track, esc, isConfigured });
