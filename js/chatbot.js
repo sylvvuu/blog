@@ -82,7 +82,6 @@ let chatPanel = null;
 export function mountChatbot(slot) {
   if (!chatPanel || !slot) return;
   chatPanel.hidden = false;
-  chatPanel.classList.add("chat-inline");
   slot.append(chatPanel);
 }
 
