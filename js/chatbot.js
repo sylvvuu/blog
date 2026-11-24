@@ -84,7 +84,9 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured }) {
 
   const panel = document.createElement("section");
   panel.className = "chat-panel";
-  panel.hidden = true;
+  // 처음부터 펼쳐진 상태로 시작한다. 닫기를 누르면 떠 있는 버튼이 나타난다.
+  panel.hidden = false;
+  fab.hidden = true;
   panel.setAttribute("aria-label", "질문 챗봇");
   panel.innerHTML = `
     <header class="chat-head">
