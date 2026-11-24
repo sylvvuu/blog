@@ -169,10 +169,18 @@ export function extractConditions(question) {
 }
 
 // 명시된 조건을 모두 만족하는 공고만 남긴다. 필드 값이 없으면 충족하지 않은 것으로 본다.
+// 지역 필드가 비어 있어도 제목·회사명에 지역 이름이 있으면 일치로 본다 (예: "대전HR 물품 검수 채용").
+// 지역과 고용형태 필드가 모두 비어 있으면 조건을 충족하지 않는다.
 export function matchJobs(items, cond) {
   return items.filter(x => {
-    if (cond.region && !(x.region || "").includes(cond.region)) return false;
-    if (cond.employType && !(x.employType || "").includes(cond.employType)) return false;
+    if (cond.region) {
+      const text = `${x.region || ""} ${x.title || ""} ${x.company || ""}`;
+      if (!text.includes(cond.region)) return false;
+    }
+    if (cond.employType) {
+      const text = `${x.employType || ""} ${x.title || ""}`;
+      if (!text.includes(cond.employType)) return false;
+    }
     return true;
   });
 }

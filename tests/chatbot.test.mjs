@@ -52,6 +52,14 @@ test("명시한 조건을 모두 만족하는 공고만 남기고, 값이 없는
   assert.deepEqual(matchJobs(jobs, { region: "서울", employType: "" }).map(x => x.title), ["사무지원"]);
 });
 
+test("지역 필드가 비어 있어도 제목에 지역 이름이 있으면 일치한다", () => {
+  const found = matchJobs(
+    [{ title: "대전HR 물품 검수 사무지원직 채용", company: "에스케이온", region: "", employType: "" }],
+    { region: "대전", employType: "" }
+  ).map(x => x.title);
+  assert.deepEqual(found, ["대전HR 물품 검수 사무지원직 채용"]);
+});
+
 test("일치 공고가 없으면 조정해 볼 조건 하나를 제안한다", () => {
   assert.equal(
     noMatchText({ region: "서울", employType: "인턴" }),
