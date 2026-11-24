@@ -352,7 +352,7 @@ async function loadSeoulWeather() {
 async function renderApiList(key) {
   const c = COLUMNS[key];
   document.title = `${c.title} | ${SITE_TITLE}`;
-  const head = `<section class="hero"><h1>${esc(c.title)}</h1><p>${esc(c.desc)}</p></section>`;
+  const head = `<section class="hero"><h1>${esc(c.title)}</h1></section>`;
   app.innerHTML = head + `<p class="loading">불러오는 중...</p>`;
   try {
     if (key === "recruit") {
