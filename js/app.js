@@ -136,8 +136,8 @@ function renderHome(posts) {
     <p class="eyebrow">MAKE YOUR NEXT MOVE</p>
     <ol>
       <li><a href="https://www.work.go.kr/consltJobCarpa/jobPsyExam/jobPsyExamIntro.do" target="_blank" rel="noopener"><span>01</span>나를 발견하기</a></li>
-      <li><span>02</span>경험을 쌓아가기</li>
-      <li><span>03</span>다음 기회로 연결하기</li>
+      <li><a href="https://www.youthcenter.go.kr/youthPolicy/ythPlcyLinkMain" target="_blank" rel="noopener"><span>02</span>청년정책 훑어보기</a></li>
+      <li><a href="https://www.worldjob.or.kr/advnc/epmtList.do?menuId=1000006327" target="_blank" rel="noopener"><span>03</span>해외경험쌓기</a></li>
     </ol>
   </section>
   <div id="chat-slot" class="chat-slot"></div>
