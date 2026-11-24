@@ -37,7 +37,6 @@
     <div class="admin-grid">
       <aside class="panel">
         <h2>글 목록</h2>
-        <button id="new-btn" class="ghost" style="width:100%;margin-bottom:12px;">+ 새 글 작성</button>
         <ul id="post-list" class="post-list"></ul>
         <h2 style="margin-top:24px;">날씨 설정</h2>
         <p class="msg" id="weather-state">저장된 키 확인 중...</p>
@@ -93,8 +92,8 @@
         <p id="chat-msg" class="msg"></p>
               </aside>
 
-      <section class="panel">
-        <h2 id="form-title">새 글 작성</h2>
+      <section class="panel" id="editor" hidden>
+        <h2 id="form-title">글 수정</h2>
         <form id="post-form">
           <input type="hidden" id="f-id">
 
@@ -103,10 +102,6 @@
             <option value="public">공개 (누구나 읽기)</option>
             <option value="private">나만보기 (관리자만 보기)</option>
           </select>
-
-
-
-
 
           <label for="f-title">제목</label>
           <input id="f-title" required>

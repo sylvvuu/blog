@@ -1,7 +1,7 @@
 import { firebaseConfig, ADMIN_EMAIL } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -69,7 +69,7 @@ $("owm-save").addEventListener("click", async () => {
   }
 });
 
-// ---- 공공취업정보 인증키 ----
+// ---- 채용정보 인증키 ----
 async function loadJobsState() {
   const snap = await getDoc(doc(db, "settings", "jobs"));
   const key = snap.exists() ? snap.data().serviceKey : "";
@@ -170,7 +170,7 @@ async function loadChatState() {
   document.querySelectorAll(".chat-source").forEach(c => { c.checked = sources.includes(c.value); });
   $("chat-rules").value = d.extraRules || "";
   $("chat-state").textContent = d.enabled === true
-    ? "AI 답변이 켜져 있습니다."
+    ? "AI 답변이 켜져 있습니다. 서버의 ANTHROPIC_API_KEY가 있어야 실제 답변이 나옵니다."
     : "AI 답변이 꺼져 있습니다. 홈 챗봇은 글 검색 답변을 씁니다.";
 }
 
@@ -218,10 +218,13 @@ async function loadViews(days) {
   document.querySelectorAll(".views-range").forEach(b => b.classList.toggle("ghost", Number(b.dataset.days) !== days));
   $("views-msg").textContent = "불러오는 중...";
   const snap = await getDocs(collection(db, "posts"));
-  const rows = snap.docs.map(d => ({ id: d.id, title: d.data().title || "(제목 없음)", views: d.data().views || 0 }));
-  // 글마다 날짜별 조회수를 모은다 (최근 30일까지 계산해 두고 기간별로 잘라 쓴다)
+  const rows = snap.docs.map(d => ({ id: d.id, title: d.data().title || "(제목 없음)", views: d.data().views || 0, visibility: d.data().visibility || "public" }));
+  // 선택한 기간의 날짜 문서만 읽는다 (문서 이름이 YYYY-MM-DD라서 시작 날짜 이후만 고른다)
+  const startDate = new Date(); startDate.setDate(startDate.getDate() - (days - 1));
+  const startKey = dayKey(startDate);
   const dailyByPost = await Promise.all(rows.map(r =>
-    getDocs(collection(db, "posts", r.id, "daily")).then(s => s.docs.map(x => ({ day: x.id, count: x.data().count || 0 })))
+    getDocs(query(collection(db, "posts", r.id, "daily"), where(documentId(), ">=", startKey)))
+      .then(s => s.docs.map(x => ({ day: x.id, count: x.data().count || 0 })))
   ));
   const byDay = {};
   dailyByPost.flat().forEach(x => { byDay[x.day] = (byDay[x.day] || 0) + x.count; });
@@ -239,7 +242,8 @@ async function loadViews(days) {
   $("views-today").textContent = today.toLocaleString("ko-KR");
   $("views-period").textContent = period.toLocaleString("ko-KR");
 
-  $("views-top").innerHTML = rows.filter(r => r.views > 0).sort((a, b) => b.views - a.views).slice(0, 5)
+  // 나만보기 글은 TOP 5에서 뺀다
+  $("views-top").innerHTML = rows.filter(r => r.views > 0 && r.visibility !== "private").sort((a, b) => b.views - a.views).slice(0, 5)
     .map(r => `<li><span>${esc(r.title)}</span><b>${r.views.toLocaleString("ko-KR")}</b></li>`).join("")
     || `<li class="msg">아직 집계된 조회수가 없습니다.</li>`;
 
@@ -333,6 +337,8 @@ $("f-body").addEventListener("paste", async e => {
 });
 
 function fillForm(p = {}) {
+  // 새 글 작성은 없다. 글 목록에서 고른 글만 편집 칸에 열린다.
+  $("editor").hidden = !p.id;
   bodyImages = Array.isArray(p.images) ? p.images.map(im => ({ id: im.id, data: im.data })) : [];
   renderThumbs();
   $("f-id").value = p.id || "";
@@ -341,7 +347,6 @@ function fillForm(p = {}) {
   $("f-summary").value = p.summary || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
-  $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
   $("form-msg").textContent = "";
 }
 
@@ -349,7 +354,6 @@ function safeHttps(u) {
   return /^https:\/\//i.test(u) ? u : "";
 }
 
-$("new-btn").addEventListener("click", () => fillForm({}));
 
 $("post-form").addEventListener("submit", async e => {
   e.preventDefault();
@@ -366,12 +370,12 @@ $("post-form").addEventListener("submit", async e => {
     body: $("f-body").value
   };
   const id = $("f-id").value;
+  if (!id) {
+    $("form-msg").textContent = "글 목록에서 수정할 글을 고르세요.";
+    return;
+  }
   try {
-    if (id) {
-      await updateDoc(doc(db, "posts", id), data);
-    } else {
-      await addDoc(collection(db, "posts"), { ...data, createdAt: serverTimestamp() });
-    }
+    await updateDoc(doc(db, "posts", id), data);
     $("form-msg").textContent = "저장되었습니다.";
     await loadPosts();
     fillForm({});
