@@ -169,7 +169,11 @@ function renderHome(posts) {
 const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo210L21.do";
 
 // 응답 날짜(YYYYMMDD)를 2026.11.27 형식으로 바꾼다
-const fmtYmd = s => (s && s.length === 8) ? `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}` : "";
+// 교육 API는 2026-11-24, 공채속보 API는 20261124 형식으로 주므로 숫자만 골라 맞춘다
+const fmtYmd = s => {
+  const d = String(s || "").replace(/\D/g, "");
+  return d.length === 8 ? `${d.slice(0, 4)}.${d.slice(4, 6)}.${d.slice(6, 8)}` : "";
+};
 // 공채속보가 준 채용 홈페이지 주소가 http(s)일 때만 사용한다
 const safeJobUrl = u => (u && /^https?:\/\//.test(u)) ? u : "";
 
