@@ -4,7 +4,7 @@
 - 문서 버전: v0.1
 - 작성일: 2026-11-24
 - 작성자: 이은정
-- 관련 자료: 공식 배포 주소 https://sylvieee.vercel.app/ (Vercel Production), 보조 주소 https://sylvvuu.github.io/blog/ (GitHub Pages), 저장소 https://github.com/sylvvuu/blog
+- 관련 자료: 공개 배포 주소 2곳 (같은 main 코드) — https://sylvieee.vercel.app/ (Vercel), https://sylvvuu.github.io/blog/ (GitHub Pages), 저장소 https://github.com/sylvvuu/blog
 
 ## 2. 개요
 - 핵심 문제: 청년 구직자가 홈에 들어와도 채용 공고 글까지 가는 경로가 길어서, 공고를 열어 보지 못하고 떠날 수 있다. GA 기준 방문 44명 중 공고 글을 연 사람은 6명(13.6%)이다.
@@ -67,7 +67,7 @@
 - 사이트 안 지원 폼은 이름과 이메일을 저장한다. 접근 권한과 보관 기간 정리가 필요하다.
 
 ## 8. 출시 및 운영
-- 배포 방식: Vercel Production (sylvieee.vercel.app). sylvielectronics.vercel.app은 여기로 307 리다이렉트된다. GitHub Pages(sylvvuu.github.io/blog)도 함께 공개되어 있다.
+- 배포 방식: 같은 main 코드를 Vercel(sylvieee.vercel.app)과 GitHub Pages(sylvvuu.github.io/blog)에 함께 배포한다. sylvielectronics.vercel.app은 Vercel 주소로 307 리다이렉트된다.
 - 일정
   - 11/24 10:30: PRD 초안 업로드 (완료)
   - 11/24 11:00: PRD 초안 제출 마감
@@ -77,7 +77,7 @@
 
 ## 9. 개선 필요 사항 및 다음 단계
 - 관리자 접속을 내부 트래픽으로 정의해 분석에서 제외
-- 홈 주소가 `/`와 `/blog/`로 나뉘어 기록되는 문제 정리
+- 두 배포 주소(Vercel, GitHub Pages)에 방문이 나뉘어 기록되는 문제 정리. 같은 측정 ID를 쓰므로 호스트 이름으로 나눠 본다
 - 신입·경력 구분 맞춤 측정기준 등록 후 3번 후보 재검토
 - 공고 API 실패 시 안내 문구 추가
 
