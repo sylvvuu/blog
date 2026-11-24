@@ -187,7 +187,7 @@ document.querySelectorAll(".views-range").forEach(btn => {
 function renderList() {
   $("post-list").innerHTML = posts.length
     ? posts.map(p => `<li><button data-id="${esc(p.id)}" class="link">${esc(p.title)}</button>
-        <span class="tag">${p.category === "recruit" ? esc(p.jobType || "채용") : "교육"}</span>${p.visibility === "private" ? ' <span class="tag">나만보기</span>' : ""}</li>`).join("")
+        ${p.visibility === "private" ? ' <span class="tag">나만보기</span>' : ""}</li>`).join("")
     : `<li class="empty">등록된 글이 없습니다.</li>`;
 }
 
@@ -197,11 +197,6 @@ $("post-list").addEventListener("click", e => {
   const p = posts.find(x => x.id === id);
   if (p) fillForm(p);
 });
-
-function syncJobType() {
-  $("job-fields").hidden = $("f-category").value !== "recruit";
-}
-$("f-category").addEventListener("change", syncJobType);
 
 // 본문에 붙여넣은 이미지: { id, data(JPEG data URL) }, 본문에는 [[img:id]] 로 표시
 let bodyImages = [];
@@ -267,21 +262,14 @@ function fillForm(p = {}) {
   renderThumbs();
   $("f-id").value = p.id || "";
   $("f-visibility").value = p.visibility || "public";
-  $("f-category").value = p.category || "education";
-  $("f-jobType").value = p.jobType || "신입공채";
   $("f-title").value = p.title || "";
   $("f-summary").value = p.summary || "";
-  $("f-location").value = p.location || "";
-  $("f-deadline").value = p.deadline || "";
-  $("f-applyUrl").value = p.applyUrl || "";
-  $("f-image").value = p.image || "";
   $("f-imageUrl").value = p.imageUrl || "";
   $("f-imageCredit").value = p.imageCredit || "";
   $("f-body").value = p.body || "";
   $("delete-btn").hidden = !p.id;
   $("form-title").textContent = p.id ? "글 수정" : "새 글 작성";
   $("form-msg").textContent = "";
-  syncJobType();
 }
 
 function safeHttps(u) {
@@ -300,14 +288,8 @@ $("post-form").addEventListener("submit", async e => {
   const data = {
     images: bodyImages.map(im => ({ id: im.id, data: im.data })),
     visibility: $("f-visibility").value === "private" ? "private" : "public",
-    category: $("f-category").value,
-    jobType: $("f-category").value === "recruit" ? $("f-jobType").value : null,
     title: $("f-title").value.trim(),
     summary: $("f-summary").value.trim(),
-    location: $("f-location").value.trim(),
-    deadline: $("f-deadline").value.trim(),
-    applyUrl: $("f-applyUrl").value.trim(),
-    image: $("f-image").value || null,
     imageUrl: safeHttps($("f-imageUrl").value.trim()),
     imageCredit: $("f-imageCredit").value.trim(),
     body: $("f-body").value
@@ -335,4 +317,3 @@ $("delete-btn").addEventListener("click", async () => {
   fillForm({});
 });
 
-syncJobType();
