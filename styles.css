@@ -235,7 +235,18 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .jobs-panel li em { font-style:normal; font-size:12px; color:var(--brand); }
 
 /* 관리자 조회수 */
-.views-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.views-kpi { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
+.analysis-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.analysis-head h2 { margin: 0; }
+.analysis-range { display: flex; gap: 8px; }
+.analysis-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 16px; }
+.analysis-grid h3 { font-size: 15px; margin: 0 0 8px; }
+.daily-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.daily-table th, .daily-table td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.daily-table td:last-child { text-align: right; }
+.ga-pending strong { font-size: 15px; color: #8a96a6; }
+.ai-panel-body { max-width: 560px; }
+@media (max-width: 760px) { .views-kpi { grid-template-columns: repeat(2, 1fr); } .analysis-grid { grid-template-columns: 1fr; } }
 .views-kpi div { background: #f6f8fb; border-radius: 8px; padding: 14px 16px; }
 .views-kpi span { display: block; font-size: 13px; color: #5b6878; }
 .views-kpi strong { font-size: 22px; }

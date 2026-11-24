@@ -247,6 +247,9 @@ async function loadViews(days) {
     .map(r => `<li><span>${esc(r.title)}</span><b>${r.views.toLocaleString("ko-KR")}</b></li>`).join("")
     || `<li class="msg">아직 집계된 조회수가 없습니다.</li>`;
 
+  $("views-daily").innerHTML = labels.map((l, i) => `<tr><td>${esc(l)}</td><td>${values[i].toLocaleString("ko-KR")}</td></tr>`).reverse().join("")
+    || `<tr><td colspan="2">기간 내 열람 기록이 없습니다.</td></tr>`;
+
   if (!window.Chart) { $("views-msg").textContent = "차트 라이브러리를 불러오지 못했습니다."; return; }
   $("views-msg").textContent = "";
   if (viewsChart) viewsChart.destroy();
