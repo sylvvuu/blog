@@ -339,3 +339,8 @@ main { padding-top: 0; }
 }
 .roadmap-card li a { display: block; color: inherit; }
 .roadmap-card li a:hover { text-decoration: underline; }
+
+/* 헤더 날씨: 로그아웃 버튼 바로 옆에 붙도록 내용 너비에 맞춤 (위 두 줄, 아래 상태 줄) */
+header.site .header-weather { display: grid; grid-template-columns: auto auto auto; column-gap: 6px; align-items: center; flex: 0 0 auto; max-width: none; width: auto; margin: 0 0 0 14px; padding: 2px 0; }
+header.site .header-weather > span:last-child { grid-column: 1 / -1; }
+header.site .auth-btn { margin-left: 8px; }
