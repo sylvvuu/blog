@@ -327,3 +327,8 @@ main { padding-top: 0; }
 .chat-slot { max-width: 420px; margin: 0 0 40px auto; }
 .chat-panel.chat-inline { width: 100%; }
 @media (max-width: 760px) { .chat-slot { max-width: none; margin: 0 0 32px; } }
+
+/* 홈 두 칸 배치: 왼쪽 공채속보, 오른쪽에 교육과 직업·직무 칸을 쌓음 */
+.home-api { grid-template-columns: 1fr 1fr; }
+#jobs-panel { grid-row: span 2; }
+@media (max-width: 760px) { .home-api { grid-template-columns: 1fr; } #jobs-panel { grid-row: auto; } }
