@@ -332,3 +332,8 @@ main { padding-top: 0; }
 .home-api { grid-template-columns: 1fr 1fr; }
 #jobs-panel { grid-row: span 2; }
 @media (max-width: 760px) { .home-api { grid-template-columns: 1fr; } #jobs-panel { grid-row: auto; } }
+
+/* 질문 도우미: 넓은 화면에서 헤더 로그아웃 버튼 아래쪽에 붙여 표시 */
+@media (min-width: 601px) {
+  .chat-panel:not(.chat-inline) { top: 96px; transform: none; }
+}
