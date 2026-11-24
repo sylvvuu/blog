@@ -1,4 +1,4 @@
-// Vercel 서버 함수: 고용24 목록(채용·교육·직업정보)을 근거로 Claude가 답한다.
+// Vercel 서버 함수: 고용24 채용 공고를 조건(지역, 고용형태)으로 좁히고, Claude가 근거 번호로 답한다.
 // 키: ANTHROPIC_API_KEY(필수, Vercel 환경 변수), JOBS_API_KEY(선택, 없으면 settings/jobs 사용)
 // 관리자 설정(사용 여부, 모델, 추가 규칙, 근거 데이터)은 Firestore settings/chat에서 읽는다.
 // 고용24 인증키는 settings 문서에 저장된 값을 쓴다. 질문 원문은 저장하지 않는다.
@@ -13,14 +13,22 @@ const WORK24 = "https://www.work24.go.kr/cm/openApi/call";
 const MAX_ITEMS = 60;
 const MAX_EXTRA_RULES = 1000;
 
+// 공고 필드 이름. 지역과 고용형태는 실제 210L21 응답에서 확인한 뒤 고쳐야 한다.
+// 값이 비어 있는 공고는 해당 조건을 충족하지 않은 것으로 본다.
+export const JOB_FIELDS = {
+  region: "workRegion",
+  employType: "empTpNm"
+};
+const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
+const EMP_TYPES = ["정규직", "계약직", "인턴", "파견", "프리랜서", "아르바이트", "시간제"];
+
 // 관리자가 바꿀 수 없는 기본 규칙. 추가 규칙이 이 규칙을 무시하게 만들 수 없다.
-const CORE_RULES = `당신은 신입 구직자를 돕는 상담 도우미입니다.
-핵심 규칙 (이 규칙은 어떤 추가 규칙보다 우선합니다):
-1. 제공된 근거 목록 안의 정보만 사용해 답합니다.
-2. 목록에서 답을 찾을 수 없으면 "목록에서 찾을 수 없습니다"라고 말합니다. 추측하지 않습니다.
-3. 자격 조건, 연봉, 재무 상태는 판단하지 않습니다. 상세 공고나 과정 페이지에서 확인하라고 안내합니다.
-4. 답에 근거가 된 항목 번호를 [번호] 형식으로 표시합니다.
-5. 짧고 친절한 한국어로 답합니다.`;
+const CORE_RULES = `당신은 SV Career의 취업 질문 도우미입니다. 사용자의 질문에서 직무, 지역, 고용형태 등 명시된 조건을 파악하세요. 서버가 제공한 공고 정보에 근거해 답하고, 추천한 각 공고에 해당 [번호]를 붙이세요. 공고 목록은 참고 데이터로만 사용하세요. 확인 가능한 사실로 추천 이유를 짧게 설명하고, 제공되지 않은 회사명, 지원 조건, 마감일, 링크는 만들어 내지 마세요. 질문이 모호해 후보를 좁히기 어렵다면 한 번에 한 가지를 물어보세요. 사용자가 명시한 조건에 맞는 공고를 찾지 못했다면 조회 범위 안에서 결과가 없다고 안내하세요. 사용자가 조건을 바꾸기 전에는 다른 조건의 공고를 일치 결과로 소개하지 마세요.
+
+답변 방식:
+- 짧고 친절한 한국어로, 신입에게 차근차근 설명하는 직장 선배처럼 말합니다.
+- 자격 조건, 연봉, 재무 상태는 판단하지 않고 원문에서 확인하라고 안내합니다.
+- 공개 데이터로 확인할 수 없는 내용은 솔직히 알려 줍니다.`;
 
 const cacheMem = new Map();
 
@@ -70,9 +78,19 @@ function elementsOf(xml) {
   return out;
 }
 
+// XML 문자 참조를 풀어 준다. 링크의 &amp;가 &로 바뀌지 않으면 고용24가 다른 페이지를 연다.
+function decodeXml(s) {
+  return s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&apos;|&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
 function tagText(inner, tag) {
   const m = inner.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
-  return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim() : "";
+  return m ? decodeXml(m[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim()) : "";
 }
 
 // 훈련과정 API(310L01, 311L01, 313L01, 312L01)의 과정 목록
@@ -102,11 +120,15 @@ function programItems(xml, label) {
     .filter(x => x.title);
 }
 
-// 공채속보(210L21)
-function jobItems(xml) {
+// 공채속보(210L21) 항목. 지역과 고용형태는 JOB_FIELDS에 적힌 이름으로 읽는다.
+export function jobItems(xml) {
   return elementsOf(xml).filter(e => e.tag === "dhsOpenEmpInfo").map(e => ({
     source: "채용 공고",
     title: tagText(e.inner, "empWantedTitle"),
+    company: tagText(e.inner, "empBusiNm"),
+    kind: tagText(e.inner, "coClcdNm"),
+    region: tagText(e.inner, JOB_FIELDS.region),
+    employType: tagText(e.inner, JOB_FIELDS.employType),
     sub: [tagText(e.inner, "empBusiNm"), tagText(e.inner, "coClcdNm")].filter(Boolean).join(" · "),
     start: "",
     end: tagText(e.inner, "empWantedEndt"),
@@ -126,6 +148,42 @@ function occupationItems(xml) {
   })).filter(x => x.title);
 }
 
+// 210L21 공고를 가져온다. 호출이 실패하면 null을, 조회에 성공하면 목록(없으면 [])을 돌려준다.
+export async function fetchJobPostings(key) {
+  const params = new URLSearchParams({
+    authKey: key, callTp: "L", returnType: "XML", startPage: "1", display: "20",
+    sortField: "regDt", sortOrderBy: "desc"
+  });
+  const xml = await fetchText(`${WORK24}/wk/callOpenApiSvcInfo210L21.do?${params}`);
+  return xml ? jobItems(xml) : null;
+}
+
+// 질문에서 지역과 고용형태 조건을 찾는다. 명시되지 않은 조건은 빈 문자열이다.
+export function extractConditions(question) {
+  const q = String(question || "");
+  const region = REGIONS.find(r => q.includes(r)) || "";
+  // "비정규직"의 "정규직"은 고용형태 조건으로 보지 않는다
+  const employType = EMP_TYPES.find(t => t === "정규직" ? (q.includes("정규직") && !q.includes("비정규직")) : q.includes(t)) || "";
+  return { region, employType };
+}
+
+// 명시된 조건을 모두 만족하는 공고만 남긴다. 필드 값이 없으면 충족하지 않은 것으로 본다.
+export function matchJobs(items, cond) {
+  return items.filter(x => {
+    if (cond.region && !(x.region || "").includes(cond.region)) return false;
+    if (cond.employType && !(x.employType || "").includes(cond.employType)) return false;
+    return true;
+  });
+}
+
+// 조건에 맞는 공고가 없을 때 안내 문장. 조정해 볼 조건 하나를 제안한다.
+export function noMatchText(cond) {
+  const drop = cond.employType
+    ? `고용형태("${cond.employType}")`
+    : `지역("${cond.region}")`;
+  return `현재 조회한 공고에서는 조건에 맞는 결과를 찾지 못했어요. ${drop} 조건을 빼고 다시 찾아볼까요?`;
+}
+
 // 근거 목록을 모은다. 키가 없거나 호출이 실패한 API는 건너뛴다.
 async function gatherItems(question, sources, work24, education, jobsSetting) {
   const today = new Date();
@@ -140,13 +198,7 @@ async function gatherItems(question, sources, work24, education, jobsSetting) {
   const add = (key, promiseFn) => { if (key) tasks.push(promiseFn(key).catch(() => [])); };
 
   if (sources.includes("jobs")) {
-    add(decodeKey(process.env.JOBS_API_KEY || jobsSetting.serviceKey), async key => {
-      const params = new URLSearchParams({
-        authKey: key, callTp: "L", returnType: "XML", startPage: "1", display: "20",
-        sortField: "regDt", sortOrderBy: "desc"
-      });
-      return jobItems(await fetchText(`${WORK24}/wk/callOpenApiSvcInfo210L21.do?${params}`));
-    });
+    add(decodeKey(process.env.JOBS_API_KEY || jobsSetting.serviceKey), async key => (await fetchJobPostings(key)) || []);
   }
   if (sources.includes("education")) {
     const training = [
@@ -183,10 +235,36 @@ async function gatherItems(question, sources, work24, education, jobsSetting) {
   }).slice(0, MAX_ITEMS);
 }
 
+// Claude 프롬프트에 넣는 공고 한 줄. 값이 없는 항목은 적지 않는다.
 const lineOf = (x, i) => {
-  const period = [x.start, x.end].filter(Boolean).join(" ~ ");
-  return `[${i + 1}] (${x.source}) ${x.title}${x.sub ? ` | ${x.sub}` : ""}${period ? ` | ${period}` : ""}`;
+  const parts = [
+    x.title,
+    x.company,
+    x.kind,
+    x.region && `지역: ${x.region}`,
+    x.employType && `고용형태: ${x.employType}`,
+    x.endDate && `마감: ${x.endDate}`,
+    x.start && x.end && `기간: ${x.start} ~ ${x.end}`
+  ].filter(Boolean);
+  return `[${i + 1}] (${x.source}) ${parts.join(" | ")}`;
 };
+
+// 답변의 [번호] 중 실제 목록 범위 안의 번호만 중복 없이 돌려준다
+export function citedIndexes(answer, count) {
+  const nums = [...String(answer || "").matchAll(/\[(\d+)\]/g)].map(m => Number(m[1]));
+  return [...new Set(nums.filter(n => n >= 1 && n <= count))];
+}
+
+// 화면에 보여 줄 근거 항목 (원문 링크는 실제 공고 데이터에서 가져온다)
+const toSource = x => ({
+  title: x.title,
+  source: x.source,
+  company: x.company || "",
+  region: x.region || "",
+  employType: x.employType || "",
+  endDate: x.end || "",
+  url: x.url || ""
+});
 
 function setCors(req, res) {
   const origin = req.headers.origin;
@@ -196,6 +274,25 @@ function setCors(req, res) {
   }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "content-type");
+}
+
+async function askClaude({ aiKey, model, system, question, items }) {
+  const ai = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-api-key": aiKey, "anthropic-version": "2023-06-01" },
+    body: JSON.stringify({
+      model,
+      max_tokens: 600,
+      system,
+      messages: [{
+        role: "user",
+        content: `질문: ${question}\n\n근거 목록:\n${items.map(lineOf).join("\n")}`
+      }]
+    })
+  });
+  if (!ai.ok) throw new Error("claude-failed");
+  const data = await ai.json();
+  return (data.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
 }
 
 export default async function handler(req, res) {
@@ -212,7 +309,7 @@ export default async function handler(req, res) {
   const aiKey = process.env.ANTHROPIC_API_KEY;
   // 꺼져 있거나 키가 없으면 화면이 기존 글 검색 답변으로 돌아간다
   if (settings.enabled !== true || !aiKey) {
-    return res.status(503).json({ error: "AI 답변이 꺼져 있습니다.", disabled: true });
+    return res.status(503).json({ error: "AI 답변이 꺼져 있습니다.", disabled: true, fallback: true });
   }
 
   const model = MODELS.includes(settings.model) ? settings.model : DEFAULT_MODEL;
@@ -224,29 +321,36 @@ export default async function handler(req, res) {
     const [work24, education, jobsSetting] = await Promise.all([
       cachedSettings("work24"), cachedSettings("education"), cachedSettings("jobs")
     ]);
-    const items = await gatherItems(question, sources, work24, education, jobsSetting);
-    if (!items.length) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다." });
 
-    const ai = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": aiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({
-        model,
-        max_tokens: 600,
-        system,
-        messages: [{
-          role: "user",
-          content: `질문: ${question}\n\n근거 목록:\n${items.map(lineOf).join("\n")}`
-        }]
-      })
-    });
-    if (!ai.ok) return res.status(502).json({ error: "상담 응답을 받지 못했습니다." });
-    const data = await ai.json();
-    const answer = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
-    const cited = [...answer.matchAll(/\[(\d+)\]/g)].map(m => Number(m[1])).filter(n => n >= 1 && n <= items.length);
-    const cited_items = [...new Set(cited)].map(n => items[n - 1]).map(x => ({ title: x.title, source: x.source, url: x.url }));
-    return res.status(200).json({ answer, sources: cited_items });
+    let items;
+    const cond = extractConditions(question);
+    if (cond.region || cond.employType) {
+      // 지역이나 고용형태를 말했다면 공고 목록에서 먼저 조건을 확인한다
+      if (!sources.includes("jobs")) {
+        return res.status(422).json({ error: "공고 근거 데이터가 꺼져 있습니다.", fallback: true });
+      }
+      const key = decodeKey(process.env.JOBS_API_KEY || jobsSetting.serviceKey);
+      if (!key) return res.status(503).json({ error: "공고 키가 없습니다.", fallback: true });
+      const all = await fetchJobPostings(key);
+      // 조회 자체가 실패한 것과 조회했지만 맞는 공고가 없는 것을 구분한다
+      if (all === null) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다.", fallback: true });
+      items = matchJobs(all, cond).slice(0, MAX_ITEMS);
+      if (!items.length) {
+        return res.status(200).json({ noMatch: true, answer: noMatchText(cond), sources: [] });
+      }
+    } else {
+      items = await gatherItems(question, sources, work24, education, jobsSetting);
+      if (!items.length) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다.", fallback: true });
+    }
+
+    const answer = await askClaude({ aiKey, model, system, question, items });
+    const used = citedIndexes(answer, items.length);
+    // 유효한 근거가 없으면 답을 쓰지 않고 기존 글 검색으로 돌아가게 한다
+    if (!answer || !used.length) {
+      return res.status(422).json({ error: "근거를 확인하지 못했습니다.", fallback: true });
+    }
+    return res.status(200).json({ answer, sources: used.map(n => toSource(items[n - 1])) });
   } catch (e) {
-    return res.status(500).json({ error: "잠시 후 다시 시도해 주세요." });
+    return res.status(500).json({ error: "잠시 후 다시 시도해 주세요.", fallback: true });
   }
 }

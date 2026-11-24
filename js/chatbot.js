@@ -182,9 +182,17 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
     const ai = isConfigured && askAI ? await askAI(question).catch(() => null) : null;
     if (!isConfigured) {
       html = `<p>챗봇을 쓰려면 Firebase 설정이 필요합니다.</p>`;
+    } else if (ai && ai.noMatch) {
+      html = `<p>${esc(ai.answer)}</p>`;
     } else if (ai) {
+      // 추천 공고 카드: 회사, 지역, 고용형태, 마감일은 서버가 공고 데이터에서 가져온 값이다
+      const card = s => {
+        const meta = [s.source, s.company, s.region, s.employType, s.endDate ? `마감 ${s.endDate}` : ""].filter(Boolean).join(" · ");
+        const title = s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title);
+        return `<li>${title}<br><span>${esc(meta)}</span></li>`;
+      };
       const sourceList = ai.sources.length
-        ? `<p>근거 항목</p><ul class="chat-links">${ai.sources.map(s => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)} <span>${esc(s.source)}</span></li>`).join("")}</ul>`
+        ? `<p>추천 공고</p><ul class="chat-links">${ai.sources.map(card).join("")}</ul>`
         : "";
       html = `<p>${esc(ai.answer).replace(/\n/g, "<br>")}</p>${sourceList}<p class="chat-note">AI 답변은 고용24 목록을 근거로 합니다. 자세한 내용은 원문에서 확인해 주세요.</p>`;
       track("chatbot_ai", { source_count: ai.sources.length, character });
