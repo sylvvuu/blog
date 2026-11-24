@@ -297,15 +297,22 @@ async function fetchEducationPrograms(raw) {
   if (!res.ok) throw new Error(`status ${res.status}`);
   const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
   if (xml.getElementsByTagName("parsererror").length) throw new Error("API 응답 오류");
-  return Array.from(xml.getElementsByTagName("scn_list")).map(n => {
-    const get = tag => n.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
-    return {
-      title: get("TITLE"),
-      start: get("TRA_START_DATE"),
-      end: get("TRA_END_DATE"),
-      url: safeJobUrl(get("TITLE_LINK"))
-    };
-  }).filter(p => p.title);
+  const all = Array.from(xml.getElementsByTagName("*"));
+  if (all.some(e => e.localName.toLowerCase() === "error")) throw new Error("API 오류 응답");
+  // 태그 이름은 대소문자가 섞일 수 있어 소문자로 비교하고, 여러 이름 중 값이 있는 것을 쓴다
+  const text = (n, names) => {
+    for (const name of names) {
+      const el = Array.from(n.getElementsByTagName("*")).find(e => e.localName.toLowerCase() === name.toLowerCase());
+      if (el && el.textContent.trim()) return el.textContent.trim();
+    }
+    return "";
+  };
+  return all.filter(e => e.localName.toLowerCase() === "scn_list").map(n => ({
+    title: text(n, ["TITLE", "title", "trainTitle"]),
+    start: text(n, ["TRA_START_DATE", "traStartDate"]),
+    end: text(n, ["TRA_END_DATE", "traEndDate"]),
+    url: safeJobUrl(text(n, ["TITLE_LINK", "titleLink"]))
+  })).filter(p => p.title);
 }
 
 async function loadEducationPrograms() {
