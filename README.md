@@ -8,6 +8,19 @@
 - 에이전트 작업 지침: `docs/AGENT_GUIDE.md`
 - 테스트 결과: `docs/TEST_REPORT.md`
 
+## 로컬에서 작업하기 (Antigravity IDE)
+
+빌드 도구가 없는 정적 사이트라 설치할 패키지가 없습니다. 저장소를 받아 폴더로 열면 됩니다.
+
+1. 저장소 받기: `git clone https://github.com/sylvvuu/blog.git` 후 Antigravity에서 **File > Open Folder**로 `blog` 폴더를 엽니다.
+2. 화면 확인: `index.html`을 브라우저로 열거나, 폴더에서 `python3 -m http.server 8000`을 실행하고 `http://localhost:8000`에 접속합니다. Firebase와 외부 API를 쓰므로 인터넷 연결이 필요합니다.
+3. 테스트: Node.js 18 이상에서 `node --test tests/chatbot.test.mjs`를 실행합니다.
+4. 서버 함수(`api/chat.js`): 로컬에서 실행하지 않습니다. `main` 브랜치에 푸시하면 Vercel이 배포하고, 키는 Vercel 환경 변수에서 읽습니다.
+5. 반영: 수정 후 `git add`, `git commit`, `git push origin main`을 실행하면 GitHub Pages와 Vercel이 함께 배포합니다. 푸시 전에 홈 화면을 로컬에서 확인합니다.
+
+- 키는 저장소에 넣지 않습니다. Firebase 웹 설정(`js/config.js`)은 공개 값이고, AI 키와 고용24 키는 Vercel 환경 변수나 관리자 페이지에만 둡니다.
+- 에이전트에게 작업을 맡길 때는 `docs/AGENT_GUIDE.md`를 먼저 읽게 합니다.
+
 ## 구성
 
 | 파일 | 역할 |
