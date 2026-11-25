@@ -154,6 +154,7 @@ function renderHome(posts) {
         <button type="submit">검색</button>
       </form>
       <ul id="job-list"><li class="empty">직업명을 입력하면 고용24 직업정보를 보여 드립니다.</li></ul>
+      <div id="job-detail" class="job-detail" hidden></div>
     </section>
   </div>
   <div class="columns">
@@ -411,18 +412,64 @@ async function loadEducationPrograms() {
 
 // 직업 정보 칸: 직업정보 API(212L01)를 키워드(K)로 검색한다
 const JOB_SEARCH_API = `${WORK24_BASE}/wk/callOpenApiSvcInfo212L01.do`;
+// 직업정보 상세(212D01): 구분자 dtlGb 2=하는 일, 3=교육·자격·훈련, 4=임금·전망, 5=능력·지식·환경
+const JOB_DETAIL_API = `${WORK24_BASE}/wk/callOpenApiSvcInfo212D01.do`;
+const JOB_SECTIONS = [
+  { gb: "2", title: "하는 일", fields: [["하는 일", "jobSum"], ["되는 길", "way"]] },
+  { gb: "3", title: "교육·자격·훈련", fields: [["관련 자격", "certNm"], ["관련 전공", "majorNm"]] },
+  { gb: "4", title: "임금·전망", fields: [["임금", "sal"], ["직업 만족도(%)", "jobSatis"], ["일자리 전망", "jobProspect"]] },
+  { gb: "5", title: "능력·지식·환경", fields: [["업무수행능력", "jobAbil"], ["지식", "knowledg"], ["업무환경", "jobEnv"]] }
+];
 async function searchJobInfo(raw, keyword) {
   const params = new URLSearchParams({ authKey: raw, returnType: "XML", target: "JOBCD", srchType: "K", keyword });
   const xml = await parseXmlResponse(await fetch(`${JOB_SEARCH_API}?${params.toString()}`));
   return byLocalName(xml, "jobList")
-    .map(n => ({ name: pick(n, ["jobNm"]), category: pick(n, ["jobClcdNM"]) }))
+    .map(n => ({ name: pick(n, ["jobNm"]), category: pick(n, ["jobClcdNM"]), code: pick(n, ["jobCd"]) }))
     .filter(j => j.name);
+}
+// 상세 응답에서 같은 이름의 빈 껍데기(자식이 있는 태그)를 뺀 값만 모은다
+function readLeaves(xml, tag) {
+  return byLocalName(xml, tag)
+    .filter(e => e.children.length === 0 && e.textContent.trim())
+    .map(e => e.textContent.trim())
+    .join(", ");
+}
+async function fetchJobSection(raw, code, gb) {
+  const params = new URLSearchParams({ authKey: raw, returnType: "XML", target: "JOBDTL", jobGb: "1", jobCd: code, dtlGb: gb });
+  return parseXmlResponse(await fetch(`${JOB_DETAIL_API}?${params.toString()}`));
+}
+async function loadJobDetail(code, name) {
+  const box = document.getElementById("job-detail");
+  if (!box) return;
+  box.hidden = false;
+  box.innerHTML = `<div class="job-detail-head"><h3>${esc(name)}</h3><button type="button" class="job-detail-close">닫기</button></div><p class="empty">상세 정보를 불러오는 중...</p>`;
+  try {
+    const raw = await work24Key("job212");
+    if (!raw) { box.innerHTML = `<p class="empty">직업정보 인증키가 아직 설정되지 않았습니다.</p>`; return; }
+    const docs = await Promise.all(JOB_SECTIONS.map(s => fetchJobSection(raw, code, s.gb)));
+    const body = JOB_SECTIONS.map((s, i) => {
+      const rows = s.fields.map(([label, tag]) => [label, readLeaves(docs[i], tag)]).filter(([, v]) => v);
+      return rows.length ? `<section><h4>${esc(s.title)}</h4>${rows.map(([l, v]) => `<p><strong>${esc(l)}</strong> ${esc(v)}</p>`).join("")}</section>` : "";
+    }).join("");
+    box.innerHTML = `<div class="job-detail-head"><h3>${esc(name)}</h3><button type="button" class="job-detail-close">닫기</button></div>${body || `<p class="empty">표시할 상세 정보가 없습니다.</p>`}`;
+  } catch (err) {
+    box.innerHTML = `<div class="job-detail-head"><h3>${esc(name)}</h3><button type="button" class="job-detail-close">닫기</button></div><p class="empty">상세 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+  }
 }
 
 function setupJobSearch() {
   const form = document.getElementById("job-form");
   const list = document.getElementById("job-list");
   if (!form || !list) return;
+  // 목록 항목을 누르면 상세를 불러온다. 상세 상자의 닫기 버튼으로 접는다
+  list.addEventListener("click", e => {
+    const item = e.target.closest(".job-item");
+    if (item) loadJobDetail(item.dataset.code, item.dataset.name);
+  });
+  const detailBox = document.getElementById("job-detail");
+  if (detailBox) detailBox.addEventListener("click", e => {
+    if (e.target.closest(".job-detail-close")) detailBox.hidden = true;
+  });
   form.onsubmit = async e => {
     e.preventDefault();
     const keyword = document.getElementById("job-keyword").value.trim();
@@ -433,8 +480,12 @@ function setupJobSearch() {
       if (!raw) { list.innerHTML = `<li class="empty">직업정보 인증키가 아직 설정되지 않았습니다.</li>`; return; }
       const jobs = await searchJobInfo(raw, keyword);
       list.innerHTML = jobs.length
-        ? jobs.slice(0, 10).map(j => `<li><strong>${esc(j.name)}</strong><span>${esc(j.category)}</span></li>`).join("")
+        ? jobs.slice(0, 10).map(j => j.code
+          ? `<li><button type="button" class="job-item" data-code="${esc(j.code)}" data-name="${esc(j.name)}"><strong>${esc(j.name)}</strong><span>${esc(j.category)}</span></button></li>`
+          : `<li><strong>${esc(j.name)}</strong><span>${esc(j.category)}</span></li>`).join("")
         : `<li class="empty">검색 결과가 없습니다.</li>`;
+      const detailBox = document.getElementById("job-detail");
+      if (detailBox) detailBox.hidden = true;
       track("job_search", { result_count: jobs.length });
     } catch (err) {
       list.innerHTML = `<li class="empty">검색하지 못했습니다. 잠시 후 다시 시도해 주세요.</li>`;
