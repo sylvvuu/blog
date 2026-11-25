@@ -386,5 +386,8 @@ header.site .header-weather .weather-tile { display: none; }
   header.site .header-weather .weather-tile::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .38); }
   header.site .header-weather .weather-txt { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
   header.site .header-weather .weather-city, header.site .header-weather .weather-state { font-size: 10px; }
-  header.site .header-weather .weather-tile strong { font-size: 18px; font-weight: 500; color: #fff; }
+  header.site .header-weather .weather-tile strong { font-size: 18px; font-weight: 500; color: inherit; }
+  header.site .header-weather .weather-tile.tone-dark { color: #1a1a1a; text-shadow: none; }
+  header.site .header-weather .weather-tile.tone-dark::before { background: rgba(255, 255, 255, .4); }
+  header.site .header-weather .weather-tile.tone-light::before { background: rgba(0, 0, 0, .5); }
 }

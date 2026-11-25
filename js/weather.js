@@ -78,6 +78,9 @@ async function getSky(key) {
 }
 
 // 모바일 헤더 사진 타일에 쓰는 배경 사진 (assets/weather, ChatGPT 제작)
+// 사진 밝기에 맞춘 글자색: light는 흰 글자와 어두운 막, dark는 검은 글자와 밝은 막
+const PHOTO_TONE = { clear: "light", cloudy: "dark", overcast: "dark", rain: "light", sleet: "light", snow: "dark" };
+
 function photoKey(pty, sky) {
   if (pty === 3 || pty === 7) return "snow";
   if (pty === 2 || pty === 6) return "sleet";
@@ -94,9 +97,11 @@ function draw(el, { v, b }, sky) {
   const icon = PTY_ICON[pty] || skyInfo?.icon || "🌤️";
   const state = pty ? (PTY[pty] || "") : (skyInfo?.text || "강수 없음");
   const windIcon = wind >= 9 ? " 💨" : "";
-  const photo = `assets/weather/${photoKey(pty, sky)}.jpg`;
+  const key = photoKey(pty, sky);
+  const photo = `assets/weather/${key}.jpg`;
+  const tone = PHOTO_TONE[key];
   el.innerHTML = `
-    <span class="weather-tile" style="background-image:url('${esc(photo)}')"><span class="weather-txt"><span class="weather-city">Seoul</span><strong>${esc(v.T1H)}°</strong><span class="weather-state">${esc(state)}</span></span></span>
+    <span class="weather-tile tone-${tone}" style="background-image:url('${esc(photo)}')"><span class="weather-txt"><span class="weather-city">Seoul</span><strong>${esc(v.T1H)}°</strong><span class="weather-state">${esc(state)}</span></span></span>
     <span class="weather-label">날씨 · 서울기준 실시간</span>
     <span class="weather-icon" aria-hidden="true">${icon}${windIcon}</span>
     <strong>${esc(v.T1H)}°C</strong>
