@@ -1043,16 +1043,20 @@ if (authBtn) authBtn.addEventListener("click", () => (user && isConfigured ? sig
 // 모바일 리디렉트 로그인 결과 확인 (실패 원인을 콘솔에 남김)
 if (isConfigured) getRedirectResult(auth).catch(e => console.error("로그인 결과 확인 실패", e));
 
-// 모바일: 브랜드(SV Career)를 누르면 메뉴 드롭다운을 연다
-const brandEl = document.querySelector("header.site .brand");
+// 모바일: ☰ 버튼으로 메뉴를 연다. SV Career 글자는 항상 홈으로 간다
+const menuToggle = document.getElementById("menu-toggle");
 const siteHeader = document.querySelector("header.site");
-if (brandEl && siteHeader) {
-  brandEl.addEventListener("click", (ev) => {
-    if (!window.matchMedia("(max-width: 760px)").matches) return;
-    ev.preventDefault();
-    siteHeader.classList.toggle("menu-open");
+if (menuToggle && siteHeader) {
+  menuToggle.addEventListener("click", () => {
+    const open = siteHeader.classList.toggle("menu-open");
+    menuToggle.setAttribute("aria-expanded", String(open));
+    menuToggle.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
   });
-  siteHeader.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => siteHeader.classList.remove("menu-open")));
+  siteHeader.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => {
+    siteHeader.classList.remove("menu-open");
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "메뉴 열기");
+  }));
 }
 window.addEventListener("hashchange", () => route(true));
 

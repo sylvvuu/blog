@@ -28,7 +28,7 @@
     try { if (localStorage.getItem('sy_owner') === '1') window['ga-disable-G-BC6KK97MHL'] = true; } catch (e) {}
     gtag('config', 'G-BC6KK97MHL');
   </script>
-  <link rel="stylesheet" href="styles.css?v=20261125d">
+  <link rel="stylesheet" href="styles.css?v=20261125e">
   <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
       c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -42,6 +42,7 @@
     <div class="wrap">
       <a class="brand" href="#/">SV Career</a>
       <nav>
+        <a class="menu-home" href="#/">홈</a>
         <section class="weather weather-menu" id="weather-menu" hidden></section>
         <a href="#/recruit">채용 공고</a>
         <a href="#/education">교육</a>
@@ -50,6 +51,9 @@
       </nav>
       <section class="weather header-weather" id="weather" hidden></section>
       <button id="auth-btn" class="auth-btn" type="button">로그인</button>
+      <button id="menu-toggle" class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false">
+        <span aria-hidden="true">&#9776;</span>
+      </button>
     </div>
   </header>
   <div class="wrap"><section class="quote-bar" id="quote" hidden></section></div>
