@@ -88,7 +88,8 @@ function draw(el, { v, b }, sky) {
     <span class="weather-label">날씨 · 서울기준 실시간</span>
     <span class="weather-icon" aria-hidden="true">${icon}${windIcon}</span>
     <strong>${esc(v.T1H)}°C</strong>
-    <span>${esc(state)} · 습도 ${esc(v.REH)}% · 풍속 ${esc(v.WSD)} m/s</span>`;
+    <span class="weather-detail">${esc(state)} · 습도 ${esc(v.REH)}% · 풍속 ${esc(v.WSD)} m/s</span>
+    <span class="weather-short">${esc(state)} · 습도 ${esc(v.REH)}%</span>`;
   el.hidden = false;
 }
 

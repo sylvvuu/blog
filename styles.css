@@ -354,6 +354,7 @@ main { padding-top: 0; }
 /* 헤더 날씨: 로그아웃 버튼 바로 옆에 붙도록 내용 너비에 맞춤 (위 두 줄, 아래 상태 줄) */
 header.site .header-weather { display: grid; grid-template-columns: auto auto auto; column-gap: 6px; align-items: center; flex: 0 0 auto; max-width: none; width: auto; margin: 0 0 0 auto; padding: 2px 0; }
 header.site .header-weather > span:last-child { grid-column: 1 / -1; }
+header.site .header-weather .weather-short { display: none; }
 header.site .auth-btn { margin-left: 8px; }
 
 /* 교육 구분 드롭다운, 직업 검색 칸 */
@@ -372,7 +373,11 @@ header.site .auth-btn { margin-left: 8px; }
   header.site .brand::after { content: " \25BE"; font-size: 14px; color: var(--muted); }
   header.site nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; padding: 6px 20px 14px; flex-direction: column; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 10px 24px rgba(0, 0, 0, .08); z-index: 60; }
   header.site nav a, header.site nav a:first-child { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
-  header.site .header-weather { display: none !important; }
+  header.site .header-weather:not([hidden]) { display: flex !important; flex: 1 1 auto; min-width: 0; max-width: none; margin: 0 !important; padding: 6px 10px; gap: 6px; flex-wrap: nowrap; justify-content: center; align-items: center; background: #e6f1fb; border: 0; border-radius: 12px; color: #0c447c; }
+  header.site .header-weather .weather-label, header.site .header-weather .weather-detail { display: none; }
+  header.site .header-weather .weather-short { display: inline; font-size: 11px; color: #185fa5; white-space: nowrap; }
+  header.site .header-weather .weather-icon { font-size: 18px; line-height: 1; }
+  header.site .header-weather strong { font-size: 16px; color: #0c447c; white-space: nowrap; }
   header.site.menu-open nav { display: flex; }
   header.site .auth-btn { margin-left: auto; }
   header.site .wrap { position: relative; }
