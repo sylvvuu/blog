@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125k";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125l";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -926,7 +926,7 @@ function renderPrivacy() {
   <p>채용 공고와 교육 과정 정보는 고용24 Open API에서 가져오며, 이 과정에서 이용자의 개인정보를 보내지 않습니다.</p>
 
   <h2>2. 개인정보의 보유와 이용 기간</h2>
-  <p>문의와 지원 정보는 목적을 이룬 뒤 지체 없이 삭제합니다. 다만 관련 법령에 따라 보관이 필요한 경우에는 그 기간 동안 보관합니다. 보관 기간: [운영자 확정 후 기재]. 회원 정보는 이용자가 삭제를 요청하면 지체 없이 삭제합니다.</p>
+  <p>문의와 지원 정보는 수집일로부터 3년 동안 보관한 뒤 삭제합니다. 다만 관련 법령에 따라 보관이 필요한 경우에는 그 기간 동안 보관합니다. 회원 정보는 이용자가 삭제를 요청하면 지체 없이 삭제합니다.</p>
 
   <h2>3. 개인정보의 처리 위탁과 제3자 제공</h2>
   <ul>
@@ -950,7 +950,7 @@ function renderPrivacy() {
   <p>사이트는 HTTPS로 정보를 주고받으며, 데이터베이스 접근 권한을 규칙으로 제한합니다. 관리자 계정만 전체 문의와 설정을 볼 수 있습니다.</p>
 
   <h2>8. 개인정보 보호책임자</h2>
-  <p>성명과 연락처: [운영자 확정 후 기재]. 개인정보 침해 신고는 개인정보보호위원회 또는 개인정보침해신고센터(국번 없이 118)에 할 수 있습니다.</p>
+  <p>책임자: SV Career 관리자 (연락처는 사이트 하단 이메일). 개인정보 침해 신고는 개인정보보호위원회 또는 개인정보침해신고센터(국번 없이 118)에 할 수 있습니다.</p>
 
   <h2>9. 시행일과 변경</h2>
   <p>이 방침은 2026년 11월 25일부터 시행합니다. 내용이 바뀌면 시행 전에 사이트에 공지합니다.</p>
