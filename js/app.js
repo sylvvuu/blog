@@ -169,9 +169,9 @@ function renderHome(posts) {
   setupJobSearch();
 }
 
-// 공채속보 최신 5건 (고용24 공채속보 Open-API, callOpenApiSvcInfo210L21, 응답은 XML)
-// 개인회원도 이용 가능한 API이며, 등록일 내림차순으로 내려온다
-const JOBS_API = "https://www.work24.go.kr/cm/openApi/call/wk/callOpenApiSvcInfo210L21.do";
+// 공채속보 목록은 서버 함수(api/jobs.js)가 고용24(callOpenApiSvcInfo210L21)를 대신 불러 JSON으로 준다
+// 브라우저가 고용24를 직접 호출하면 아이폰 사파리에서 응답을 읽지 못해서 서버를 거친다
+const JOBS_PROXY = "https://sylvieee.vercel.app/api/jobs";
 
 // 응답 날짜(YYYYMMDD)를 2026.11.27 형식으로 바꾼다
 // 교육 API는 2026-11-24, 공채속보 API는 20261124 형식으로 주므로 숫자만 골라 맞춘다
@@ -183,32 +183,18 @@ const fmtYmd = s => {
 const safeJobUrl = u => (u && /^https?:\/\//.test(u)) ? u : "";
 
 // 공채속보 목록을 가져온다 (sortField=regDt, sortOrderBy=desc: 등록일 내림차순)
-async function fetchLatestJobs(raw, display) {
-  const params = new URLSearchParams({
-    authKey: raw,
-    callTp: "L",
-    returnType: "XML",
-    startPage: "1",
-    display: String(display),
-    sortField: "regDt",
-    sortOrderBy: "desc"
-  });
-  const res = await fetch(`${JOBS_API}?${params.toString()}`);
+async function fetchLatestJobs(_raw, display) {
+  // 키는 서버가 가지고 있으므로 브라우저는 개수만 보낸다
+  const res = await fetch(`${JOBS_PROXY}?display=${encodeURIComponent(display)}`);
   if (!res.ok) throw new Error(`status ${res.status}`);
-  const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-  if (xml.getElementsByTagName("parsererror").length || !xml.getElementsByTagName("dhsOpenEmpInfoList").length) {
-    throw new Error("API 응답 오류");
-  }
-  return Array.from(xml.getElementsByTagName("dhsOpenEmpInfo")).map(n => {
-    const get = tag => n.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
-    return {
-      title: get("empWantedTitle"),
-      company: get("empBusiNm"),
-      kind: get("coClcdNm"),
-      endDate: get("empWantedEndt"),
-      url: safeJobUrl(get("empWantedHomepgDetail"))
-    };
-  }).filter(j => j.title);
+  const data = await res.json();
+  return (data.items || []).map(j => ({
+    title: j.title || "",
+    company: j.company || "",
+    kind: j.kind || "",
+    endDate: j.endDate || "",
+    url: safeJobUrl(j.url)
+  })).filter(j => j.title);
 }
 
 // settings/jobs에 저장된 고용24 인증키를 한 번만 읽어 공채속보와 교육 API가 함께 쓴다
@@ -249,11 +235,8 @@ async function loadPublicJobs() {
   const el = document.getElementById("jobs-panel");
   if (!el || !db) return;
   try {
-    const raw = await getApiKey();
-    if (!raw) { el.hidden = true; return; }
-
     // 드롭다운 기준은 공고 제목 대괄호가 아니라 API의 기업 구분 값(coClcdNm, 예: 중견기업)을 쓴다
-    jobsAll = (await fetchLatestJobs(raw, 20)).map(j => ({ ...j, tag: j.kind || "기타" }));
+    jobsAll = (await fetchLatestJobs(null, 20)).map(j => ({ ...j, tag: j.kind || "기타" }));
     if (!jobsAll.length) { el.hidden = true; return; }
 
     // 드롭다운 옵션: 전체보기 + 태그별 건수
@@ -504,9 +487,7 @@ async function renderApiList(key) {
   app.innerHTML = head + `<p class="loading">불러오는 중...</p>`;
   try {
     if (key === "recruit") {
-      const raw = await getApiKey();
-      if (!raw) { app.innerHTML = head + `<p class="empty">채용 정보 인증키가 아직 설정되지 않았습니다.</p>`; return; }
-      const jobs = await fetchLatestJobs(raw, 20);
+      const jobs = await fetchLatestJobs(null, 20);
       const cards = jobs.map(j => {
         const inner = `<span class="badge">${esc(j.kind || "기타")}</span>
           <h3>${esc(j.title)}</h3><p>${esc(j.company)}</p>
