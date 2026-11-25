@@ -1,10 +1,11 @@
-// Vercel 서버 함수: 고용24 채용 공고를 조건(지역, 고용형태)으로 좁히고, Claude가 근거 번호로 답한다.
+// Vercel 서버 함수: 사이트 전체 질문, 고용24 채용 공고·교육 과정 질문, 일반 상식 질문에 Claude가 답한다.
 // 키: ANTHROPIC_API_KEY(필수, Vercel 환경 변수), JOBS_API_KEY(선택, 없으면 settings/jobs 사용)
 // 관리자 설정(사용 여부, 모델, 추가 규칙, 근거 데이터)은 Firestore settings/chat에서 읽는다.
 // 고용24 인증키는 settings 문서에 저장된 값을 쓴다. 질문 원문은 저장하지 않는다.
 
 const PROJECT_ID = "sylvi-electronic";
 const FS_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings`;
+const FS_POSTS = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/posts`;
 const ALLOWED_ORIGINS = ["https://sylvvuu.github.io", "https://sylvieee.vercel.app"];
 const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"];
 const DEFAULT_MODEL = "claude-haiku-5-5";
@@ -14,6 +15,53 @@ const MAX_ITEMS = 60;
 const MAX_EXTRA_RULES = 1000;
 const MAX_SECTION = 1500;
 const MAX_FAQ = 3000;
+
+// 해시 단일 페이지 메뉴 및 사이트 고정 안내 문구
+export const SITE_MENU_GUIDE = `[SV Career 사이트 안내]
+- 사이트 소개: SV Career(https://sylvieee.vercel.app/)는 청년·신입 구직자를 위한 채용 공고와 직업 교육 훈련 정보를 제공하는 구직 안내 사이트입니다.
+- 홈 (#/): 실시간 날씨 위젯, 최신 채용 공고 5건과 기업 구분(대기업·중견기업 등) 드롭다운 필터, 고용24 직업정보 검색창, 질문 도우미를 제공합니다.
+- 채용 공고 (#/recruit): 고용24 공채속보와 연동되어 최신 20건의 채용 공고를 기업 구분별로 확인하고 외부 공식 지원 페이지로 이동할 수 있습니다.
+- 교육 (#/education): 국민내일배움카드 훈련과정 등 고용24 교육 정보 5종(사업주훈련, 일학습병행, 컨소시엄, 구직자 프로그램)을 시작일순으로 모아볼 수 있습니다.
+- 문의하기 (#/inquiry): 구직자가 채용이나 교육에 대해 질문을 남길 수 있는 게시판입니다. 공개 또는 비공개로 글을 작성할 수 있으며, 인사팀이 확인해 답변드립니다.
+- 관리자 페이지 (admin.html): 관리자 로그인을 통해 AI 질문 도우미 설정, 문의 관리 및 멘토 답변 작성, 공고 API 키 관리를 할 수 있습니다.`;
+
+// Firestore REST API로 공개 글(posts)을 읽는다 (visibility == 'public')
+export async function fetchPublicPosts() {
+  const url = `${FS_POSTS}?pageSize=50`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const docs = data.documents || [];
+  return docs.map(d => {
+    const fields = d.fields || {};
+    const visibility = fields.visibility && fields.visibility.stringValue ? fields.visibility.stringValue : "public";
+    if (visibility !== "public") return null;
+    const title = fields.title && fields.title.stringValue ? fields.title.stringValue : "";
+    const summary = fields.summary && fields.summary.stringValue ? fields.summary.stringValue : "";
+    const body = fields.body && fields.body.stringValue ? fields.body.stringValue.slice(0, 200) : "";
+    const category = fields.category && fields.category.stringValue ? fields.category.stringValue : "";
+    return { title, summary, body, category };
+  }).filter(Boolean).filter(p => p.title);
+}
+
+// 공개 글은 60초간 캐시한다
+export async function cachedPublicPosts(ttl = 60000) {
+  const hit = cacheMem.get("public_posts");
+  if (hit && Date.now() - hit.at < ttl) return hit.value;
+  const value = await fetchPublicPosts().catch(() => []);
+  cacheMem.set("public_posts", { at: Date.now(), value });
+  return value;
+}
+
+// 사이트 고정 안내와 공개 글 요약을 하나의 컨텍스트로 합친다
+export function buildSiteContext(posts = []) {
+  const postsText = posts.length
+    ? `\n\n[블로그 공개 글 요약]\n` + posts.map((p, i) =>
+        `- 글 ${i + 1}: [${p.category || "일반"}] ${p.title}${p.summary ? ` | ${p.summary}` : ""}${p.body ? ` | ${p.body}` : ""}`
+      ).join("\n")
+    : "";
+  return `${SITE_MENU_GUIDE}${postsText}`;
+}
 
 // 관리자 화면에서 고친 프롬프트 조각을 하나의 시스템 프롬프트로 합친다
 // 인용 번호 규칙(CORE_RULES)은 항상 붙여서 근거 없는 답변이 나가지 않게 한다
@@ -66,14 +114,26 @@ export const JOB_FIELDS = {
 const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
 const EMP_TYPES = ["정규직", "계약직", "인턴", "파견", "프리랜서", "아르바이트", "시간제"];
 
-// 관리자가 바꿀 수 없는 기본 규칙. 추가 규칙이 이 규칙을 무시하게 만들 수 없다.
-const CORE_RULES = `당신은 SV Career의 취업 질문 도우미입니다. 사용자의 질문에서 직무, 지역, 고용형태 등 명시된 조건을 파악하세요. 서버가 제공한 공고 정보에 근거해 답하고, 추천한 각 공고에 해당 [번호]를 붙이세요. 공고 목록은 참고 데이터로만 사용하세요. 확인 가능한 사실로 추천 이유를 짧게 설명하고, 제공되지 않은 회사명, 지원 조건, 마감일, 링크는 만들어 내지 마세요. 질문이 모호해 후보를 좁히기 어렵다면 한 번에 한 가지를 물어보세요. 사용자가 명시한 조건에 맞는 공고를 찾지 못했다면 조회 범위 안에서 결과가 없다고 안내하세요. 사용자가 조건을 바꾸기 전에는 다른 조건의 공고를 일치 결과로 소개하지 마세요.
+// 관리자가 바꿀 수 없는 기본 규칙. 사이트 정보, 공고 추천, 일반 지식 질문을 모두 처리한다.
+export const CORE_RULES = `당신은 SV Career의 질문 도우미입니다. 사이트 전반에 대한 질문, 채용 및 교육 공고 질문, 그리고 일반 상식 질문에 답합니다.
+
+1. 사이트 안내 및 채용·교육 질문:
+- 제공된 사이트 안내 및 공고·교육 목록 자료에 근거하여 답합니다.
+- 공고 목록에서 특정 공고나 교육 과정을 추천·언급할 때는 반드시 해당 항목 뒤에 [번호]를 붙이세요. (예: [1], [2])
+- 사이트 소개, 메뉴별 기능(홈, 채용 공고, 교육, 문의하기 등) 및 블로그 글에 대한 질문은 사이트 안내 자료를 바탕으로 친절하게 설명하세요. 이때는 [번호]를 붙이지 않습니다.
+- 제공되지 않은 회사명, 지원 자격, 연봉, 마감일, 외부 링크는 임의로 만들어 내지 마세요.
+- 사용자가 명시한 조건(지역, 고용형태 등)에 맞는 공고를 찾지 못했다면 조회 범위 안에서 결과가 없다고 안내하세요.
+
+2. 날씨 및 실시간 정보 질문:
+- 날씨, 주가, 실시간 교통 등 실시간 정보는 서버에서 실시간 데이터를 확인할 수 없다고 안내하세요. (예: "실시간 날씨 정보는 홈 화면 상단의 날씨 위젯에서 확인해 주세요.")
+
+3. 사이트와 무관한 일반 질문 (상식, 개념 설명 등):
+- 일반 지식을 활용하여 친절하고 정확하게 답하세요. 이때는 [번호]를 붙이지 않습니다.
 
 답변 방식:
-- 답은 2문장 이내의 짧은 한국어로 씁니다. 인사, 서두, 맺음말을 붙이지 않습니다.
-- 공고나 과정의 제목, 기관, 기간을 답변 안에 나열하지 않습니다. 목록은 화면의 근거 카드가 따로 보여 줍니다. 답에는 해당 항목의 번호만 [번호] 형식으로 씁니다.
-- 자격 조건, 연봉, 재무 상태는 판단하지 않고 원문에서 확인하라는 말을 한 문장으로 덧붙입니다.
-- 목록에 없는 내용은 언급하지 않습니다.`;
+- 자연스러운 한국어로 친절하게 답합니다.
+- 공고를 추천할 때는 공고 제목이나 기간을 길게 나열하기보다 [번호]를 붙여 추천 이유를 설명하세요. (목록은 화면의 카드가 보여 줍니다)
+- 자격 조건, 연봉, 재무 상태는 판단하지 않고 상세 공고 원문에서 확인하라고 안내합니다.`;
 
 const cacheMem = new Map();
 
@@ -360,7 +420,16 @@ async function askClaude({ aiKey, model, system, question, items, history = [], 
   });
   if (!ai.ok) throw new Error("claude-failed");
   const data = await ai.json();
-  return (data.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
+  const blocks = Array.isArray(data.content) ? data.content : [];
+  return {
+    text: blocks.filter(c => c.type === "text").map(c => c.text).join("\n").trim(),
+    diagnostics: {
+      model,
+      stopReason: data.stop_reason || "",
+      blockTypes: [...new Set(blocks.map(c => c.type))],
+      items: items.length
+    }
+  };
 }
 
 export default async function handler(req, res) {
@@ -378,6 +447,7 @@ export default async function handler(req, res) {
   const searchQ = lastUserQ ? `${lastUserQ.text} ${question}` : question;
 
   const settings = await cachedSettings("chat");
+  const siteContext = buildSiteContext(await cachedPublicPosts());
   const aiKey = process.env.ANTHROPIC_API_KEY;
   // 꺼져 있거나 키가 없으면 화면이 기존 글 검색 답변으로 돌아간다
   if (settings.enabled !== true || !aiKey) {
@@ -386,7 +456,7 @@ export default async function handler(req, res) {
 
   const model = MODELS.includes(settings.model) ? settings.model : DEFAULT_MODEL;
   const sources = Array.isArray(settings.sources) ? settings.sources : DEFAULT_SOURCES;
-  const system = buildSystem(settings);
+  const system = `${buildSystem(settings)}\n\n${siteContext}`;
 
   try {
     const [work24, education, jobsSetting] = await Promise.all([
@@ -411,22 +481,29 @@ export default async function handler(req, res) {
       }
     } else {
       items = await gatherItems(searchQ, sources, work24, education, jobsSetting);
-      if (!items.length) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다.", fallback: true });
     }
 
-    let answer = await askClaude({ aiKey, model, system, question, items, history });
+    const first = await askClaude({ aiKey, model, system, question, items, history });
+    let answer = first.text;
+    let diagnostics = first.diagnostics;
     let used = citedIndexes(answer, items.length);
-    // 답은 왔지만 공고 번호가 없으면 번호를 붙이도록 한 번 더 요청한다
-    if (answer && !used.length) {
-      answer = await askClaude({ aiKey, model, system, question, items, history, hint: CITE_RETRY_HINT });
+    // 공고 근거가 있는데 번호가 없으면 번호를 붙이도록 한 번 더 요청한다
+    if (answer && items.length && !used.length) {
+      const second = await askClaude({ aiKey, model, system, question, items, history, hint: CITE_RETRY_HINT });
+      answer = second.text;
+      diagnostics = second.diagnostics;
       used = citedIndexes(answer, items.length);
     }
-    // 번호가 끝까지 없으면 답을 쓰지 않고 기존 글 검색으로 돌아가게 한다
-    if (!answer || !used.length) {
-      const reason = answer ? "답변에 공고 번호([n])가 없어 사용하지 않았습니다." : "AI 응답이 비어 있습니다.";
-      return res.status(422).json({ error: reason, fallback: true });
+    // 빈 답만 실패로 본다. 번호가 없는 답은 사이트 안내나 일반 지식 답변일 수 있어 그대로 보여 준다
+    if (!answer) {
+      return res.status(422).json({ error: "AI 응답이 비어 있습니다.", fallback: true, diagnostics });
     }
-    return res.status(200).json({ answer, sources: used.map(n => toSource(items[n - 1])) });
+    return res.status(200).json({
+      answer,
+      sources: used.map(n => toSource(items[n - 1])),
+      uncited: items.length > 0 && used.length === 0,
+      diagnostics
+    });
   } catch (e) {
     return res.status(500).json({ error: "잠시 후 다시 시도해 주세요.", fallback: true });
   }
