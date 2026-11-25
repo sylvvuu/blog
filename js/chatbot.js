@@ -206,7 +206,7 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
       const sourceList = ai.sources.length
         ? `<p>추천 공고</p><ul class="chat-links">${ai.sources.map(card).join("")}</ul>`
         : "";
-      html = `<p>${esc(ai.answer).replace(/\n/g, "<br>")}</p>${sourceList}<p class="chat-note">AI 답변은 고용24 목록을 근거로 합니다. 자세한 내용은 원문에서 확인해 주세요.</p>`;
+      html = `<p>${esc(ai.answer).replace(/\n/g, "<br>")}</p>${sourceList}<p class="chat-note">AI 멘토의 답변은 참고용입니다. 자세한 내용은 원문과 사이트의 글에서 확인해 주세요.</p>`;
       track("chatbot_ai", { source_count: ai.sources.length, character });
     } else {
       try {

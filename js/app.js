@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125i";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125k";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -904,6 +904,59 @@ function drawInquiryBoard(list, page) {
   });
 }
 
+// 개인정보 처리방침 페이지 (#/privacy). 실제 수집 항목과 처리 위탁을 코드 기준으로 적는다
+function renderPrivacy() {
+  document.title = `개인정보 처리방침 | ${SITE_TITLE}`;
+  app.innerHTML = `<article class="privacy-page">
+  <h1>개인정보 처리방침</h1>
+  <p>SV 인사팀이 운영하는 SV Career(https://sylvieee.vercel.app, 이하 "사이트")는 「개인정보 보호법」에 따라 이용자의 개인정보를 보호하고, 이와 관련한 고충을 신속하게 처리하기 위해 아래와 같이 개인정보 처리방침을 둡니다.</p>
+
+  <h2>1. 수집하는 개인정보 항목과 목적</h2>
+  <table class="board privacy-table">
+    <thead><tr><th>구분</th><th>수집 항목</th><th>수집 목적</th></tr></thead>
+    <tbody>
+      <tr><td>로그인 (Google 계정 또는 이메일·비밀번호)</td><td>이름, 이메일, 계정 식별값</td><td>로그인 유지, 문의·지원·댓글 작성자 확인</td></tr>
+      <tr><td>문의하기</td><td>이름, 이메일, 문의 제목과 내용, 분류, 공개 여부</td><td>문의 확인과 답변</td></tr>
+      <tr><td>채용 지원 (사이트 내 지원 폼)</td><td>이름, 이메일, 지원 공고, 계정 식별값</td><td>지원 접수와 확인</td></tr>
+      <tr><td>AI 멘토 (질문 도우미)</td><td>입력한 질문과 대화 내용</td><td>질문에 대한 답변 생성</td></tr>
+      <tr><td>좋아요, 스크랩, 댓글</td><td>계정 식별값, 댓글 내용</td><td>기능 제공과 작성자 표시</td></tr>
+      <tr><td>방문 기록 (Google Analytics 4)</td><td>방문 페이지, 글 열람 등 이벤트, 기기와 브라우저 정보</td><td>사이트 이용 통계와 개선</td></tr>
+    </tbody>
+  </table>
+  <p>채용 공고와 교육 과정 정보는 고용24 Open API에서 가져오며, 이 과정에서 이용자의 개인정보를 보내지 않습니다.</p>
+
+  <h2>2. 개인정보의 보유와 이용 기간</h2>
+  <p>문의와 지원 정보는 목적을 이룬 뒤 지체 없이 삭제합니다. 다만 관련 법령에 따라 보관이 필요한 경우에는 그 기간 동안 보관합니다. 보관 기간: [운영자 확정 후 기재]. 회원 정보는 이용자가 삭제를 요청하면 지체 없이 삭제합니다.</p>
+
+  <h2>3. 개인정보의 처리 위탁과 제3자 제공</h2>
+  <ul>
+    <li>Google: 로그인과 방문 통계(Google Analytics 4)</li>
+    <li>Google Firebase: 회원 인증과 데이터 저장</li>
+    <li>Vercel: 사이트 호스팅과 서버 기능</li>
+    <li>Anthropic: AI 멘토가 답변을 만들 때 입력한 질문과 대화 내용을 전송합니다. 질문에 개인정보를 적지 않도록 안내합니다.</li>
+  </ul>
+  <p>이 밖에 이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다.</p>
+
+  <h2>4. 공개 문의에 대한 안내</h2>
+  <p>공개로 남긴 문의는 질문과 답변이 누구에게나 보이며, 작성자 이름은 첫 글자만 표시됩니다. 개인정보가 드러나지 않도록 주의해 주세요. 비공개로 남긴 문의는 인사팀 관리자만 확인합니다.</p>
+
+  <h2>5. 쿠키와 분석 도구</h2>
+  <p>사이트는 로그인 상태 유지와 방문 통계를 위해 쿠키를 사용합니다. 이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있으며, 이 경우 일부 기능이 동작하지 않을 수 있습니다.</p>
+
+  <h2>6. 이용자의 권리</h2>
+  <p>이용자는 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다. 요청은 사이트 하단의 이메일이나 문의하기 게시판으로 해 주세요.</p>
+
+  <h2>7. 안전성 확보 조치</h2>
+  <p>사이트는 HTTPS로 정보를 주고받으며, 데이터베이스 접근 권한을 규칙으로 제한합니다. 관리자 계정만 전체 문의와 설정을 볼 수 있습니다.</p>
+
+  <h2>8. 개인정보 보호책임자</h2>
+  <p>성명과 연락처: [운영자 확정 후 기재]. 개인정보 침해 신고는 개인정보보호위원회 또는 개인정보침해신고센터(국번 없이 118)에 할 수 있습니다.</p>
+
+  <h2>9. 시행일과 변경</h2>
+  <p>이 방침은 2026년 11월 25일부터 시행합니다. 내용이 바뀌면 시행 전에 사이트에 공지합니다.</p>
+</article>`;
+}
+
 async function renderInquiry() {
   document.title = `${COLUMNS.inquiry.title} | ${SITE_TITLE}`;
   app.innerHTML = `<section class="hero"><h1>문의하기</h1><p>${esc(COLUMNS.inquiry.desc)}</p></section>
@@ -989,6 +1042,7 @@ async function renderRoute() {
   if (hash === "/inquiry/write") return renderInquiryWrite();
   if (hash.startsWith("/inquiry/")) return renderInquiryDetail(decodeURIComponent(hash.slice(9)));
   if (hash === "/inquiry") return renderInquiry();
+  if (hash === "/privacy") return renderPrivacy();
   app.innerHTML = `<p class="loading">불러오는 중...</p>`;
   if (hash === "/education" || hash === "/recruit") return renderApiList(hash.slice(1));
   try {
