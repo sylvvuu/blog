@@ -379,6 +379,8 @@ header.site .header-weather .weather-tile { display: none; }
   header.site.menu-open nav { display: flex; }
   header.site .auth-btn { margin-left: auto; }
   header.site .wrap { position: relative; }
+  /* 모바일 헤더에서는 날씨 텍스트를 숨기고, 날씨는 메뉴 카드에만 보임 */
+  header.site .header-weather { display: none !important; }
   /* 날씨 카드: SV Career 메뉴를 열면 맨 위에 보임 (헤더에서는 숨김) */
   #weather-menu { display: block; margin: 0 0 6px; padding: 10px 0 12px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
   #weather-menu[hidden] { display: none; }
