@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, READ_ONLY_EMAILS } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -23,6 +23,18 @@ $("login-btn").addEventListener("click", async () => {
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (e) {
     $("login-msg").textContent = "로그인에 실패했습니다: " + e.message;
+  }
+});
+// 이메일/비밀번호 로그인: 입력값은 Firebase에만 전달하고 저장하지 않는다
+$("email-login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("login-msg").textContent = "";
+  try {
+    await signInWithEmailAndPassword(auth, $("login-email").value.trim(), $("login-pw").value);
+    $("login-pw").value = "";
+  } catch (err) {
+    $("login-pw").value = "";
+    $("login-msg").textContent = "로그인에 실패했습니다. 이메일이나 비밀번호를 확인해 주세요.";
   }
 });
 $("logout-btn").addEventListener("click", () => signOut(auth));

@@ -21,6 +21,11 @@
     <h2>인사팀 블로그 관리자</h2>
     <p class="msg">허용된 Google 계정으로 로그인하세요.</p>
     <button id="login-btn">Google 계정으로 로그인</button>
+    <form id="email-login-form" class="email-login" autocomplete="on">
+      <label>이메일<input id="login-email" type="email" required autocomplete="username"></label>
+      <label>비밀번호<input id="login-pw" type="password" required autocomplete="current-password"></label>
+      <button type="submit">이메일로 로그인</button>
+    </form>
     <p id="login-msg" class="msg"></p>
   </div>
 
