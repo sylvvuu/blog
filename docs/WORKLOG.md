@@ -1,16 +1,16 @@
-# 작업 기록 (2026-11-18 기준)
+# 작업 기록 (2026-11-25 갱신)
 
-SY Electronics 인사팀 블로그(https://sylvvuu.github.io/blog/)의 작업 내역과 현재 상태를 정리합니다.
+SV Career 인사팀 블로그(https://sylvieee.vercel.app/)의 작업 내역과 현재 상태를 정리합니다. 2026-11-25부터 공개 주소는 Vercel 하나입니다. 1~9장은 11/18~11/24 기록이고, 주소 표와 10장 이후가 최신입니다.
 
 ## 0. 주소 모음
 
 | 구분 | 주소 |
 |---|---|
-| 블로그 홈 | https://sylvvuu.github.io/blog/ |
-| 교육 목록 | https://sylvvuu.github.io/blog/#/education |
-| 채용 공고 목록 | https://sylvvuu.github.io/blog/#/recruit |
-| 문의하기 | https://sylvvuu.github.io/blog/#/inquiry |
-| 관리자 페이지 | https://sylvvuu.github.io/blog/admin.html |
+| 블로그 홈 | https://sylvieee.vercel.app/ |
+| 교육 목록 | https://sylvieee.vercel.app/#/education |
+| 채용 공고 목록 | https://sylvieee.vercel.app/#/recruit |
+| 문의하기 | https://sylvieee.vercel.app/#/inquiry |
+| 관리자 페이지 | https://sylvieee.vercel.app/admin.html |
 | GitHub 저장소 | https://github.com/sylvvuu/blog (main 브랜치 푸시 시 자동 배포) |
 | Firebase 콘솔 (프로젝트) | https://console.firebase.google.com/project/sylvi-electronic |
 | Firestore 규칙 편집 | https://console.firebase.google.com/project/sylvi-electronic/firestore/databases/-default-/security/rules |
@@ -107,7 +107,7 @@ SY Electronics 인사팀 블로그(https://sylvvuu.github.io/blog/)의 작업 �
 
 ## 8. 알려진 문제
 
-- **브라우저 캐시:** GitHub Pages는 `js/app.js`를 약 10분간 캐시합니다. 배포 직후에는 강력 새로고침(Ctrl+Shift+R)이 필요합니다.
+- **브라우저 캐시 (옛 주소):** GitHub Pages 주소는 2026-11-25부터 공개 주소로 쓰지 않습니다. 과거에 캐시 문제가 있었다는 기록으로만 남깁니다.
 - **채용 목록 숨김:** API 오류가 나면 목록을 조용히 숨깁니다. 원인을 화면에서 보려면 오류 문구를 표시하도록 바꿀 수 있습니다.
 - **dist/ 폴더:** `dist/index.html`, `dist/admin.html`은 예전 사본이라 배포 대상이 아닙니다. 사용하지 않습니다.
 
@@ -120,3 +120,26 @@ SY Electronics 인사팀 블로그(https://sylvvuu.github.io/blog/)의 작업 �
 - 미확인: 관리자 화면에서 방문자·공고 클릭 카드에 실제 숫자가 나오는지. 다음 확인 항목
 - 미해결: 챗봇에서 "청년정책 연결해줘"를 물으면 "관련 글을 찾지 못했습니다"라고 답함. 청년정책 훑어보기 페이지 연결과 키워드 인식 수정 필요
 - 미완: 측정 ID(G-) 일치 확인, 홈 하단 목록 Vercel 환경변수 이전, AI 10문항 평가(TEST_REPORT 4-1)
+
+## 10. 2026-11-25 작업 기록 (Vercel 단일 주소로 정리)
+
+- 결정: 공개 주소는 `https://sylvieee.vercel.app/` 하나. GitHub Pages는 서버 함수가 없어 채용·교육·AI가 빠지므로 공개 주소에서 제외 (`docs/DECISION_LOG.md`).
+- 커밋 기록 (main):
+  - `3371b9d` 모바일 로그인 리디렉트, 질문 도우미 인라인 배치(이후 되돌림), 모바일 헤더 드롭다운 메뉴
+  - `3c41989` 모바일 헤더: 메뉴 항목 들여쓰기 통일, 날씨 숨김
+  - `06e0ce3` 로그인 도메인을 Vercel 주소로 바꾸고 `/__/auth`를 Firebase로 연결 (`vercel.json`)
+  - `36960eb` 질문 도우미 인라인 배치 되돌림 (요청하지 않은 수정)
+- 확인 결과
+  - 데스크톱 `sylvieee.vercel.app` 로그인: 정상 (사용자 확인)
+  - 아이폰 로그인: 06e0ce3 배포 후 재확인 필요
+  - Firebase 승인 도메인에 `sylvieee.vercel.app` 추가: 완료 (사용자 확인)
+  - 아이폰 Vercel 주소 채용 20건, 교육 25건: 확인됨 (2045732, fe59822 배포 시점)
+  - 아이폰 질문 도우미 AI 답변: 미확인
+- 시행착오 전체는 `docs/TROUBLESHOOTING.md`, 캡처는 `docs/screenshots/2026-11-25/`.
+- 남은 항목
+  - [ ] 아이폰에서 로그인 → 앱 복귀 → 로그아웃 표시 확인
+  - [ ] 아이폰에서 질문 도우미가 스크롤을 따라오고 숨김이 되는지 확인
+  - [ ] Vercel 환경 변수 `ANTHROPIC_API_KEY` 확인과 `/api/chat` 응답 확인
+  - [ ] 채용 키와 교육 키를 서버 함수에서만 읽도록 옮기기 (PRD 7장)
+  - [ ] 개인정보 처리방침 페이지 작성 (`docs/RETROSPECTIVE.md` 8장)
+  - [ ] 상담 평가 10문항 실시 (`docs/TEST_REPORT.md` 4-1)

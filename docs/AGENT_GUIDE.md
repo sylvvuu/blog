@@ -14,9 +14,13 @@
 | `js/app.js` | 블로그 화면 로직과 GA 이벤트 전송 |
 | `js/admin.js` | 관리자 화면 로직 |
 | `js/config.js` | 회사명, Firebase 설정값 |
-| `js/chatbot.js` | 규칙 기반 질문 도우미 (블로그 글 검색) |
+| `js/chatbot.js` | 질문 도우미 (블로그 글 검색, AI 답변 호출) |
 | `js/weather.js` | 날씨 위젯 |
 | `api/chat.js` | AI 상담 서버 함수 (Vercel). 공고 목록을 가져와 Claude API에 질문 |
+| `api/jobs.js` | 채용 공고 목록 서버 함수 (고용24 공채속보, 키는 `settings/jobs` 또는 `JOBS_API_KEY`) |
+| `api/education.js` | 교육 목록 서버 함수 (고용24 훈련과정 등, 키는 `settings/education`) |
+| `api/analytics.js` | 관리자 분석 서버 함수 (GA4 Data API, Workload Identity 인증) |
+| `vercel.json` | `/__/auth/` 경로를 Firebase 로그인 도메인으로 연결 |
 | `tests/chatbot.test.mjs` | 질문 도우미 단위 테스트 |
 | `firestore.rules` | 보안 규칙 (Firebase 콘솔에 따로 게시해야 적용됨) |
 | `docs/PRD.md` | 기획서 (수업 양식 12개 항목) |
@@ -25,20 +29,21 @@
 | `docs/DECISION_LOG.md` | 결정 로그 |
 | `docs/SUCCESS_FAILURE_LOG.md` | 성공·실패 로그 |
 | `docs/TEST_REPORT.md` | 테스트 결과 |
-| `docs/WORKLOG.md` | 이전 작업 기록 (수정하지 않음) |
+| `docs/WORKLOG.md` | 작업 기록 (11/25에 주소와 10장 갱신) |
+| `docs/TROUBLESHOOTING.md` | 시행착오 기록과 캡처 (`docs/screenshots/2026-11-25/`) |
 
 `js/seed.js`는 11/24에 삭제했습니다. 샘플 글을 다시 넣는 코드는 없습니다.
 
-`dist/` 폴더는 배포에 쓰지 않는 오래된 복사본입니다. 수정하지 않습니다.
+`dist/` 폴더는 배포에 쓰지 않는 오래된 복사본입니다 (11/24 09:16 상태). 스크립트 경로가 맞지 않아 HTML만 갱신하면 동작하지 않으므로 2026-11-25에는 갱신하지 않았습니다. 삭제 여부는 담당자가 결정합니다.
 
 ## 3. 이벤트 이름
 - **이벤트 이름은 반드시 `js/app.js`의 실제 `track()` 호출을 기준으로 합니다.** README나 옛 문서의 이름을 믿지 않습니다.
-- 현재 이름: `page_view`, `page_time`, `post_read`, `post_like`, `post_unlike`, `post_scrap`, `post_unscrap`, `post_comment`, `share`, `post_apply`, `post_apply_submit`, `inquiry_submit`, `chatbot_open`, `chatbot_question`, `chatbot_link_click`, `job_list_view`, `job_item_click`, `job_filter_change`, `edu_list_view`, `edu_item_click`
+- 현재 이름: `page_view`, `page_time`, `post_read`, `post_like`, `post_unlike`, `post_scrap`, `post_unscrap`, `post_comment`, `share`, `post_apply`, `post_apply_submit`, `inquiry_submit`, `chatbot_open`, `chatbot_question`, `chatbot_ai`, `chatbot_link_click`, `chatbot_source_click`, `chatbot_character_change`, `job_list_view`, `job_item_click`, `job_filter_change`, `job_search`, `edu_list_view`, `edu_item_click`, `edu_filter_change`
 - 옛 이름: `post_complete`(11/18 이전 완독), `post_view`(11/18 이전 조회). 과거 데이터를 볼 때만 참고합니다.
 - 관리자 브라우저에서는 이벤트를 보내지 않습니다(`isOwnerBrowser` 규칙). 테스트는 로그아웃 상태나 시크릿 창에서 합니다.
 
 ## 4. Git 규칙
-- 깃허브 반영은 담당자(이은정)가 승인한 뒤에만 합니다. 승인 전에는 로컬에서만 고칩니다.
+- 깃허브 반영은 담당자(이은정)가 승인한 뒤에만 합니다. 승인 전에는 로컬에서만 고칩니다. "고쳐 줘"는 푸시 승인이 아닙니다. 푸시 전에 커밋 목록을 보여 주고 승인을 받습니다. (2026-11-25에 승인 없이 푸시한 기록이 있습니다. `docs/TROUBLESHOOTING.md` 8번)
 - 구현, 기획, 기록 변경은 모두 커밋으로 남깁니다. 기획서만 고치고 기록 문서를 빼지 않습니다.
 - 커밋 메시지는 한글로, 무엇을 바꿨는지 한 줄로 씁니다.
 - 커밋 마지막에 `Co-Authored-By`와 `Claude-Session` 줄을 넣습니다.
@@ -66,3 +71,11 @@
 - 이미지는 챗지피티로 만든 것만 씁니다. 외부 사진이나 이미지 주소를 넣지 않습니다.
 - 지표 기준선: 11/24 이전 수치는 가상 글 기준이므로 같은 기준으로 직접 비교하지 않습니다.
 - 지원은 우리 사이트에서 받지 않습니다. 외부 지원 페이지 이동 클릭(`job_item_click`)만 측정합니다.
+
+## 7. 2026-11-25 추가 규칙
+- 공개 주소는 **https://sylvieee.vercel.app/** 하나입니다. 문서와 화면에 GitHub Pages 주소를 공개 주소로 적지 않습니다.
+- 채용, 교육, AI 상담, 분석은 `api/` 서버 함수에서 처리합니다. 로컬 정적 서버에서는 동작하지 않을 수 있습니다.
+- 요청하지 않은 변경을 하지 않습니다. 스타일이나 배치를 바꿀 때는 바꿀 범위를 먼저 말하고, 사용자 확인 뒤 커밋합니다.
+- 모바일 동작은 아이폰 사파리에서 확인합니다. 데스크톱 확인으로 대신하지 않습니다.
+- 로그인 도메인(`js/config.js`의 `authDomain`)과 `vercel.json`의 `/__/auth` 연결은 함께 바꿉니다. 한쪽만 바꾸면 로그인 복귀가 실패합니다.
+- 캡처는 `docs/screenshots/날짜/` 폴더에 날짜별로 저장하고, 기록 문서에서 상대 경로로 연결합니다.

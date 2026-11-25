@@ -14,7 +14,7 @@
   - 테스트 리포트: `docs/TEST_REPORT.md`
   - 디자인 시안: `docs/design/`
   - 저장소: https://github.com/sylvvuu/blog
-  - 배포 주소: https://sylvvuu.github.io/blog/ , https://sylvieee.vercel.app/
+  - 배포 주소: https://sylvieee.vercel.app/ (2026-11-25부터 단일 주소)
 
 ## 2. 개요
 신입 구직자는 SV Career 홈에서 채용 공고를 먼저 보고 싶어 한다. 그러나 현재 홈은 소개 영역과 날씨 영역을 지나야 공고 글에 닿는다. GA 기준 방문 44명 중 공고 글을 연 사람은 6명(13.6%)으로, 경로가 길어 떠나는 사용자가 있을 것이라고 본다. 이 경로 가설을 해결하기 위해 홈 첫 화면에 고용24 공고 목록을 바로 보여 주고, Claude API 기반 상담으로 공고 탐색을 돕는다. 채용 공고와 교육 과정은 직접 쓰지 않고 고용24 오픈 API에서 가져온다. 이번 해결 범위는 홈에서 공고까지의 접근 경로이며, 청년정책, 기업 재무 정보, 갭이어 안내, 사이트 안 지원 접수는 범위 밖이다.
@@ -222,7 +222,7 @@
 ### 8.3 프로토타입 URL
 - 홈 레이아웃 시안: `docs/design/home-layout-chatbot-slider-api.html`
 - 드롭다운 시안: `docs/design/jobs-dropdown-filter.html`
-- 배포 주소: https://sylvvuu.github.io/blog/
+- 배포 주소: https://sylvieee.vercel.app/ (2026-11-25 변경, GitHub Pages 주소는 공개 중단)
 - 시안과 구현의 차이: 자동 슬라이드, 챗봇 홈 상단 이동은 시안에만 있고 구현하지 않았다.
 
 ## 9. 출시 및 운영 전략
@@ -232,7 +232,7 @@
 - 다음 단계: F4 승인 후 표시 확인, F5 정리, 자동 슬라이드, 챗봇 위치, 직업정보와 직무정보 API, 청년정책 API, 기업 재무 정보, 갭이어 안내
 
 ### 9.2 출시 방식
-- 배포 방식: `main` 푸시 시 GitHub Pages와 Vercel이 함께 배포된다.
+- 배포 방식: `main` 푸시 시 Vercel이 배포한다. 공개 주소는 Vercel만 사용한다 (2026-11-25 변경).
 - 일정
   - 11/24 10:30: 초안 업로드 (완료)
   - 11/24 14:00: PDR 최종본 제출 (이번 문서)
