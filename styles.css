@@ -444,6 +444,14 @@ header.site .header-weather .weather-tile { display: none; }
   header.site .menu-home { display: none; }
 }
 
+/* 관리자 AI 질문 도우미 연결 상태 */
+.ai-status-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 6px 0 14px; }
+.ai-status { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.ai-status b { color: var(--text); font-weight: 600; }
+.ai-status b.ai-status-ok { color: #1f7a3a; }
+.ai-status b.ai-status-bad, .ai-status-bad { color: #b42318; }
+.ai-status-btn { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+
 /* 관리자 AI 질문 도우미 */
 .ai-final { padding: 18px; background: var(--bg); }
 .ai-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
