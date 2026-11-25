@@ -204,4 +204,5 @@ SV Career 인사팀 블로그(https://sylvieee.vercel.app/)의 작업 내역과 
   - `admin.html`: 브라우저 캐시 방지를 위해 `js/admin.js?v=20261125d` 캐시 키 추가
 - 확인:
   - 문법 검사(`js/config.js`, `js/admin.js`) 및 단위 테스트(11개) 전체 통과
+  - 배포 후 사용자 실제 로그인 성공 확인 완료 (커밋 `a77ca9f`). `test1@example.com (읽기 전용)` 표시 및 탭 전환 외 모든 버튼·입력란 비활성화 확인됨
 
