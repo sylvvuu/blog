@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { chatTokens, chatSearch } from "../js/chatbot.js";
-import { extractConditions, matchJobs, citedIndexes, noMatchText, jobItems } from "../api/chat.js";
+import { extractConditions, matchJobs, citedIndexes, noMatchText, jobItems, buildSiteContext, SITE_MENU_GUIDE, CORE_RULES } from "../api/chat.js";
 
 const jobs = [
   { title: "사무지원", region: "서울 강남구", employType: "정규직", end: "20261231" },
@@ -84,4 +84,21 @@ test("210L21 응답에서 공고 필드를 읽는다", () => {
   assert.equal(jobItems(xml2)[0].url, "https://www.work24.go.kr/x?a=1&b=2");
   // 지역과 고용형태 필드가 응답에 없으면 빈 값이어서 조건 검색에서 제외된다
   assert.equal(item.region, "");
+});
+
+// 사이트 전반 질문: 사이트 안내와 공개 글 요약이 AI 컨텍스트에 들어간다
+test("buildSiteContext: 사이트 안내와 공개 글 요약을 함께 담는다", () => {
+  const ctx = buildSiteContext([{ title: "신입 교육 안내", summary: "요약", body: "본문", category: "교육" }]);
+  assert.ok(ctx.includes(SITE_MENU_GUIDE));
+  assert.ok(ctx.includes("[블로그 공개 글 요약]"));
+  assert.ok(ctx.includes("신입 교육 안내"));
+});
+
+test("buildSiteContext: 글이 없으면 사이트 안내만 담는다", () => {
+  assert.equal(buildSiteContext([]), SITE_MENU_GUIDE);
+});
+
+test("CORE_RULES: 사이트 밖 일반 질문과 실시간 정보 안내를 포함한다", () => {
+  assert.ok(CORE_RULES.includes("일반 지식"));
+  assert.ok(CORE_RULES.includes("실시간"));
 });
