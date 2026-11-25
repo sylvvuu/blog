@@ -32,6 +32,8 @@ const PLACEHOLDERS = [
   [/\[문의하기 링크\]/g, "문의하기 화면(#/inquiry)"]
 ];
 
+const CITE_RETRY_HINT = "반드시 추천하거나 언급한 공고 뒤에 [번호]를 붙이세요. 번호 없이 답하지 마세요.";
+
 function buildSystem(s) {
   const clip = (v, n) => String(v || "").slice(0, n).trim();
   const persona = SECTION_TITLES
@@ -327,14 +329,14 @@ function setCors(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "content-type");
 }
 
-async function askClaude({ aiKey, model, system, question, items }) {
+async function askClaude({ aiKey, model, system, question, items, hint = "" }) {
   const ai = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": aiKey, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
       model,
       max_tokens: 300,
-      system,
+      system: hint ? `${system}\n\n${hint}` : system,
       messages: [{
         role: "user",
         content: `질문: ${question}\n\n근거 목록:\n${items.map(lineOf).join("\n")}`
@@ -393,11 +395,17 @@ export default async function handler(req, res) {
       if (!items.length) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다.", fallback: true });
     }
 
-    const answer = await askClaude({ aiKey, model, system, question, items });
-    const used = citedIndexes(answer, items.length);
-    // 유효한 근거가 없으면 답을 쓰지 않고 기존 글 검색으로 돌아가게 한다
+    let answer = await askClaude({ aiKey, model, system, question, items });
+    let used = citedIndexes(answer, items.length);
+    // 답은 왔지만 공고 번호가 없으면 번호를 붙이도록 한 번 더 요청한다
+    if (answer && !used.length) {
+      answer = await askClaude({ aiKey, model, system, question, items, hint: CITE_RETRY_HINT });
+      used = citedIndexes(answer, items.length);
+    }
+    // 번호가 끝까지 없으면 답을 쓰지 않고 기존 글 검색으로 돌아가게 한다
     if (!answer || !used.length) {
-      return res.status(422).json({ error: "근거를 확인하지 못했습니다.", fallback: true });
+      const reason = answer ? "답변에 공고 번호([n])가 없어 사용하지 않았습니다." : "AI 응답이 비어 있습니다.";
+      return res.status(422).json({ error: reason, fallback: true });
     }
     return res.status(200).json({ answer, sources: used.map(n => toSource(items[n - 1])) });
   } catch (e) {
