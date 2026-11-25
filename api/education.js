@@ -3,7 +3,23 @@
 // 키: settings/education.serviceKey(국민내일배움카드), settings/work24의 edu311·edu313·edu312·edu217.
 // 응답: { items: [{ source, title, sub, start, end, url }] } (시작일 순서)
 
-import { fetchText, trainingItems, programItems } from "./chat.js";
+import { trainingItems, programItems } from "./chat.js";
+
+// 고용24 한 곳이 느려도 전체 목록이 늦지 않도록 호출마다 시간 제한을 둔다
+const SOURCE_TIMEOUT_MS = 4000;
+
+async function fetchTextWithTimeout(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SOURCE_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return res.ok ? await res.text() : "";
+  } catch (e) {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 const PROJECT_ID = "sylvi-electronic";
 const FS_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings`;
@@ -73,7 +89,7 @@ export default async function handler(req, res) {
       const params = s.kind === "training"
         ? trainingParams(s.key)
         : new URLSearchParams({ authKey: s.key, returnType: "XML", startPage: "1", display: "5" });
-      const xml = await fetchText(`${WORK24}/${s.path}?${params.toString()}`);
+      const xml = await fetchTextWithTimeout(`${WORK24}/${s.path}?${params.toString()}`);
       if (!xml) return [];
       return s.kind === "training" ? trainingItems(xml, s.label) : programItems(xml, s.label);
     } catch (e) {
