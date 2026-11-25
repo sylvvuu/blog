@@ -13,10 +13,17 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // 검사용 읽기 전용 계정 (조회만 허용, 쓰기·삭제 불가)
+    function isReviewer() {
+      return isSignedIn()
+        && request.auth.token.email == "[삭제된 이메일]"
+        && request.auth.token.email_verified == true;
+    }
+
     // 글: 공개 글은 누구나 읽기, 나만보기 글은 관리자만 읽기. 작성·삭제는 관리자만
     // 로그인한 사용자는 좋아요·스크랩 카운터 숫자만 바꿀 수 있음
     match /posts/{postId} {
-      allow read: if resource.data.visibility == 'public' || isAdmin();
+      allow read: if resource.data.visibility == 'public' || isAdmin() || isReviewer();
       allow create, delete: if isAdmin();
       allow update: if isAdmin() || (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'scraps', 'views'])
@@ -132,7 +139,7 @@ service cloud.firestore {
         && request.resource.data.isPublic is bool
         && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 1000
         && request.resource.data.status == '대기';
-      allow read: if isAdmin()
+      allow read: if isAdmin() || isReviewer()
         || resource.data.get('isPublic', false) == true
         || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow update: if isAdmin()
