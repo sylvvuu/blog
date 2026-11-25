@@ -1,7 +1,9 @@
 // Firebase 웹 앱 설정값. Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 구성에서 복사해 붙여넣으세요.
 export const firebaseConfig = {
   apiKey: "AIzaSyC6CHywgzwyALWZKEfrZFvo4TT9hjpGyZk",
-  authDomain: "sylvi-electronic.firebaseapp.com",
+  // Vercel 주소에서는 같은 도메인의 /__/auth 경로(vercel.json에서 Firebase로 연결)를 써서 아이폰 사파리의 로그인 정보 차단을 피함
+  // GitHub Pages 주소는 기존 Firebase 도메인을 그대로 사용
+  authDomain: location.hostname.endsWith("github.io") ? "sylvi-electronic.firebaseapp.com" : "sylvieee.vercel.app",
   projectId: "sylvi-electronic",
   storageBucket: "sylvi-electronic.firebasestorage.app",
   messagingSenderId: "852910515729",

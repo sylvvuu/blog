@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/__/auth/:path*", "destination": "https://sylvi-electronic.firebaseapp.com/__/auth/:path*" }
+  ]
+}
