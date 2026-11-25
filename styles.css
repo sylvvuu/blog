@@ -366,14 +366,25 @@ header.site .auth-btn { margin-left: 8px; }
 #job-panel { grid-column: 1 / -1; }
 @media (min-width: 761px) { #job-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+/* 날씨 사진 타일은 760px 이하에서만 보임 (기본 숨김) */
+header.site .header-weather .weather-tile { display: none; }
+
 /* 모바일 헤더: 메뉴는 SV Career를 눌러 여는 드롭다운, 로그인 버튼은 항상 보임 */
 @media (max-width: 760px) {
   header.site { position: relative; }
   header.site .brand::after { content: " \25BE"; font-size: 14px; color: var(--muted); }
   header.site nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; padding: 6px 20px 14px; flex-direction: column; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 10px 24px rgba(0, 0, 0, .08); z-index: 60; }
   header.site nav a, header.site nav a:first-child { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
-  header.site .header-weather { display: none !important; }
   header.site.menu-open nav { display: flex; }
   header.site .auth-btn { margin-left: auto; }
   header.site .wrap { position: relative; }
+  /* 날씨 사진 타일: SV Career와 로그인 사이 가운데 */
+  header.site .header-weather { display: flex !important; flex: 0 0 auto; width: auto; max-width: none; margin: 0 auto; padding: 0; border: 0; background: transparent; box-shadow: none; }
+  header.site .header-weather[hidden] { display: none !important; }
+  header.site .header-weather > :not(.weather-tile) { display: none; }
+  header.site .header-weather .weather-tile { position: relative; display: flex; width: 104px; height: 48px; border-radius: 10px; overflow: hidden; background-size: cover; background-position: center; color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, .35); }
+  header.site .header-weather .weather-tile::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .38); }
+  header.site .header-weather .weather-txt { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+  header.site .header-weather .weather-city, header.site .header-weather .weather-state { font-size: 10px; }
+  header.site .header-weather .weather-tile strong { font-size: 18px; font-weight: 500; color: #fff; }
 }

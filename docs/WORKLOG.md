@@ -143,3 +143,18 @@ SV Career 인사팀 블로그(https://sylvieee.vercel.app/)의 작업 내역과 
   - [ ] 채용 키와 교육 키를 서버 함수에서만 읽도록 옮기기 (PRD 7장)
   - [ ] 개인정보 처리방침 페이지 작성 (`docs/RETROSPECTIVE.md` 8장)
   - [ ] 상담 평가 10문항 실시 (`docs/TEST_REPORT.md` 4-1)
+
+## 11. 2026-11-25 모바일 헤더 날씨 사진 타일
+
+- 결정: 헤더 날씨는 SV Career와 로그인 사이 사진 타일 (온도 18px, 도시명과 날씨 상태 10px). 760px 이하에서만 표시. 시안 자료는 `docs/design/weather-header-tile.html`.
+- 구현
+  - `assets/weather/`에 날씨 사진 여섯 장 추가 (맑음, 구름많음, 흐림, 비, 눈비, 눈)
+  - `js/weather.js`: 강수형태(PTY)와 하늘상태(SKY)로 사진을 고르는 `photoKey()` 추가, 타일 마크업 추가
+  - `styles.css`: 760px 이하에서 타일 표시, 기존 날씨 텍스트는 모바일에서 숨김
+- 확인
+  - `photoKey` 매핑 로직 단위 확인 완료
+  - 기존 `tests/chatbot.test.mjs`는 이 변경 이전부터 실패 (변경 전 상태에서도 실패 확인). 이번 작업과 무관
+- 미확인
+  - 아이폰 사파리에서 타일 위치와 글자 줄넘김
+  - 실제 기상청 값이 들어올 때 타일 표시
+- 브랜치: `feature/mobile-weather-tile` (main에 합치기 전 상태)

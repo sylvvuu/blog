@@ -77,6 +77,16 @@ async function getSky(key) {
   }
 }
 
+// 모바일 헤더 사진 타일에 쓰는 배경 사진 (assets/weather, ChatGPT 제작)
+function photoKey(pty, sky) {
+  if (pty === 3 || pty === 7) return "snow";
+  if (pty === 2 || pty === 6) return "sleet";
+  if (pty) return "rain";
+  if (sky === 4) return "overcast";
+  if (sky === 3) return "cloudy";
+  return "clear";
+}
+
 function draw(el, { v, b }, sky) {
   const pty = Number(v.PTY) || 0;
   const wind = Number(v.WSD) || 0;
@@ -84,7 +94,9 @@ function draw(el, { v, b }, sky) {
   const icon = PTY_ICON[pty] || skyInfo?.icon || "🌤️";
   const state = pty ? (PTY[pty] || "") : (skyInfo?.text || "강수 없음");
   const windIcon = wind >= 9 ? " 💨" : "";
+  const photo = `assets/weather/${photoKey(pty, sky)}.jpg`;
   el.innerHTML = `
+    <span class="weather-tile" style="background-image:url('${esc(photo)}')"><span class="weather-txt"><span class="weather-city">Seoul</span><strong>${esc(v.T1H)}°</strong><span class="weather-state">${esc(state)}</span></span></span>
     <span class="weather-label">날씨 · 서울기준 실시간</span>
     <span class="weather-icon" aria-hidden="true">${icon}${windIcon}</span>
     <strong>${esc(v.T1H)}°C</strong>
