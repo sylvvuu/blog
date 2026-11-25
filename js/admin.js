@@ -46,7 +46,8 @@ onAuthStateChanged(auth, async user => {
     return;
   }
   const isExpired = READ_ONLY_EXPIRES_AT ? Date.now() >= Date.parse(READ_ONLY_EXPIRES_AT) : false;
-  const readOnly = !isExpired && READ_ONLY_EMAILS.includes(user.email) && user.emailVerified;
+  // 검사용 읽기 전용 계정은 테스트 이메일 계정일 수 있으므로 emailVerified를 강제하지 않는다
+  const readOnly = !isExpired && READ_ONLY_EMAILS.includes(user.email);
   if (user.email !== ADMIN_EMAIL && !readOnly) {
     $("login-msg").textContent = isExpired && READ_ONLY_EMAILS.includes(user.email)
       ? `${user.email} 계정의 읽기 권한이 만료되었습니다.`

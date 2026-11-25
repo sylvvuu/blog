@@ -200,7 +200,8 @@ SV Career 인사팀 블로그(https://sylvieee.vercel.app/)의 작업 내역과 
 - 요청: `test1@example.com` 계정에 관리자 페이지 읽기 권한 부여, 11월 30일(11월 말)까지만 유지하는 조건
 - 구현:
   - `js/config.js`: `READ_ONLY_EMAILS`에 `test1@example.com` 등록, 만료 시점 `READ_ONLY_EXPIRES_AT = "2026-12-01T00:00:00+09:00"` (11월 30일 23:59:59 KST까지 유효) 정의
-  - `js/admin.js`: 만료 체크 로직(`isExpired`) 추가. 유효 기간 동안에는 탭 전환을 제외한 모든 버튼·입력란 비활성화, 만료 후에는 "읽기 권한이 만료되었습니다" 안내 후 로그아웃 처리
+  - `js/admin.js`: 만료 체크 로직(`isExpired`) 추가. 유효 기간 동안에는 탭 전환을 제외한 모든 버튼·입력란 비활성화, 만료 후에는 "읽기 권한이 만료되었습니다" 안내 후 로그아웃 처리. 테스트 계정의 이메일 미인증 대응으로 `emailVerified` 조건 제외
+  - `admin.html`: 브라우저 캐시 방지를 위해 `js/admin.js?v=20261125d` 캐시 키 추가
 - 확인:
   - 문법 검사(`js/config.js`, `js/admin.js`) 및 단위 테스트(11개) 전체 통과
 
