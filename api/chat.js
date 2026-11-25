@@ -12,6 +12,48 @@ const DEFAULT_SOURCES = ["jobs", "education", "job"];
 const WORK24 = "https://www.work24.go.kr/cm/openApi/call";
 const MAX_ITEMS = 60;
 const MAX_EXTRA_RULES = 1000;
+const MAX_SECTION = 1500;
+const MAX_FAQ = 3000;
+
+// 관리자 화면에서 고친 프롬프트 조각을 하나의 시스템 프롬프트로 합친다
+// 인용 번호 규칙(CORE_RULES)은 항상 붙여서 근거 없는 답변이 나가지 않게 한다
+const SECTION_TITLES = [
+  ["secRole", "# 역할 및 페르소나"],
+  ["secTasks", "# 핵심 업무"],
+  ["secRules", "# 응답 원칙 및 제약사항"],
+  ["secExamples", "# 대화 흐름 예시"]
+];
+const LENGTH_RULES = {
+  short: "답은 2문장 이내로 짧게 씁니다.",
+  long: "필요하면 3~5문장으로 자세히 씁니다."
+};
+const PLACEHOLDERS = [
+  [/\[채용사이트 또는 기업명\]/g, "SV Career"],
+  [/\[문의하기 링크\]/g, "문의하기 화면(#/inquiry)"]
+];
+
+function buildSystem(s) {
+  const clip = (v, n) => String(v || "").slice(0, n).trim();
+  const persona = SECTION_TITLES
+    .map(([k, title]) => (clip(s[k], MAX_SECTION) ? `${title}\n${clip(s[k], MAX_SECTION)}` : ""))
+    .filter(Boolean).join("\n\n");
+  const guards = [
+    s.noSalary === true ? "- 연봉, 합격 기준, 미공개 채용 일정은 추측하지 않습니다." : "",
+    s.noPersonal === true ? "- 주민등록번호, 상세 주소 등 민감한 개인정보를 요구하지 않습니다." : "",
+    s.noAutoLink === true ? "- 지원 링크나 다음 행동은 질문에 답한 뒤에만 안내합니다." : ""
+  ].filter(Boolean);
+  const faq = clip(s.faq, MAX_FAQ);
+  const extra = clip(s.extraRules, MAX_EXTRA_RULES);
+  const system = [
+    persona,
+    CORE_RULES,
+    guards.length ? `추가 금지 규칙:\n${guards.join("\n")}` : "",
+    LENGTH_RULES[s.answerLength] || "",
+    faq ? `FAQ 문서:\n${faq}` : "",
+    extra ? `추가 운영 규칙:\n${extra}` : ""
+  ].filter(Boolean).join("\n\n");
+  return PLACEHOLDERS.reduce((t, [re, to]) => t.replace(re, to), system);
+}
 
 // 공고 필드 이름. 지역과 고용형태는 실제 210L21 응답에서 확인한 뒤 고쳐야 한다.
 // 값이 비어 있는 공고는 해당 조건을 충족하지 않은 것으로 본다.
@@ -323,8 +365,7 @@ export default async function handler(req, res) {
 
   const model = MODELS.includes(settings.model) ? settings.model : DEFAULT_MODEL;
   const sources = Array.isArray(settings.sources) ? settings.sources : DEFAULT_SOURCES;
-  const extraRules = String(settings.extraRules || "").slice(0, MAX_EXTRA_RULES).trim();
-  const system = extraRules ? `${CORE_RULES}\n\n추가 운영 규칙:\n${extraRules}` : CORE_RULES;
+  const system = buildSystem(settings);
 
   try {
     const [work24, education, jobsSetting] = await Promise.all([

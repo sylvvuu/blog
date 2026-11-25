@@ -161,27 +161,130 @@ $("work24-save").addEventListener("click", async () => {
 });
 
 // ---- AI 상담 설정 (settings/chat) ----
+// ---- AI 질문 도우미 설정 (프리셋, 프롬프트 섹션, 금지 규칙, FAQ, 테스트 채팅) ----
+const CHAT_API = "https://sylvieee.vercel.app/api/chat";
+const SEC_IDS = ["secRole", "secTasks", "secRules", "secExamples"];
+const SEC_LABEL = { secRole: "역할 및 페르소나", secTasks: "핵심 업무", secRules: "응답 원칙", secExamples: "대화 흐름 예시" };
+const CHAT_DEFAULT_SOURCES = ["jobs", "education", "job"];
+const PRESETS = {
+  job: {
+    secRole: "당신은 SV Career의 전문 AI 채용 어시스턴트입니다. 구직자가 원하는 채용 공고를 쉽고 빠르게 찾고, 지원 과정의 궁금증을 해결할 수 있도록 친절하고 명확하게 안내하는 것이 목표입니다.",
+    secTasks: "1. 맞춤 공고 추천: 사용자의 직무, 경력, 희망 근무지, 기술 스택을 파악하여 가장 적합한 공고를 추천합니다.\n2. 채용 절차 및 FAQ 안내: 서류 전형, 면접 방식, 복리후생, 지원서 수정 방법 등 자주 묻는 질문에 정확히 답변합니다.\n3. 지원 독려: 안내가 끝난 후에는 해당 공고의 지원 링크나 다음 행동을 자연스럽게 제안합니다.",
+    secRules: "- 반드시 제공된 채용 공고 데이터와 FAQ 문서에 있는 내용만 바탕으로 답변합니다.\n- 데이터에 없는 연봉, 합격 기준, 미공개 채용 일정은 추측하지 않습니다. 모르는 내용은 \"해당 내용은 인사담당자 확인이 필요합니다. [문의하기 링크]를 이용해 주세요.\"라고 안내합니다.\n- 전문적이면서도 따뜻한 존댓말을 사용합니다.\n- 주민등록번호, 상세 주소 등 민감한 개인정보를 요구하지 않습니다.",
+    secExamples: "- 구직자가 \"개발자 공고 있어?\"처럼 모호하게 물으면: \"어떤 개발 분야(프론트엔드, 백엔드, AI 등)와 경력 연차를 찾으시나요?\"라고 한 가지만 되묻습니다."
+  },
+  edu: {
+    secRole: "당신은 SV Career의 교육 과정 안내 어시스턴트입니다. 임직원과 구직자가 자신에게 맞는 교육 과정을 쉽게 찾고 수강 조건을 이해할 수 있도록 안내합니다.",
+    secTasks: "1. 과정 추천: 질문에 맞는 훈련 과정이나 구직자 프로그램을 추천합니다.\n2. 수강 안내: 훈련 기간, 모집 일정, 신청 방법을 데이터에 있는 범위에서 설명합니다.",
+    secRules: "- 반드시 제공된 교육 과정 데이터와 FAQ 문서에 있는 내용만 바탕으로 답변합니다.\n- 데이터에 없는 지원금, 수료 기준, 모집 일정은 추측하지 않습니다. 모르는 내용은 \"해당 내용은 인사담당자 확인이 필요합니다. [문의하기 링크]를 이용해 주세요.\"라고 안내합니다.\n- 전문적이면서도 따뜻한 존댓말을 사용합니다.",
+    secExamples: "- 질문이 모호하면 관심 분야와 희망 기간을 한 가지씩 물어봅니다."
+  }
+};
+let chatSec = "secRole";
+let chatPreset = "job";
+let chatLast = null;
+
+function setChatSec(id) {
+  chatSec = id;
+  document.querySelectorAll(".ai-sec").forEach(b => b.classList.toggle("on", b.dataset.sec === id));
+  SEC_IDS.forEach(k => { $("sec-" + k).hidden = k !== id; });
+  $("sec-title").textContent = SEC_LABEL[id];
+  updateSecCount();
+}
+function updateSecCount() {
+  $("sec-count").textContent = `${$("sec-" + chatSec).value.length.toLocaleString()} / 1,500자`;
+}
+function setChatPreset(name) {
+  chatPreset = name;
+  document.querySelectorAll(".ai-preset").forEach(b => b.classList.toggle("on", b.dataset.preset === name));
+}
+function fillSections(values) {
+  SEC_IDS.forEach(k => { $("sec-" + k).value = values[k] || ""; });
+  updateSecCount();
+}
+
 async function loadChatState() {
   const snap = await getDoc(doc(db, "settings", "chat"));
   const d = snap.exists() ? snap.data() : {};
+  chatLast = d;
   $("chat-enabled").checked = d.enabled === true;
+  $("chat-badge").textContent = d.enabled === true ? "켜짐" : "꺼짐";
+  $("chat-badge").className = "ai-badge " + (d.enabled === true ? "on" : "off");
   $("chat-model").value = d.model || "claude-haiku-5-5";
-  const sources = Array.isArray(d.sources) ? d.sources : ["jobs", "education", "job"];
+  const sources = Array.isArray(d.sources) ? d.sources : CHAT_DEFAULT_SOURCES;
   document.querySelectorAll(".chat-source").forEach(c => { c.checked = sources.includes(c.value); });
+  $("rule-salary").checked = d.noSalary !== false;
+  $("rule-personal").checked = d.noPersonal !== false;
+  $("rule-link").checked = d.noAutoLink === true;
+  $("chat-length").value = d.answerLength || "normal";
+  $("chat-faq").value = d.faq || "";
   $("chat-rules").value = d.extraRules || "";
+  setChatPreset(d.preset || "job");
+  const hasSections = SEC_IDS.some(k => d[k]);
+  fillSections(hasSections ? d : PRESETS.job);
+  setChatSec(chatSec);
   $("chat-state").textContent = d.enabled === true
     ? "AI 답변이 켜져 있습니다. 서버의 ANTHROPIC_API_KEY가 있어야 실제 답변이 나옵니다."
     : "AI 답변이 꺼져 있습니다. 홈 챗봇은 글 검색 답변을 씁니다.";
 }
 
+document.querySelectorAll(".ai-sec").forEach(b => b.addEventListener("click", () => setChatSec(b.dataset.sec)));
+SEC_IDS.forEach(k => $("sec-" + k).addEventListener("input", updateSecCount));
+
+document.querySelectorAll(".ai-preset").forEach(b => b.addEventListener("click", () => {
+  const name = b.dataset.preset;
+  if (name === "custom") { setChatPreset("custom"); return; }
+  const current = SEC_IDS.some(k => $("sec-" + k).value.trim());
+  if (current && !confirm("현재 프롬프트 내용을 이 프리셋으로 바꿀까요? 저장하기 전까지는 적용되지 않습니다.")) return;
+  setChatPreset(name);
+  fillSections(PRESETS[name]);
+}));
+
+$("sec-reset").addEventListener("click", () => {
+  if (chatPreset === "custom") { $("chat-msg").textContent = "직접 작성 모드에서는 기본값이 없습니다. 프리셋을 고르세요."; return; }
+  if (!confirm("이 항목을 프리셋 기본값으로 되돌릴까요?")) return;
+  $(("sec-" + chatSec)).value = PRESETS[chatPreset][chatSec] || "";
+  updateSecCount();
+});
+
+$("sec-prev").addEventListener("click", () => {
+  const raw = chatLast && chatLast.prevSnapshot;
+  if (!raw) { $("chat-msg").textContent = "이전 저장본이 없습니다."; return; }
+  const prev = JSON.parse(raw);
+  $("chat-enabled").checked = prev.enabled === true;
+  $("chat-model").value = prev.model || "claude-haiku-5-5";
+  $("chat-faq").value = prev.faq || "";
+  $("chat-rules").value = prev.extraRules || "";
+  $("rule-salary").checked = prev.noSalary !== false;
+  $("rule-personal").checked = prev.noPersonal !== false;
+  $("rule-link").checked = prev.noAutoLink === true;
+  $("chat-length").value = prev.answerLength || "normal";
+  fillSections(prev);
+  $("chat-msg").textContent = "이전 저장본을 불러왔습니다. 저장을 눌러야 적용됩니다.";
+});
+
 $("chat-save").addEventListener("click", async () => {
   const sources = [...document.querySelectorAll(".chat-source")].filter(c => c.checked).map(c => c.value);
+  const snapshot = chatLast ? { ...chatLast } : {};
+  delete snapshot.updatedAt;
+  delete snapshot.prevSnapshot;
   try {
     await setDoc(doc(db, "settings", "chat"), {
       enabled: $("chat-enabled").checked,
       model: $("chat-model").value,
       sources,
       extraRules: $("chat-rules").value.trim().slice(0, 1000),
+      preset: chatPreset,
+      secRole: $("sec-secRole").value.trim().slice(0, 1500),
+      secTasks: $("sec-secTasks").value.trim().slice(0, 1500),
+      secRules: $("sec-secRules").value.trim().slice(0, 1500),
+      secExamples: $("sec-secExamples").value.trim().slice(0, 1500),
+      noSalary: $("rule-salary").checked,
+      noPersonal: $("rule-personal").checked,
+      noAutoLink: $("rule-link").checked,
+      answerLength: $("chat-length").value,
+      faq: $("chat-faq").value.trim().slice(0, 3000),
+      prevSnapshot: JSON.stringify(snapshot),
       updatedAt: serverTimestamp()
     }, { merge: true });
     $("chat-msg").textContent = "저장했습니다. 홈에서 새로고침하면 반영됩니다.";
@@ -190,6 +293,42 @@ $("chat-save").addEventListener("click", async () => {
     $("chat-msg").textContent = "저장에 실패했습니다: " + e.message;
   }
 });
+
+// 테스트 채팅: 저장된 설정으로 실제 API를 호출해 결과를 보여 준다
+async function sendChatTest(text) {
+  const q = text.trim();
+  if (!q) return;
+  const log = $("chat-test-log");
+  log.insertAdjacentHTML("beforeend", `<div class="ai-msg me">${esc(q)}</div><div class="ai-msg bot" id="chat-wait">확인 중...</div>`);
+  const t0 = performance.now();
+  let html;
+  try {
+    const res = await fetch(CHAT_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) });
+    const data = await res.json().catch(() => ({}));
+    const ms = Math.round(performance.now() - t0);
+    if (res.ok && data.answer) {
+      html = `${esc(data.answer)}<div class="ai-meta">근거 ${(data.sources || []).length}건 · ${ms}ms</div>`;
+    } else if (data.noMatch) {
+      html = `${esc(data.answer)}<div class="ai-meta">조회 결과 없음 · ${ms}ms</div>`;
+    } else {
+      html = `<span class="ai-err">답변 실패 (${res.status}): ${esc(data.error || "원인을 확인하세요")}</span><div class="ai-meta">홈 챗봇은 글 검색 답변으로 대신합니다</div>`;
+    }
+  } catch (e) {
+    html = `<span class="ai-err">서버에 연결하지 못했습니다.</span>`;
+  }
+  const wait = document.getElementById("chat-wait");
+  if (wait) { wait.removeAttribute("id"); wait.innerHTML = html; }
+  log.scrollTop = log.scrollHeight;
+}
+$("chat-test-send").addEventListener("click", () => {
+  const input = $("chat-test-q");
+  sendChatTest(input.value);
+  input.value = "";
+});
+$("chat-test-q").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); $("chat-test-send").click(); }
+});
+document.querySelectorAll(".ai-chip").forEach(b => b.addEventListener("click", () => sendChatTest(b.dataset.q)));
 
 async function loadPosts() {
   loadChatState().catch(() => { $("chat-state").textContent = "AI 설정을 불러오지 못했습니다."; });

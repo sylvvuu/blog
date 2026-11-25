@@ -43,27 +43,100 @@
     </nav>
 
     <div class="tab-panel" data-panel="ai">
-    <section class="panel ai-panel">
-      <h2>AI 질문 도우미 설정</h2>
-      <div class="ai-panel-body">
+      <section class="panel ai-final">
+        <div class="ai-top">
+          <div class="ai-top-left">
+            <h2>AI 질문 도우미</h2>
+            <span id="chat-badge" class="ai-badge">확인 중</span>
+          </div>
+          <label class="ai-switch"><input id="chat-enabled" type="checkbox"> <span>AI 답변 사용</span></label>
+        </div>
         <p class="msg" id="chat-state">저장된 설정 확인 중...</p>
-        <label><input id="chat-enabled" type="checkbox"> AI 답변 사용 (끄면 홈 챗봇은 글 검색 답변을 씁니다)</label>
-        <label for="chat-model">모델</label>
-        <select id="chat-model">
-          <option value="claude-haiku-5-5">Claude Haiku 5.5 (빠름, 기본)</option>
-          <option value="claude-sonnet-5-5">Claude Sonnet 5.5</option>
-          <option value="claude-opus-5-5">Claude Opus 5.5</option>
-        </select>
-        <p class="msg">답변 근거 데이터</p>
-        <label><input class="chat-source" type="checkbox" value="jobs"> 채용 공고</label>
-        <label><input class="chat-source" type="checkbox" value="education"> 교육 과정 (훈련 4종 + 구직자 프로그램)</label>
-        <label><input class="chat-source" type="checkbox" value="job"> 직업 정보 (질문을 검색어로 사용)</label>
-        <label for="chat-rules">추가 답변 규칙 (1,000자 이내, 핵심 규칙은 서버에 고정되어 있습니다)</label>
-        <textarea id="chat-rules" rows="4" maxlength="1000"></textarea>
-        <button id="chat-save" type="button" style="width:100%;margin-top:8px;">AI 설정 저장</button>
-        <p id="chat-msg" class="msg"></p>
-      </div>
-    </section>
+
+        <div class="ai-presets" role="radiogroup" aria-label="답변 역할 프리셋">
+          <button type="button" class="ai-preset" data-preset="job">채용 안내<small>공고 추천, 지원 절차</small></button>
+          <button type="button" class="ai-preset" data-preset="edu">교육 안내<small>과정 추천, 수강 조건</small></button>
+          <button type="button" class="ai-preset" data-preset="custom">직접 작성<small>프롬프트 전체 편집</small></button>
+        </div>
+
+        <div class="ai-cols">
+          <div class="ai-col ai-side">
+            <div class="ai-label">프롬프트 구성</div>
+            <button type="button" class="ai-sec on" data-sec="secRole">역할 및 페르소나</button>
+            <button type="button" class="ai-sec" data-sec="secTasks">핵심 업무</button>
+            <button type="button" class="ai-sec" data-sec="secRules">응답 원칙</button>
+            <button type="button" class="ai-sec" data-sec="secExamples">대화 흐름 예시</button>
+
+            <div class="ai-label">금지 규칙</div>
+            <label class="ai-check"><input id="rule-salary" type="checkbox" checked> 연봉과 합격 기준 추측 금지</label>
+            <label class="ai-check"><input id="rule-personal" type="checkbox" checked> 개인정보 요구 금지</label>
+            <label class="ai-check"><input id="rule-link" type="checkbox"> 지원 링크 먼저 제안하지 않기</label>
+
+            <div class="ai-label">답변 길이</div>
+            <select id="chat-length" aria-label="답변 길이">
+              <option value="short">짧게 (2문장 이내)</option>
+              <option value="normal" selected>보통</option>
+              <option value="long">자세히 (3~5문장)</option>
+            </select>
+          </div>
+
+          <div class="ai-col ai-editor">
+            <div class="ai-editor-head">
+              <span id="sec-title" class="ai-editor-title">역할 및 페르소나</span>
+              <span id="sec-count" class="msg">0 / 1,500자</span>
+            </div>
+            <textarea id="sec-secRole" class="sec-area" maxlength="1500" rows="12"></textarea>
+            <textarea id="sec-secTasks" class="sec-area" maxlength="1500" rows="12" hidden></textarea>
+            <textarea id="sec-secRules" class="sec-area" maxlength="1500" rows="12" hidden></textarea>
+            <textarea id="sec-secExamples" class="sec-area" maxlength="1500" rows="12" hidden></textarea>
+            <div class="ai-editor-actions">
+              <button type="button" id="sec-reset" class="ghost">기본값으로</button>
+              <button type="button" id="sec-prev" class="ghost">이전 저장본</button>
+            </div>
+          </div>
+
+          <div class="ai-col ai-test">
+            <div class="ai-label">테스트 채팅</div>
+            <div class="ai-chips">
+              <button type="button" class="ai-chip" data-q="기간제 모집 알려줘">기간제 모집</button>
+              <button type="button" class="ai-chip" data-q="AI 교육 있어?">AI 교육</button>
+              <button type="button" class="ai-chip" data-q="문의는 어떻게 해?">문의 방법</button>
+            </div>
+            <div id="chat-test-log" class="ai-log" aria-live="polite"></div>
+            <div class="ai-test-input">
+              <input id="chat-test-q" maxlength="200" placeholder="질문을 입력하세요">
+              <button type="button" id="chat-test-send">보내기</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-bottom">
+          <div>
+            <label class="ai-label" for="chat-faq">FAQ 문서</label>
+            <p class="msg">서류 전형, 면접, 복리후생, 지원서 수정 항목을 입력합니다. (3,000자 이내)</p>
+            <textarea id="chat-faq" maxlength="3000" rows="5"></textarea>
+          </div>
+          <div>
+            <div class="ai-label">근거 데이터</div>
+            <label class="ai-check"><input class="chat-source" type="checkbox" value="jobs"> 채용 공고</label>
+            <label class="ai-check"><input class="chat-source" type="checkbox" value="education"> 교육 과정 (훈련 4종 + 구직자 프로그램)</label>
+            <label class="ai-check"><input class="chat-source" type="checkbox" value="job"> 직업 정보 (질문을 검색어로 사용)</label>
+            <label class="ai-label" for="chat-model">모델</label>
+            <select id="chat-model">
+              <option value="claude-haiku-5-5">Claude Haiku 5.5 (빠름, 기본)</option>
+              <option value="claude-sonnet-5-5">Claude Sonnet 5.5</option>
+              <option value="claude-opus-5-5">Claude Opus 5.5</option>
+            </select>
+            <label class="ai-label" for="chat-rules">추가 운영 규칙 (1,000자 이내)</label>
+            <textarea id="chat-rules" rows="3" maxlength="1000"></textarea>
+          </div>
+        </div>
+
+        <div class="ai-save-bar">
+          <p id="chat-msg" class="msg"></p>
+          <button id="chat-save" type="button">AI 설정 저장</button>
+        </div>
+      </section>
     </div>
 
     <div class="tab-panel" data-panel="inquiry" hidden>
