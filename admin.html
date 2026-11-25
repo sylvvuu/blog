@@ -57,6 +57,10 @@
           <label class="ai-switch"><input id="chat-enabled" type="checkbox"> <span>AI 답변 사용</span></label>
         </div>
         <p class="msg" id="chat-state">저장된 설정 확인 중...</p>
+        <div class="ai-status-row">
+          <div id="chat-status" class="ai-status" aria-live="polite">연결 상태 확인 중...</div>
+          <button type="button" id="chat-status-refresh" class="ai-status-btn">연결 상태 다시 확인</button>
+        </div>
 
         <div class="ai-presets" role="radiogroup" aria-label="답변 역할 프리셋">
           <button type="button" class="ai-preset" data-preset="job">채용 안내<small>공고 추천, 지원 절차</small></button>
@@ -274,6 +278,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script type="module" src="js/admin.js?v=20261125d"></script>
+  <script type="module" src="js/admin.js?v=20261125e"></script>
 </body>
 </html>

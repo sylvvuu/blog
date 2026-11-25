@@ -435,6 +435,19 @@ async function askClaude({ aiKey, model, system, question, items, history = [], 
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === "OPTIONS") return res.status(204).end();
+  // 관리자 화면의 연결 상태 점검: 키 값은 빼고 있는지 여부와 설정 요약만 돌려준다
+  if (req.method === "GET") {
+    const chat = await cachedSettings("chat");
+    const posts = await cachedPublicPosts();
+    return res.status(200).json({
+      keyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
+      enabled: chat.enabled === true,
+      model: MODELS.includes(chat.model) ? chat.model : DEFAULT_MODEL,
+      sources: Array.isArray(chat.sources) ? chat.sources : DEFAULT_SOURCES,
+      publicPosts: posts.length,
+      checkedAt: new Date().toISOString()
+    });
+  }
   if (req.method !== "POST") return res.status(405).json({ error: "POST만 허용합니다." });
 
   const question = (req.body && req.body.question) || "";

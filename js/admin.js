@@ -328,12 +328,17 @@ async function sendChatTest(text) {
     const res = await fetch(CHAT_API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) });
     const data = await res.json().catch(() => ({}));
     const ms = Math.round(performance.now() - t0);
+    const d = data.diagnostics;
+    const diag = d ? `진단: 모델 ${esc(d.model || "-")} · 정지 이유 ${esc(d.stopReason || "-")} · 응답 블록 ${esc((d.blockTypes || []).join(", ") || "-")} · 공고 ${d.items ?? "-"}건` : "";
     if (res.ok && data.answer) {
-      html = `${esc(data.answer)}<div class="ai-meta">근거 ${(data.sources || []).length}건 · ${ms}ms</div>`;
+      const basis = data.uncited
+        ? "근거 번호 없음 (사이트 안내 또는 일반 지식 답변)"
+        : `근거 ${(data.sources || []).length}건`;
+      html = `${esc(data.answer)}<div class="ai-meta">${basis} · ${ms}ms</div>${diag ? `<div class="ai-meta">${diag}</div>` : ""}`;
     } else if (data.noMatch) {
       html = `${esc(data.answer)}<div class="ai-meta">조회 결과 없음 · ${ms}ms</div>`;
     } else {
-      html = `<span class="ai-err">답변 실패 (${res.status}): ${esc(data.error || "원인을 확인하세요")}</span><div class="ai-meta">홈 챗봇은 글 검색 답변으로 대신합니다</div>`;
+      html = `<span class="ai-err">답변 실패 (${res.status}): ${esc(data.error || "원인을 확인하세요")}</span>${diag ? `<div class="ai-meta">${diag}</div>` : ""}<div class="ai-meta">홈 챗봇은 글 검색 답변으로 대신합니다</div>`;
     }
   } catch (e) {
     html = `<span class="ai-err">서버에 연결하지 못했습니다.</span>`;
@@ -351,6 +356,32 @@ $("chat-test-q").addEventListener("keydown", e => {
   if (e.key === "Enter") { e.preventDefault(); $("chat-test-send").click(); }
 });
 document.querySelectorAll(".ai-chip").forEach(b => b.addEventListener("click", () => sendChatTest(b.dataset.q)));
+
+// 연결 상태 점검: 서버 키 존재 여부(값은 표시하지 않음), 사용 여부, 공개 글 수를 보여 준다
+const statusItem = (label, value, ok) =>
+  `<span>${esc(label)} <b class="${ok === undefined ? "" : ok ? "ai-status-ok" : "ai-status-bad"}">${esc(value)}</b></span>`;
+async function renderChatStatus() {
+  const box = $("chat-status");
+  box.textContent = "연결 상태 확인 중...";
+  try {
+    const res = await fetch(CHAT_API, { method: "GET", cache: "no-store" });
+    const s = await res.json();
+    if (!res.ok) throw new Error(String(res.status));
+    const time = new Date(s.checkedAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    box.innerHTML = [
+      statusItem("서버 키", s.keyConfigured ? "있음" : "없음", s.keyConfigured),
+      statusItem("AI 답변", s.enabled ? "켜짐" : "꺼짐", s.enabled),
+      statusItem("모델", s.model),
+      statusItem("근거 데이터", (s.sources || []).length + "종"),
+      statusItem("공개 글", s.publicPosts + "개"),
+      statusItem("확인", time)
+    ].join("");
+  } catch (e) {
+    box.innerHTML = `<span class="ai-status-bad">연결 상태를 가져오지 못했습니다 (${esc(e.message)})</span>`;
+  }
+}
+$("chat-status-refresh").addEventListener("click", renderChatStatus);
+renderChatStatus();
 
 async function loadPosts() {
   loadChatState().catch(() => { $("chat-state").textContent = "AI 설정을 불러오지 못했습니다."; });
