@@ -349,27 +349,20 @@ function work24Key(name) {
   });
 }
 
-const EDU_SOURCES = [
-  { label: "국민내일배움카드", key: () => getApiKey("education"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo310L01.do`, raw) },
-  { label: "사업주훈련", key: () => work24Key("edu311"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo311L01.do`, raw) },
-  { label: "일학습병행", key: () => work24Key("edu313"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo313L01.do`, raw) },
-  { label: "국가인적자원개발 컨소시엄", key: () => work24Key("edu312"), load: raw => fetchTraining(`${WORK24_BASE}/hr/callOpenApiSvcInfo312L01.do`, raw) },
-  { label: "구직자 취업역량", key: () => work24Key("edu217"), load: fetchJobProgram }
-];
+// 교육 과정 목록은 서버 함수(api/education.js)가 고용24 훈련·취업역량 API를 대신 불러 JSON으로 준다
+// 브라우저가 고용24를 직접 호출하면 아이폰 사파리에서 응답을 읽지 못하므로 서버를 거친다
+const EDU_PROXY = "https://sylvieee.vercel.app/api/education";
 
-// 키가 없거나 호출이 실패한 API는 건너뛰고, 나머지를 시작일 순서로 합친다
+// 키는 서버가 가지고 있고, 키가 없거나 호출이 실패한 API는 서버에서 건너뛴다
 async function fetchAllEducation() {
-  const groups = await Promise.all(EDU_SOURCES.map(async s => {
-    try {
-      const raw = await s.key();
-      if (!raw) return [];
-      return (await s.load(raw)).map(p => ({ ...p, source: s.label }));
-    } catch (e) {
-      return [];
-    }
-  }));
-  const startKey = d => String(d || "").replace(/\D/g, "") || "99999999";
-  return groups.flat().sort((a, b) => startKey(a.start).localeCompare(startKey(b.start)));
+  try {
+    const res = await fetch(EDU_PROXY);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || [];
+  } catch (e) {
+    return [];
+  }
 }
 
 // 교육 구분 드롭다운: 전체보기가 기본, 나머지는 API별로 나눠 본다

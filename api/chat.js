@@ -62,7 +62,7 @@ const decodeKey = k => {
 };
 const safeUrl = u => (/^https?:\/\//.test(u || "") ? u : "");
 
-async function fetchText(url) {
+export async function fetchText(url) {
   const res = await fetch(url);
   return res.ok ? res.text() : "";
 }
@@ -95,7 +95,7 @@ function tagText(inner, tag) {
 }
 
 // 훈련과정 API(310L01, 311L01, 313L01, 312L01)의 과정 목록
-function trainingItems(xml, label) {
+export function trainingItems(xml, label) {
   return elementsOf(xml).filter(e => e.tag.toLowerCase() === "scn_list").map(e => ({
     source: label,
     title: tagText(e.inner, "title"),
@@ -107,7 +107,7 @@ function trainingItems(xml, label) {
 }
 
 // 구직자 취업역량 강화프로그램(217L01): pgmNm이 한 번만 있는 요소가 항목이다
-function programItems(xml, label) {
+export function programItems(xml, label) {
   return elementsOf(xml)
     .filter(e => (e.inner.match(/<pgmNm>/g) || []).length === 1)
     .map(e => ({
