@@ -14,6 +14,9 @@ export const firebaseConfig = {
 // 관리자 페이지에 로그인할 수 있는 Google 계정
 export const ADMIN_EMAIL = "fkdna3@gmail.com";
 
+// 검사용 읽기 전용 계정: 관리자 화면을 조회만 할 수 있다 (저장·삭제 버튼 비활성, 규칙은 조회만 허용)
+export const READ_ONLY_EMAILS = ["[삭제된 이메일]"];
+
 export const COMPANY_NAME = "SV";
 
 // 홈 화면 회사 소개. 아래 문구는 초안이므로 확정된 소개 문구로 바꿔 주세요.

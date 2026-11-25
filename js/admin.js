@@ -1,4 +1,4 @@
-import { firebaseConfig, ADMIN_EMAIL } from "./config.js";
+import { firebaseConfig, ADMIN_EMAIL, READ_ONLY_EMAILS } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -33,14 +33,20 @@ onAuthStateChanged(auth, async user => {
     $("admin-view").hidden = true;
     return;
   }
-  if (user.email !== ADMIN_EMAIL) {
+  const readOnly = READ_ONLY_EMAILS.includes(user.email) && user.emailVerified;
+  if (user.email !== ADMIN_EMAIL && !readOnly) {
     $("login-msg").textContent = `${user.email} 계정은 관리자 권한이 없습니다.`;
     await signOut(auth);
     return;
   }
   $("login-view").hidden = true;
   $("admin-view").hidden = false;
-  $("who").textContent = user.email;
+  $("who").textContent = user.email + (readOnly ? " (읽기 전용)" : "");
+  if (readOnly) {
+    // 조회만 허용: 탭 전환을 제외한 입력과 버튼을 모두 막는다
+    document.querySelectorAll("#admin-view button:not(.admin-tab), #admin-view input, #admin-view textarea, #admin-view select")
+      .forEach(el => { el.disabled = true; });
+  }
   await loadPosts();
 });
 
