@@ -847,7 +847,7 @@ function drawInquiryBoard(list, page) {
   const pager = Array.from({ length: pages }, (_, i) => `<button type="button" data-page="${i + 1}" class="${i + 1 === cur ? "on" : ""}">${i + 1}</button>`).join("");
   document.getElementById("inq-area").innerHTML = list.length
     ? `<div class="inq-board"><table class="board"><thead><tr><th>번호</th><th>분류</th><th>제목</th><th>작성자</th><th>날짜</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table><div class="inq-pager">${pager}</div></div>`
-    : `<p class="msg">아직 등록된 문의가 없습니다. 첫 문의를 남겨 주세요.</p>`;
+    : `<div class="inq-board"><table class="board"><thead><tr><th>번호</th><th>분류</th><th>제목</th><th>작성자</th><th>날짜</th><th>상태</th></tr></thead><tbody><tr><td colspan="6" class="inq-empty"><span class="inq-empty-dot" aria-hidden="true"></span><div class="inq-empty-title">아직 등록된 문의가 없습니다</div><div class="inq-empty-desc">취업이나 교육 고민, 멘토에게 털어놓아 보세요.</div><a class="inq-empty-btn" href="#/inquiry/write">첫 문의 남기기</a></td></tr></tbody></table></div>`;
   document.querySelectorAll("#inq-area [data-page]").forEach(b => {
     b.onclick = () => drawInquiryBoard(list, Number(b.dataset.page));
   });
@@ -872,7 +872,7 @@ function renderInquiryWrite() {
     document.getElementById("inq-login").onclick = signIn;
     return;
   }
-  app.innerHTML = `<section class="hero"><h1>문의 글쓰기</h1><p>채용이나 교육에서 막막했던 부분을 편하게 남겨 주세요. 인사팀이 확인해 답변드립니다.</p></section>
+  app.innerHTML = `<section class="hero"><h1>문의 글쓰기</h1><p>취업이나 교육 고민, 멘토에게 털어놓아 보세요. 답변은 게시판에서 확인할 수 있습니다.</p></section>
     <div class="inquiry"><form id="inq-form" class="comment-form">
       <p class="who">${esc(user.email)} 계정으로 문의합니다.</p>
       <select id="q-cat" aria-label="분류">${INQ_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("")}</select>
