@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125n";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125o";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
