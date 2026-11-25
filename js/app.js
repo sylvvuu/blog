@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125l";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125m";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -919,7 +919,7 @@ function renderPrivacy() {
       <tr><td>문의하기</td><td>이름, 이메일, 문의 제목과 내용, 분류, 공개 여부</td><td>문의 확인과 답변</td></tr>
       <tr><td>채용 지원 (사이트 내 지원 폼)</td><td>이름, 이메일, 지원 공고, 계정 식별값</td><td>지원 접수와 확인</td></tr>
       <tr><td>AI 멘토 (질문 도우미)</td><td>입력한 질문과 대화 내용</td><td>질문에 대한 답변 생성</td></tr>
-      <tr><td>좋아요, 스크랩, 댓글</td><td>계정 식별값, 댓글 내용</td><td>기능 제공과 작성자 표시</td></tr>
+      <tr><td>좋아요, 스크랩, 댓글</td><td>계정 식별값, 댓글 내용, 댓글에 표시되는 작성자 이름</td><td>기능 제공과 작성자 표시. 댓글은 누구나 볼 수 있습니다</td></tr>
       <tr><td>방문 기록 (Google Analytics 4)</td><td>방문 페이지, 글 열람 등 이벤트, 기기와 브라우저 정보</td><td>사이트 이용 통계와 개선</td></tr>
     </tbody>
   </table>
@@ -938,7 +938,7 @@ function renderPrivacy() {
   <p>이 밖에 이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다.</p>
 
   <h2>4. 공개 문의에 대한 안내</h2>
-  <p>공개로 남긴 문의는 질문과 답변이 누구에게나 보이며, 작성자 이름은 첫 글자만 표시됩니다. 개인정보가 드러나지 않도록 주의해 주세요. 비공개로 남긴 문의는 인사팀 관리자만 확인합니다.</p>
+  <p>공개로 남긴 문의의 제목, 내용, 답변은 누구나 볼 수 있습니다. 화면에서는 작성자 이름을 첫 글자만 표시하지만, 문의 내용에 개인정보를 적으면 그대로 공개되므로 주의해 주세요. 비공개로 남긴 문의는 작성자와 인사팀 관리자만 볼 수 있습니다.</p>
 
   <h2>5. 쿠키와 분석 도구</h2>
   <p>사이트는 로그인 상태 유지와 방문 통계를 위해 쿠키를 사용합니다. 이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있으며, 이 경우 일부 기능이 동작하지 않을 수 있습니다.</p>
