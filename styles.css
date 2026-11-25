@@ -365,3 +365,14 @@ header.site .auth-btn { margin-left: 8px; }
 /* 직업 정보 칸: 좌우 전체 너비 사용, 검색 결과는 두 줄로 */
 #job-panel { grid-column: 1 / -1; }
 @media (min-width: 761px) { #job-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 모바일 헤더: 메뉴는 SV Career를 눌러 여는 드롭다운, 로그인 버튼은 항상 보임 */
+@media (max-width: 760px) {
+  header.site { position: relative; }
+  header.site .brand::after { content: " \25BE"; font-size: 14px; color: var(--muted); }
+  header.site nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; padding: 6px 20px 14px; flex-direction: column; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 10px 24px rgba(0, 0, 0, .08); z-index: 60; }
+  header.site nav a { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  header.site.menu-open nav { display: flex; }
+  header.site .auth-btn { margin-left: auto; }
+  header.site .wrap { position: relative; }
+}

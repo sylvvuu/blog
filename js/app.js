@@ -2,7 +2,7 @@ import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
 import { setupChatbot, mountChatbot } from "./chatbot.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, addDoc, updateDoc, doc,
   query, where, orderBy, increment, serverTimestamp
@@ -94,8 +94,11 @@ async function signIn() {
     alert("Firebase 설정값을 js/config.js에 입력한 뒤 사용할 수 있습니다.");
     return;
   }
+  // 모바일 브라우저는 팝업이 막히는 경우가 많아 같은 탭에서 이동하는 방식으로 로그인
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
+    if (isMobile) await signInWithRedirect(auth, new GoogleAuthProvider());
+    else await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (e) {
     console.error("로그인 실패", e);
   }
@@ -961,6 +964,20 @@ async function route(nav = false) {
 }
 
 if (authBtn) authBtn.addEventListener("click", () => (user && isConfigured ? signOut(auth) : signIn()));
+// 모바일 리디렉트 로그인 결과 확인 (실패 원인을 콘솔에 남김)
+if (isConfigured) getRedirectResult(auth).catch(e => console.error("로그인 결과 확인 실패", e));
+
+// 모바일: 브랜드(SV Career)를 누르면 메뉴 드롭다운을 연다
+const brandEl = document.querySelector("header.site .brand");
+const siteHeader = document.querySelector("header.site");
+if (brandEl && siteHeader) {
+  brandEl.addEventListener("click", (ev) => {
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    ev.preventDefault();
+    siteHeader.classList.toggle("menu-open");
+  });
+  siteHeader.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => siteHeader.classList.remove("menu-open")));
+}
 window.addEventListener("hashchange", () => route(true));
 
 if (isConfigured) {
