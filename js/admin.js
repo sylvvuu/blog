@@ -197,6 +197,7 @@ async function loadPosts() {
   loadJobsState().catch(() => { $("jobs-state").textContent = "채용정보 설정을 불러오지 못했습니다."; });
   loadEduState().catch(() => { $("edu-state").textContent = "교육정보 설정을 불러오지 못했습니다."; });
   loadWeatherState().catch(() => { $("weather-state").textContent = "날씨 설정을 불러오지 못했습니다."; });
+  loadInquiries().catch(() => { $("inq-msg").textContent = "문의 목록을 불러오지 못했습니다."; });
   const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt", "desc")));
   posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   // 공개 설정이 없던 기존 글은 공개로 한 번 정리 (공개 목록 조회에 필요)
@@ -414,3 +415,67 @@ $("delete-btn").addEventListener("click", async () => {
   fillForm({});
 });
 
+
+// ---- 문의 관리 (답변 저장, 1년 지난 문의 정리) ----
+const INQ_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+let inquiries = [];
+let openInquiry = null;
+const inqTime = q => (q.createdAt && q.createdAt.toMillis ? q.createdAt.toMillis() : 0);
+const inqLast = q => (q.repliedAt && q.repliedAt.toMillis ? q.repliedAt.toMillis() : inqTime(q));
+
+async function loadInquiries() {
+  const snap = await getDocs(query(collection(db, "inquiries"), orderBy("createdAt", "desc")));
+  inquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("inq-msg").textContent = `문의 ${inquiries.length}건`;
+  $("inq-list").innerHTML = inquiries.map((q, i) => {
+    const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleDateString("ko-KR") : "";
+    return `<tr data-i="${i}" style="cursor:pointer;"><td>${date}</td><td>${esc(q.category || "기타")}</td><td>${esc(q.title || "(제목 없음)")}</td><td>${esc(q.name || "")}</td><td>${q.isPublic === true ? "공개" : "비공개"}</td><td>${q.reply ? "답변 완료" : "대기"}</td></tr>`;
+  }).join("") || `<tr><td colspan="6">문의가 없습니다.</td></tr>`;
+}
+
+$("inq-list").addEventListener("click", e => {
+  const tr = e.target.closest("tr[data-i]");
+  if (!tr) return;
+  openInquiry = inquiries[Number(tr.dataset.i)];
+  const q = openInquiry;
+  const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleString("ko-KR") : "";
+  $("inq-detail").hidden = false;
+  $("inq-d-title").textContent = q.title || "(제목 없음)";
+  $("inq-d-meta").textContent = `${q.name || ""} · ${q.email || ""} · ${date} · ${q.isPublic === true ? "공개" : "비공개"}`;
+  $("inq-d-msg").textContent = q.message || "";
+  $("inq-reply").value = q.reply || "";
+  $("inq-d-out").textContent = "";
+});
+
+$("inq-save").addEventListener("click", async () => {
+  if (!openInquiry) return;
+  const reply = $("inq-reply").value.trim();
+  if (!reply) { $("inq-d-out").textContent = "답변 내용을 입력해 주세요."; return; }
+  try {
+    await updateDoc(doc(db, "inquiries", openInquiry.id), {
+      reply: reply.slice(0, 2000),
+      repliedAt: serverTimestamp(),
+      status: "완료"
+    });
+    $("inq-d-out").textContent = "답변을 저장했습니다.";
+    await loadInquiries();
+  } catch (e) {
+    $("inq-d-out").textContent = "저장에 실패했습니다: " + e.message;
+  }
+});
+
+$("inq-cleanup").addEventListener("click", async () => {
+  const cutoff = Date.now() - INQ_YEAR_MS;
+  const targets = inquiries.filter(q => inqLast(q) > 0 && inqLast(q) < cutoff);
+  if (!targets.length) { $("inq-msg").textContent = "1년이 지난 문의가 없습니다."; return; }
+  if (!confirm(`1년이 지난 문의 ${targets.length}건을 삭제합니다. 삭제한 문의는 되돌릴 수 없습니다. 계속할까요?`)) return;
+  try {
+    for (const q of targets) await deleteDoc(doc(db, "inquiries", q.id));
+    $("inq-msg").textContent = `${targets.length}건을 삭제했습니다.`;
+    openInquiry = null;
+    $("inq-detail").hidden = true;
+    await loadInquiries();
+  } catch (e) {
+    $("inq-msg").textContent = "정리에 실패했습니다: " + e.message;
+  }
+});

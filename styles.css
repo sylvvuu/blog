@@ -396,3 +396,31 @@ header.site .header-weather .weather-tile { display: none; }
   #weather-menu .weather-tile.tone-dark::before { background: rgba(255, 255, 255, .55); }
   #weather-menu .weather-tile.tone-light::before { background: rgba(0, 0, 0, .58); }
 }
+
+/* 문의 게시판 */
+.inq-board { max-width: 880px; margin: 0 auto; }
+.inq-top { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.inq-board table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+.inq-board th, .inq-board td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; }
+.inq-board th { background: #f6f7f9; font-weight: 600; }
+.inq-board td.inq-title { text-align: left; }
+.inq-board td.inq-title a { color: inherit; text-decoration: none; }
+.inq-board td.inq-title a:hover { text-decoration: underline; }
+.inq-lock { font-size: 12px; color: #888; margin-right: 6px; }
+.inq-mine { font-size: 11px; color: #fff; background: var(--accent, #2563eb); border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
+.inq-state { font-size: 12px; color: #888; }
+.inq-state.done { color: #15803d; font-weight: 600; }
+.inq-pager { display: flex; justify-content: center; gap: 6px; margin-top: 16px; }
+.inq-pager button { min-width: 32px; padding: 4px 8px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
+.inq-pager button.on { background: var(--accent, #2563eb); color: #fff; border-color: transparent; }
+.inq-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.inq-check input { width: auto; }
+.privacy { font-size: 13px; color: #555; background: #f6f7f9; border-radius: 8px; padding: 10px 12px; }
+.privacy p { margin: 8px 0 0; line-height: 1.6; }
+.inq-detail .inq-q { white-space: pre-wrap; line-height: 1.7; }
+.inq-reply { margin-top: 20px; padding: 14px; border-left: 3px solid var(--accent, #2563eb); background: #f6f9ff; border-radius: 8px; }
+.inq-reply p { white-space: pre-wrap; margin: 8px 0; }
+@media (max-width: 760px) {
+  .inq-board th:nth-child(2), .inq-board td:nth-child(2), .inq-board th:nth-child(5), .inq-board td:nth-child(5) { display: none; }
+  .inq-board table { font-size: 13px; }
+}

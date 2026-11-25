@@ -19,7 +19,7 @@ let user = null;
 const COLUMNS = {
   education: { title: "교육", desc: "임직원의 업무 역량을 키우는 교육 프로그램을 안내합니다. 실무 중심으로 진행하며 본사와 지점 모두 참여할 수 있습니다." },
   recruit: { title: "채용 공고", desc: "SV와 함께할 인재를 찾습니다. 신입공채와 경력직 채용 공고를 확인해 보세요." },
-  inquiry: { title: "문의하기", desc: "채용이나 교육에 관해 궁금한 점을 남겨 주세요. 로그인 후 문의를 남기면 인사팀이 확인합니다." }
+  inquiry: { title: "문의하기", desc: "신입 채용과 교육 과정에서 궁금한 점을 남겨 주세요. 인사팀이 확인해 답변드립니다." }
 };
 
 // 글에 쓰는 그림 (직접 그린 SVG, 외부 이미지 없음)
@@ -815,24 +815,76 @@ async function renderPost(posts, id) {
   }
 }
 
-// ---------- 문의하기 ----------
+// ---------- 문의하기 (게시판) ----------
 
-function renderInquiry() {
+const INQ_CATEGORIES = ["채용", "교육", "기타"];
+const INQ_PAGE = 10;
+const INQ_PRIVACY = "문의를 남길 때 Google 계정의 이름과 이메일, 문의 내용, 공개 여부를 수집합니다. 수집한 정보는 문의 확인과 답변을 위해서만 쓰며, 인사팀 관리자가 모든 문의를 볼 수 있습니다. 공개로 남긴 문의는 질문과 답변이 누구에게나 보이며, 이름은 첫 글자만 표시됩니다. 비공개로 남긴 문의는 작성자와 관리자만 볼 수 있습니다. 답변을 저장한 날부터 1년이 지나면 문의를 삭제합니다. 문의를 남기지 않아도 채용과 교육 정보는 이용하실 수 있습니다.";
+const maskName = (n = "") => (n ? n.charAt(0) + "*".repeat(Math.max(n.length - 1, 0)) : "");
+
+// 공개 문의와 내가 쓴 문의를 합쳐서 최신순으로 정렬
+async function loadInquiries() {
+  const [pub, mine] = await Promise.all([
+    getDocs(query(collection(db, "inquiries"), where("isPublic", "==", true))),
+    user ? getDocs(query(collection(db, "inquiries"), where("uid", "==", user.uid))) : Promise.resolve(null)
+  ]);
+  const map = new Map();
+  pub.docs.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
+  if (mine) mine.docs.forEach(d => map.set(d.id, { id: d.id, ...d.data() }));
+  return [...map.values()].sort((a, b) => tsOf(b) - tsOf(a));
+}
+
+function drawInquiryBoard(list, page) {
+  const pages = Math.max(1, Math.ceil(list.length / INQ_PAGE));
+  const cur = Math.min(Math.max(page, 1), pages);
+  const rows = list.slice((cur - 1) * INQ_PAGE, cur * INQ_PAGE).map((q, i) => {
+    const no = list.length - ((cur - 1) * INQ_PAGE + i);
+    const mine = !!user && q.uid === user.uid;
+    const lock = q.isPublic === true ? "" : '<span class="inq-lock">비공개</span>';
+    const state = q.status === "완료" ? '<span class="inq-state done">답변 완료</span>' : '<span class="inq-state">답변 대기</span>';
+    return `<tr><td>${no}</td><td>${esc(q.category || "기타")}</td><td class="inq-title">${lock}<a href="#/inquiry/${esc(q.id)}">${esc(q.title || "(제목 없음)")}</a></td><td>${esc(maskName(q.name))}${mine ? ' <span class="inq-mine">내 글</span>' : ""}</td><td>${fmtDate(q.createdAt)}</td><td>${state}</td></tr>`;
+  }).join("");
+  const pager = Array.from({ length: pages }, (_, i) => `<button type="button" data-page="${i + 1}" class="${i + 1 === cur ? "on" : ""}">${i + 1}</button>`).join("");
+  document.getElementById("inq-area").innerHTML = list.length
+    ? `<div class="inq-board"><table class="board"><thead><tr><th>번호</th><th>분류</th><th>제목</th><th>작성자</th><th>날짜</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table><div class="inq-pager">${pager}</div></div>`
+    : `<p class="msg">아직 등록된 문의가 없습니다. 첫 문의를 남겨 주세요.</p>`;
+  document.querySelectorAll("#inq-area [data-page]").forEach(b => {
+    b.onclick = () => drawInquiryBoard(list, Number(b.dataset.page));
+  });
+}
+
+async function renderInquiry() {
   document.title = `${COLUMNS.inquiry.title} | ${SITE_TITLE}`;
-  const body = user
-    ? `<form id="inq-form" class="comment-form">
-        <p class="who">${esc(user.email)} 계정으로 문의합니다.</p>
-        <input id="q-name" maxlength="20" value="${esc(user.displayName || "")}" placeholder="이름" required>
-        <textarea id="q-msg" maxlength="1000" placeholder="문의 내용 (최대 1000자)" required></textarea>
-        <button type="submit">문의 보내기</button>
-        <p class="msg" id="q-out"></p>
-      </form>`
-    : `<div class="login-box"><p>문의는 Google 로그인 후 남길 수 있습니다.</p><button class="btn primary" id="inq-login">Google 로그인</button></div>`;
-  app.innerHTML = `<section class="hero"><h1>${esc(COLUMNS.inquiry.title)}</h1><p>${esc(COLUMNS.inquiry.desc)}</p></section><div class="inquiry">${body}</div>`;
+  app.innerHTML = `<section class="hero"><h1>문의하기</h1><p>${esc(COLUMNS.inquiry.desc)}</p></section>
+    <div class="inq-board"><div class="inq-top"><button class="btn primary" id="inq-write" type="button">글쓰기</button></div><div id="inq-area"><p class="loading">불러오는 중...</p></div></div>`;
+  document.getElementById("inq-write").onclick = () => { location.hash = "#/inquiry/write"; };
+  try {
+    drawInquiryBoard(await loadInquiries(), 1);
+  } catch (e) {
+    document.getElementById("inq-area").innerHTML = `<p class="msg">문의 목록을 불러오지 못했습니다.</p>`;
+  }
+}
+
+function renderInquiryWrite() {
+  document.title = `문의 글쓰기 | ${SITE_TITLE}`;
   if (!user) {
+    app.innerHTML = `<section class="hero"><h1>문의 글쓰기</h1></section><div class="inquiry"><div class="login-box"><p>문의는 Google 로그인 후 남길 수 있습니다.</p><button class="btn primary" id="inq-login" type="button">Google 로그인</button></div></div>`;
     document.getElementById("inq-login").onclick = signIn;
     return;
   }
+  app.innerHTML = `<section class="hero"><h1>문의 글쓰기</h1><p>채용이나 교육에서 막막했던 부분을 편하게 남겨 주세요. 인사팀이 확인해 답변드립니다.</p></section>
+    <div class="inquiry"><form id="inq-form" class="comment-form">
+      <p class="who">${esc(user.email)} 계정으로 문의합니다.</p>
+      <select id="q-cat" aria-label="분류">${INQ_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("")}</select>
+      <input id="q-title" maxlength="60" placeholder="제목" required>
+      <input id="q-name" maxlength="20" value="${esc(user.displayName || "")}" placeholder="이름" required>
+      <label class="inq-check"><input type="checkbox" id="q-public"> 공개로 남기기 (체크하지 않으면 비공개)</label>
+      <textarea id="q-msg" maxlength="1000" placeholder="예: 신입 공고에 지원할 때 자격 요건은 어디서 확인하나요?" required></textarea>
+      <label class="inq-check"><input type="checkbox" id="q-agree" required> 개인정보 수집과 이용에 동의합니다</label>
+      <details class="privacy"><summary>개인정보 수집과 이용 안내</summary><p>${esc(INQ_PRIVACY)}</p></details>
+      <button type="submit">문의 보내기</button>
+      <p class="msg" id="q-out"></p>
+    </form></div>`;
   document.getElementById("inq-form").onsubmit = async e => {
     e.preventDefault();
     const out = document.getElementById("q-out");
@@ -841,16 +893,38 @@ function renderInquiry() {
         uid: user.uid,
         name: document.getElementById("q-name").value.trim().slice(0, 20),
         email: user.email || "",
+        title: document.getElementById("q-title").value.trim().slice(0, 60),
+        category: document.getElementById("q-cat").value,
+        isPublic: document.getElementById("q-public").checked,
         message: document.getElementById("q-msg").value.trim(),
+        status: "대기",
         createdAt: serverTimestamp()
       });
-      document.getElementById("q-msg").value = "";
-      out.textContent = "문의가 접수되었습니다. 확인 후 답변드리겠습니다.";
       track("inquiry_submit");
+      location.hash = "#/inquiry";
     } catch (err) {
       out.textContent = "문의 접수에 실패했습니다: " + err.message;
     }
   };
+}
+
+async function renderInquiryDetail(id) {
+  document.title = `문의하기 | ${SITE_TITLE}`;
+  try {
+    const snap = await getDoc(doc(db, "inquiries", id));
+    if (!snap.exists()) {
+      app.innerHTML = `<div class="inquiry"><p class="msg">글을 찾을 수 없습니다.</p><p><a href="#/inquiry">목록으로</a></p></div>`;
+      return;
+    }
+    const q = snap.data();
+    const reply = q.reply
+      ? `<div class="inq-reply"><strong>인사팀 답변</strong><p>${esc(q.reply)}</p><span class="msg">${fmtDate(q.repliedAt)}</span></div>`
+      : `<p class="msg">아직 답변이 없습니다.</p>`;
+    app.innerHTML = `<section class="hero"><h1>${esc(q.title || "문의")}</h1><p>${esc(q.category || "기타")} · ${esc(maskName(q.name))} · ${fmtDate(q.createdAt)} · ${q.isPublic === true ? "공개" : "비공개"}</p></section>
+      <div class="inquiry inq-detail"><p class="inq-q">${esc(q.message)}</p>${reply}<p><a href="#/inquiry">목록으로</a></p></div>`;
+  } catch (e) {
+    app.innerHTML = `<div class="inquiry"><p class="msg">이 문의는 볼 수 없습니다.</p><p><a href="#/inquiry">목록으로</a></p></div>`;
+  }
 }
 
 // ---------- 라우팅 ----------
@@ -861,6 +935,8 @@ async function renderRoute() {
     return;
   }
   const hash = location.hash.replace(/^#/, "") || "/";
+  if (hash === "/inquiry/write") return renderInquiryWrite();
+  if (hash.startsWith("/inquiry/")) return renderInquiryDetail(decodeURIComponent(hash.slice(9)));
   if (hash === "/inquiry") return renderInquiry();
   app.innerHTML = `<p class="loading">불러오는 중...</p>`;
   if (hash === "/education" || hash === "/recruit") return renderApiList(hash.slice(1));

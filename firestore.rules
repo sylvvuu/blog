@@ -122,14 +122,22 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // 문의: 로그인 사용자가 작성, 읽기·삭제는 관리자만
+    // 문의 게시판: 로그인 사용자가 작성, 공개 글과 본인 글은 읽기 가능, 답변·상태 수정과 삭제는 관리자만
     match /inquiries/{inquiryId} {
       allow create: if isSignedIn()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.name is string && request.resource.data.name.size() <= 20
-        && request.resource.data.message is string
-        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 1000;
-      allow read, delete: if isAdmin();
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 20
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 60
+        && request.resource.data.category in ['채용', '교육', '기타']
+        && request.resource.data.isPublic is bool
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 1000
+        && request.resource.data.status == '대기';
+      allow read: if isAdmin()
+        || resource.data.get('isPublic', false) == true
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply', 'repliedAt', 'status']);
+      allow delete: if isAdmin();
     }
   }
 }
