@@ -1,6 +1,6 @@
 # SV Career
 
-채용 공고와 교육 과정을 고용24 공공 API에서 가져와 보여 주는 구직 안내 사이트입니다. HTML과 JavaScript로 만들었고, 설정과 글 데이터는 Firebase Firestore에 저장합니다. 채용·교육 목록, 질문 도우미의 AI 답변, 관리자 분석은 Vercel 서버 함수(`api/`)에서 처리합니다.
+채용 공고와 교육 과정을 고용24 공공 API에서 가져와 보여 주는 구직 안내 사이트입니다. HTML과 JavaScript로 만들었고, 설정과 글 데이터는 Firebase Firestore에 저장합니다. 채용·교육 목록, AI 멘토의 AI 답변, 관리자 분석은 Vercel 서버 함수(`api/`)에서 처리합니다.
 
 **공개 주소: https://sylvieee.vercel.app/** (단일 주소, 2026-11-25 결정)
 
@@ -30,11 +30,11 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `index.html` | 홈 (질문 도우미, 채용 공고 목록과 드롭다운, 교육 패널, 문의) |
+| `index.html` | 홈 (AI 멘토, 채용 공고 목록과 드롭다운, 교육 패널, 문의) |
 | `admin.html` | 관리자 페이지 (Google 로그인, 글 수정·삭제, 날씨·채용·교육 키 설정, 분석) |
 | `js/config.js` | Firebase 설정값, 관리자 이메일, 회사명. Vercel 주소에서는 로그인 도메인을 `sylvieee.vercel.app`으로 씀 |
 | `js/app.js` | 홈 화면 로직, 채용·교육 API 호출, GA4 이벤트 전송, 모바일 메뉴 |
-| `js/chatbot.js` | 질문 도우미 UI (블로그 글 검색, AI 답변 호출) |
+| `js/chatbot.js` | AI 멘토 UI (블로그 글 검색, AI 답변 호출) |
 | `js/weather.js` | 날씨 위젯 |
 | `js/admin.js` | 관리자 화면 로직 |
 | `api/jobs.js` | 채용 공고 목록 서버 함수 (고용24 공채속보 210L21) |
@@ -42,7 +42,7 @@
 | `api/chat.js` | AI 상담 서버 함수 (공고 목록을 근거로 Claude API 호출) |
 | `api/analytics.js` | 관리자 분석 서버 함수 (GA4 Data API, Vercel OIDC와 Workload Identity로 인증) |
 | `vercel.json` | `/__/auth/` 경로를 Firebase 로그인 도메인으로 연결 (아이폰 로그인 복귀 문제 대응) |
-| `tests/chatbot.test.mjs` | 질문 도우미 단위 테스트 (`node --test tests/chatbot.test.mjs`) |
+| `tests/chatbot.test.mjs` | AI 멘토 단위 테스트 (`node --test tests/chatbot.test.mjs`) |
 | `firestore.rules` | 설정 문서는 누구나 읽기, 쓰기는 관리자만. 글은 공개 글만 읽기 |
 | `docs/` | 기획서, 결정 로그, 성공과 실패 로그, 시행착오, 에이전트 지침, 테스트 결과, 회고, 시안 |
 
@@ -84,7 +84,7 @@
 | `ANTHROPIC_API_KEY` | Claude API 호출 (모델 `claude-haiku-5-5`) |
 | `JOBS_API_KEY` | 고용24 공채속보 목록 조회 (관리자 채용 키와 같은 값) |
 
-`ANTHROPIC_API_KEY`가 없으면 `/api/chat`은 503을 반환하고, 질문 도우미는 기존 글 검색으로 답합니다. 관리자 화면의 "AI 답변 사용" 체크는 별도로 켜져 있어야 합니다.
+`ANTHROPIC_API_KEY`가 없으면 `/api/chat`은 503을 반환하고, AI 멘토는 기존 글 검색으로 답합니다. 관리자 화면의 "AI 답변 사용" 체크는 별도로 켜져 있어야 합니다.
 
 ## 4. 관리자 사용법
 
@@ -122,6 +122,6 @@ git push origin main
   - 문의: `inquiry_submit`
   - 채용: `job_list_view`, `job_item_click`, `job_filter_change`, `job_search`
   - 교육: `edu_list_view`, `edu_item_click`, `edu_filter_change`
-  - 질문 도우미: `chatbot_open`, `chatbot_question`(찾은 글 수만), `chatbot_ai`, `chatbot_link_click`, `chatbot_source_click`, `chatbot_character_change`
+  - AI 멘토: `chatbot_open`, `chatbot_question`(찾은 글 수만), `chatbot_ai`, `chatbot_link_click`, `chatbot_source_click`, `chatbot_character_change`
 - 11/18 이전에는 완독 이벤트 이름이 `post_complete`였고, 글 조회 이벤트 `post_view`도 있었습니다. 이전 데이터를 볼 때 이 이름 변경을 고려합니다.
 - 11/24 이전 샘플 글 기간의 수치는 가상 데이터 기준이라 기준선으로 쓰지 않습니다.

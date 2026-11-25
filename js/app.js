@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125i";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -133,7 +133,7 @@ function renderHome(posts) {
   document.title = SITE_TITLE;
   app.innerHTML = `<section class="home-hero">
     <h1>취업도, 내 인생도.<br>다음은 나답게.</h1>
-    <p>고용24 채용·교육 정보를 한곳에서 확인하고, 궁금한 점은 질문 도우미에게 물어보세요.</p>
+    <p>고용24 채용·교육 정보를 한곳에서 확인하고, 궁금한 점은 AI 멘토에게 물어보세요.</p>
   </section>
   <section class="roadmap-card" aria-label="나의 로드맵 안내">
     <p class="eyebrow">MAKE YOUR NEXT MOVE</p>

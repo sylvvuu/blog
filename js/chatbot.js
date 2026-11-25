@@ -89,7 +89,9 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
   const fab = document.createElement("button");
   fab.type = "button";
   fab.className = "chat-fab";
-  fab.textContent = "질문하기";
+  fab.textContent = "AI 멘토";
+  // 닫았을 때 다시 열 수 있도록 버튼을 페이지에 붙인다 (이전에는 붙지 않아 다시 열 수 없었음)
+  document.body.append(fab);
 
   const panel = document.createElement("section");
   panel.className = "chat-panel";
@@ -100,7 +102,7 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
   panel.innerHTML = `
     <header class="chat-head">
       <img class="chat-head-avatar" alt="">
-      <strong>질문 도우미</strong>
+      <strong>AI 멘토</strong>
       <div class="chat-switch" role="group" aria-label="캐릭터 선택">
         <button type="button" data-character="male">남성</button>
         <button type="button" data-character="female">여성</button>
