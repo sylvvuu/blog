@@ -125,3 +125,14 @@ git push origin main
   - AI 멘토: `chatbot_open`, `chatbot_question`(찾은 글 수만), `chatbot_ai`, `chatbot_link_click`, `chatbot_source_click`, `chatbot_character_change`
 - 11/18 이전에는 완독 이벤트 이름이 `post_complete`였고, 글 조회 이벤트 `post_view`도 있었습니다. 이전 데이터를 볼 때 이 이름 변경을 고려합니다.
 - 11/24 이전 샘플 글 기간의 수치는 가상 데이터 기준이라 기준선으로 쓰지 않습니다.
+
+## 8. 제출 현황 (1차 미니 프로젝트)
+
+- 배포 주소: https://sylvieee.vercel.app/ (운영 배포 커밋 cb7b4b2)
+- 기획서: `docs/PRD.md`, 제출용 요약: `docs/SUBMISSION_SUMMARY.md`
+- 로컬 단위 테스트: `node --test tests/chatbot.test.mjs` 14개 통과
+- 남은 항목
+  - Google Analytics와 Anthropic의 처리 국가 칸은 근거 확인 후 기재
+  - 기존 문의 정리 버튼은 보안 규칙 게시 후 운영 화면에서 실행 결과 확인
+  - `node --check` 구문 검사 로컬 실행
+  - `docs/handoff`, `feature/mobile-nav-home` 브랜치는 승인 후 병합 결정
