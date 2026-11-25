@@ -1,6 +1,6 @@
 import { firebaseConfig, ADMIN_EMAIL, COMPANY_INTRO } from "./config.js";
 import { startSeoulWeather } from "./weather.js";
-import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125m";
+import { setupChatbot, mountChatbot } from "./chatbot.js?v=20261125n";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -631,6 +631,7 @@ async function renderPost(posts, id) {
   // 지원 폼: 로그인 계정으로 이름과 이메일만 입력
   const applyPanel = isRec && !safeUrl(p.applyUrl) ? `<section id="apply-box" class="apply-box" hidden>
       <h2>지원하기</h2>
+      <p class="who">실습용 사이트의 지원 폼입니다.</p>
       ${user
         ? `<p class="who">이름과 이메일만 입력하면 지원이 접수됩니다.</p>
       <form id="apply-form" class="comment-form">
@@ -870,7 +871,7 @@ async function renderPost(posts, id) {
 
 const INQ_CATEGORIES = ["채용", "교육", "기타"];
 const INQ_PAGE = 10;
-const INQ_PRIVACY = "문의를 남길 때 Google 계정의 이름과 이메일, 문의 내용, 공개 여부를 수집합니다. 수집한 정보는 문의 확인과 답변을 위해서만 쓰며, 인사팀 관리자가 모든 문의를 볼 수 있습니다. 공개로 남긴 문의는 질문과 답변이 누구에게나 보이며, 이름은 첫 글자만 표시됩니다. 비공개로 남긴 문의는 작성자와 관리자만 볼 수 있습니다. 답변을 저장한 날부터 1년이 지나면 문의를 삭제합니다. 문의를 남기지 않아도 채용과 교육 정보는 이용하실 수 있습니다.";
+const INQ_PRIVACY = "문의를 남길 때 이름, 문의 제목과 내용, 분류, 공개 여부를 수집합니다. 문의 이메일은 저장하지 않습니다. 수집한 정보는 문의 확인과 답변을 위해서만 쓰며, 인사팀 관리자가 모든 문의를 볼 수 있습니다. 공개로 남긴 문의는 제목, 내용, 답변이 누구에게나 보이며, 이름은 가린 형태로만 저장하고 표시합니다. 비공개로 남긴 문의는 작성자와 관리자만 볼 수 있습니다. 답변을 완료한 문의는 답변 완료일부터, 답변 없이 남은 문의는 작성일부터 1년이 지나면 관리자가 삭제합니다. 문의를 남기지 않아도 채용과 교육 정보는 이용하실 수 있습니다.";
 const maskName = (n = "") => (n ? n.charAt(0) + "*".repeat(Math.max(n.length - 1, 0)) : "");
 
 // 공개 문의와 내가 쓴 문의를 합쳐서 최신순으로 정렬
@@ -909,14 +910,15 @@ function renderPrivacy() {
   document.title = `개인정보 처리방침 | ${SITE_TITLE}`;
   app.innerHTML = `<article class="privacy-page">
   <h1>개인정보 처리방침</h1>
-  <p>SV 인사팀이 운영하는 SV Career(https://sylvieee.vercel.app, 이하 "사이트")는 「개인정보 보호법」에 따라 이용자의 개인정보를 보호하고, 이와 관련한 고충을 신속하게 처리하기 위해 아래와 같이 개인정보 처리방침을 둡니다.</p>
+  <p><strong>SV Career는 이은정이 AI 프로덕트 매니저 과정에서 제작·운영하는 실습용 사이트입니다.</strong></p>
+  <p>이 사이트(https://sylvieee.vercel.app)는 「개인정보 보호법」에 따라 이용자의 개인정보를 보호하고, 이와 관련한 고충을 신속하게 처리하기 위해 아래와 같이 개인정보 처리방침을 둡니다.</p>
 
   <h2>1. 수집하는 개인정보 항목과 목적</h2>
   <table class="board privacy-table">
     <thead><tr><th>구분</th><th>수집 항목</th><th>수집 목적</th></tr></thead>
     <tbody>
       <tr><td>로그인 (Google 계정 또는 이메일·비밀번호)</td><td>이름, 이메일, 계정 식별값</td><td>로그인 유지, 문의·지원·댓글 작성자 확인</td></tr>
-      <tr><td>문의하기</td><td>이름, 이메일, 문의 제목과 내용, 분류, 공개 여부</td><td>문의 확인과 답변</td></tr>
+      <tr><td>문의하기</td><td>이름, 문의 제목과 내용, 분류, 공개 여부 (문의 이메일은 저장하지 않음)</td><td>문의 확인과 답변</td></tr>
       <tr><td>채용 지원 (사이트 내 지원 폼)</td><td>이름, 이메일, 지원 공고, 계정 식별값</td><td>지원 접수와 확인</td></tr>
       <tr><td>AI 멘토 (질문 도우미)</td><td>입력한 질문과 대화 내용</td><td>질문에 대한 답변 생성</td></tr>
       <tr><td>좋아요, 스크랩, 댓글</td><td>계정 식별값, 댓글 내용, 댓글에 표시되는 작성자 이름</td><td>기능 제공과 작성자 표시. 댓글은 누구나 볼 수 있습니다</td></tr>
@@ -926,31 +928,31 @@ function renderPrivacy() {
   <p>채용 공고와 교육 과정 정보는 고용24 Open API에서 가져오며, 이 과정에서 이용자의 개인정보를 보내지 않습니다.</p>
 
   <h2>2. 개인정보의 보유와 이용 기간</h2>
-  <p>문의와 지원 정보는 수집일로부터 3년 동안 보관한 뒤 삭제합니다. 다만 관련 법령에 따라 보관이 필요한 경우에는 그 기간 동안 보관합니다. 회원 정보는 이용자가 삭제를 요청하면 지체 없이 삭제합니다.</p>
+  <p>문의는 답변을 완료한 경우 답변 완료일부터, 답변 없이 남은 경우 작성일부터 1년이 지나면 관리자가 삭제합니다. 채용 지원 정보는 수집일부터 3년 동안 보관한 뒤 삭제합니다. 다만 관련 법령에 따라 보관이 필요한 경우에는 그 기간 동안 보관합니다. 회원 정보는 이용자가 삭제를 요청하면 지체 없이 삭제합니다.</p>
 
   <h2>3. 개인정보의 처리 위탁과 제3자 제공</h2>
   <ul>
-    <li>Google: 로그인과 방문 통계(Google Analytics 4)</li>
-    <li>Google Firebase: 회원 인증과 데이터 저장</li>
-    <li>Vercel: 사이트 호스팅과 서버 기능</li>
-    <li>Anthropic: AI 멘토가 답변을 만들 때 입력한 질문과 대화 내용을 전송합니다. 질문에 개인정보를 적지 않도록 안내합니다.</li>
+    <li>Google: 로그인과 방문 통계(Google Analytics 4). 처리 국가와 보유 기간: [확인 후 기재]</li>
+    <li>Google Firebase: 회원 인증과 데이터 저장. 데이터 저장 리전: [확인 후 기재]</li>
+    <li>Vercel: 사이트 호스팅과 서버 기능. 서버 함수 실행 리전: 미국 워싱턴 D.C.(iad1)</li>
+    <li>Anthropic: AI 멘토가 답변을 만들 때 입력한 질문과 이전 대화 내용을 전송합니다. 처리 국가와 보유 기간: [확인 후 기재]. 질문에 개인정보를 적지 않도록 안내합니다.</li>
   </ul>
   <p>이 밖에 이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다.</p>
 
   <h2>4. 공개 문의에 대한 안내</h2>
-  <p>공개로 남긴 문의의 제목, 내용, 답변은 누구나 볼 수 있습니다. 화면에서는 작성자 이름을 첫 글자만 표시하지만, 문의 내용에 개인정보를 적으면 그대로 공개되므로 주의해 주세요. 비공개로 남긴 문의는 작성자와 인사팀 관리자만 볼 수 있습니다.</p>
+  <p>공개 여부는 직접 선택하며 기본값은 비공개입니다. 공개로 남긴 문의의 제목, 내용, 답변은 누구나 볼 수 있습니다. 공개 문의의 이름은 가린 형태로만 저장·표시하며, 문의 내용에 개인정보를 적으면 그대로 공개되므로 주의해 주세요. 비공개로 남긴 문의는 작성자와 인사팀 관리자만 볼 수 있습니다.</p>
 
   <h2>5. 쿠키와 분석 도구</h2>
   <p>사이트는 로그인 상태 유지와 방문 통계를 위해 쿠키를 사용합니다. 이용자는 브라우저 설정에서 쿠키 저장을 거부할 수 있으며, 이 경우 일부 기능이 동작하지 않을 수 있습니다.</p>
 
   <h2>6. 이용자의 권리</h2>
-  <p>이용자는 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다. 요청은 사이트 하단의 이메일이나 문의하기 게시판으로 해 주세요.</p>
+  <p>이용자는 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다. 요청은 사이트 하단의 운영자 이메일(fkdna3@gmail.com)로 해 주세요.</p>
 
   <h2>7. 안전성 확보 조치</h2>
   <p>사이트는 HTTPS로 정보를 주고받으며, 데이터베이스 접근 권한을 규칙으로 제한합니다. 관리자 계정만 전체 문의와 설정을 볼 수 있습니다.</p>
 
   <h2>8. 개인정보 보호책임자</h2>
-  <p>책임자: SV Career 관리자 (연락처는 사이트 하단 이메일). 개인정보 침해 신고는 개인정보보호위원회 또는 개인정보침해신고센터(국번 없이 118)에 할 수 있습니다.</p>
+  <p>책임자: 이은정 (운영자), 연락처: fkdna3@gmail.com. 개인정보 침해 신고는 개인정보보호위원회 또는 개인정보침해신고센터(국번 없이 118)에 할 수 있습니다.</p>
 
   <h2>9. 시행일과 변경</h2>
   <p>이 방침은 2026년 11월 25일부터 시행합니다. 내용이 바뀌면 시행 전에 사이트에 공지합니다.</p>
@@ -992,14 +994,16 @@ function renderInquiryWrite() {
   document.getElementById("inq-form").onsubmit = async e => {
     e.preventDefault();
     const out = document.getElementById("q-out");
+    const isPub = document.getElementById("q-public").checked;
+    const nameVal = document.getElementById("q-name").value.trim().slice(0, 20);
+    if (isPub && !confirm("공개로 남긴 문의는 제목, 내용, 답변이 누구에게나 보입니다. 이름은 가린 형태로만 표시됩니다. 계속할까요?")) return;
     try {
       await addDoc(collection(db, "inquiries"), {
         uid: user.uid,
-        name: document.getElementById("q-name").value.trim().slice(0, 20),
-        email: user.email || "",
+        name: isPub ? maskName(nameVal) : nameVal,
         title: document.getElementById("q-title").value.trim().slice(0, 60),
         category: document.getElementById("q-cat").value,
-        isPublic: document.getElementById("q-public").checked,
+        isPublic: isPub,
         message: document.getElementById("q-msg").value.trim(),
         status: "대기",
         createdAt: serverTimestamp()

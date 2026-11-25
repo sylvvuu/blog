@@ -633,7 +633,7 @@ $("inq-list").addEventListener("click", e => {
   const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleString("ko-KR") : "";
   $("inq-detail").hidden = false;
   $("inq-d-title").textContent = q.title || "(제목 없음)";
-  $("inq-d-meta").textContent = `${q.name || ""} · ${q.email || ""} · ${date} · ${q.isPublic === true ? "공개" : "비공개"}`;
+  $("inq-d-meta").textContent = `${q.name || ""} · ${date} · ${q.isPublic === true ? "공개" : "비공개"}`;
   $("inq-d-msg").textContent = q.message || "";
   $("inq-reply").value = q.reply || "";
   $("inq-d-out").textContent = "";
