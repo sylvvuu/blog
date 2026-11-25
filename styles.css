@@ -133,7 +133,12 @@ footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size:
 /* 관리자 */
 .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
 .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.admin-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+.admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+.admin-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; overflow-x: auto; }
+.admin-tab { background: none; color: var(--muted); border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 14px; font-size: 15px; white-space: nowrap; }
+.admin-tab.on { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.admin-tab:hover { color: var(--brand); }
+.tab-panel > section { margin-top: 0; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
 .panel h2 { margin: 0 0 16px; font-size: 17px; }
 .login-card { max-width: 380px; margin: 120px auto; text-align: center; }

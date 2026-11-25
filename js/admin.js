@@ -479,3 +479,12 @@ $("inq-cleanup").addEventListener("click", async () => {
     $("inq-msg").textContent = "정리에 실패했습니다: " + e.message;
   }
 });
+
+// ---- 관리 메뉴 탭: 한 번에 한 화면만 보여 준다 (AI 질문 도우미가 첫 화면) ----
+document.querySelectorAll(".admin-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const name = btn.dataset.tab;
+    document.querySelectorAll(".admin-tab").forEach(b => b.classList.toggle("on", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => { p.hidden = p.dataset.panel !== name; });
+  });
+});
