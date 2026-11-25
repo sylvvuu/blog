@@ -170,7 +170,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .fab:hover { filter: brightness(1.08); }
 
 /* 질문 챗봇 */
-.chat-fab { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); z-index: 50; border: 0; cursor: pointer; background: #fff; color: var(--brand); padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 18px rgba(31, 78, 121, .22); }
+.chat-fab { position: fixed; right: 20px; bottom: 76px; z-index: 50; border: 0; cursor: pointer; background: var(--brand); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 18px rgba(31, 78, 121, .28); }
 .chat-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); z-index: 60; width: min(340px, calc(100vw - 40px)); max-height: 60vh; display: flex; flex-direction: column; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .18); overflow: hidden; }
 .chat-panel[hidden] { display: none; }
 .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--brand); color: #fff; }
@@ -197,7 +197,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* 좁은 화면(모바일)은 하단 시트로 연다 */
 @media (max-width: 600px) {
   .chat-panel { left: 0; right: 0; top: auto; bottom: 0; transform: none; width: auto; max-height: 60vh; border-radius: 14px 14px 0 0; }
-  .chat-fab { right: 16px; top: auto; bottom: 16px; transform: none; }
+  .chat-fab { right: 20px; bottom: 76px; }
 }
 .login-hint { margin: 8px 0 0; font-size: 13px; max-width: 240px; }
 
@@ -334,7 +334,7 @@ header.site .header-weather strong { font-size: 15px; }
 header.site .header-weather .weather-label { font-size: 11px; }
 @media (max-width: 860px) { header.site .header-weather { display: none; } }
 
-/* 홈 상단을 위로 올리고, 질문 도우미는 한쪽으로 좁혀 배치 */
+/* 홈 상단을 위로 올리고, AI 멘토는 한쪽으로 좁혀 배치 */
 main { padding-top: 0; }
 .home-hero { padding: 32px 0 20px; }
 .chat-slot { max-width: 420px; margin: 0 0 40px auto; }
@@ -346,7 +346,7 @@ main { padding-top: 0; }
 #jobs-panel { grid-row: span 2; }
 @media (max-width: 760px) { .home-api { grid-template-columns: 1fr; } #jobs-panel { grid-row: auto; } }
 
-/* 질문 도우미: 넓은 화면에서 헤더 로그아웃 버튼 아래쪽에 붙여 표시 */
+/* AI 멘토: 넓은 화면에서 헤더 로그아웃 버튼 아래쪽에 붙여 표시 */
 @media (min-width: 601px) {
   .chat-panel:not(.chat-inline) { top: 96px; transform: none; }
 }
@@ -441,7 +441,7 @@ header.site .header-weather .weather-tile { display: none; }
   header.site .menu-home { display: none; }
 }
 
-/* 관리자 AI 질문 도우미 연결 상태 */
+/* 관리자 AI 멘토 연결 상태 */
 .ai-status-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 6px 0 14px; }
 .ai-status { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
 .ai-status b { color: var(--text); font-weight: 600; }
@@ -449,7 +449,7 @@ header.site .header-weather .weather-tile { display: none; }
 .ai-status b.ai-status-bad, .ai-status-bad { color: #b42318; }
 .ai-status-btn { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--text); }
 
-/* 관리자 AI 질문 도우미 */
+/* 관리자 AI 멘토 */
 .ai-final { padding: 18px; background: var(--bg); }
 .ai-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .ai-top-left { display: flex; align-items: center; gap: 10px; }

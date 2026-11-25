@@ -14,14 +14,14 @@
 | `js/app.js` | 블로그 화면 로직과 GA 이벤트 전송 |
 | `js/admin.js` | 관리자 화면 로직 |
 | `js/config.js` | 회사명, Firebase 설정값 |
-| `js/chatbot.js` | 질문 도우미 (블로그 글 검색, AI 답변 호출) |
+| `js/chatbot.js` | AI 멘토 (블로그 글 검색, AI 답변 호출) |
 | `js/weather.js` | 날씨 위젯 |
 | `api/chat.js` | AI 상담 서버 함수 (Vercel). 공고 목록을 가져와 Claude API에 질문 |
 | `api/jobs.js` | 채용 공고 목록 서버 함수 (고용24 공채속보, 키는 `settings/jobs` 또는 `JOBS_API_KEY`) |
 | `api/education.js` | 교육 목록 서버 함수 (고용24 훈련과정 등, 키는 `settings/education`) |
 | `api/analytics.js` | 관리자 분석 서버 함수 (GA4 Data API, Workload Identity 인증) |
 | `vercel.json` | `/__/auth/` 경로를 Firebase 로그인 도메인으로 연결 |
-| `tests/chatbot.test.mjs` | 질문 도우미 단위 테스트 |
+| `tests/chatbot.test.mjs` | AI 멘토 단위 테스트 |
 | `firestore.rules` | 보안 규칙 (Firebase 콘솔에 따로 게시해야 적용됨) |
 | `docs/PRD.md` | 기획서 (수업 양식 12개 항목) |
 | `docs/drafts/PRD-v0.1-draft.md` | 초안 PRD (11/24 10:30) |
@@ -69,7 +69,7 @@
 - 웹 페이지 내용을 확인할 때 도구의 캐시를 의심합니다. 실제 화면을 브라우저로 한 번 더 확인합니다.
 - 문서를 고칠 때 원격 쪽 변경이 있는지 먼저 확인합니다.
 - 공고와 교육 데이터는 고용24 오픈 API에서만 가져옵니다. 블로그에 가상 공고를 만들지 않습니다 (11/24 샘플 글 삭제).
-- 질문 도우미(`js/chatbot.js`)는 블로그 글만 검색합니다. 블로그 글이 거의 없어 답이 약합니다.
+- AI 멘토(`js/chatbot.js`)는 블로그 글만 검색합니다. 블로그 글이 거의 없어 답이 약합니다.
 - AI 상담(`api/chat.js`)은 사이트 전반 질문, 공고·교육 질문, 일반 상식 질문에 답합니다. 사이트 정보는 공개 블로그 글(Firestore `posts`)과 `SITE_MENU_GUIDE` 고정 안내에서 가져옵니다. 공고 근거가 있을 때는 `[번호]`를 붙이고, 사이트 안내나 일반 지식 답변은 번호 없이 `uncited`로 표시합니다. 날씨 등 실시간 정보는 확인할 수 없다고 안내합니다. 규칙을 바꾸면 PRD 6.3과 `docs/TEST_REPORT.md`를 함께 고칩니다. (2026-11-25 병합)
 - AI 연결 상태는 `GET /api/chat`으로 확인합니다. 키 값은 돌려주지 않고 키 존재 여부만 돌려줍니다.
 - 채용 목록 드롭다운은 API의 `coClcdNm` 값으로 나눕니다. 제목 대괄호를 기준으로 쓰지 않습니다.

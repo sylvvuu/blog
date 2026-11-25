@@ -183,7 +183,7 @@ $("work24-save").addEventListener("click", async () => {
 });
 
 // ---- AI 상담 설정 (settings/chat) ----
-// ---- AI 질문 도우미 설정 (프리셋, 프롬프트 섹션, 금지 규칙, FAQ, 테스트 채팅) ----
+// ---- AI 멘토 설정 (프리셋, 프롬프트 섹션, 금지 규칙, FAQ, 테스트 채팅) ----
 const CHAT_API = "https://sylvieee.vercel.app/api/chat";
 const SEC_IDS = ["secRole", "secTasks", "secRules", "secExamples"];
 const SEC_LABEL = { secRole: "역할 및 페르소나", secTasks: "핵심 업무", secRules: "응답 원칙", secExamples: "대화 흐름 예시" };
@@ -672,7 +672,7 @@ $("inq-cleanup").addEventListener("click", async () => {
   }
 });
 
-// ---- 관리 메뉴 탭: 한 번에 한 화면만 보여 준다 (AI 질문 도우미가 첫 화면) ----
+// ---- 관리 메뉴 탭: 한 번에 한 화면만 보여 준다 (AI 멘토가 첫 화면) ----
 document.querySelectorAll(".admin-tab").forEach(btn => {
   btn.addEventListener("click", () => {
     const name = btn.dataset.tab;
