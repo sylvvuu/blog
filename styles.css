@@ -368,6 +368,7 @@ header.site .auth-btn { margin-left: 8px; }
 
 /* 날씨 사진 타일은 760px 이하에서만 보임 (기본 숨김) */
 header.site .header-weather .weather-tile { display: none; }
+#weather-menu { display: none; }
 
 /* 모바일 헤더: 메뉴는 SV Career를 눌러 여는 드롭다운, 로그인 버튼은 항상 보임 */
 @media (max-width: 760px) {
@@ -378,16 +379,18 @@ header.site .header-weather .weather-tile { display: none; }
   header.site.menu-open nav { display: flex; }
   header.site .auth-btn { margin-left: auto; }
   header.site .wrap { position: relative; }
-  /* 날씨 사진 타일: SV Career와 로그인 사이 가운데 */
-  header.site .header-weather { display: flex !important; flex: 0 0 auto; width: auto; max-width: none; margin: 0 auto; padding: 0; border: 0; background: transparent; box-shadow: none; }
-  header.site .header-weather[hidden] { display: none !important; }
-  header.site .header-weather > :not(.weather-tile) { display: none; }
-  header.site .header-weather .weather-tile { position: relative; display: flex; width: 104px; height: 48px; border-radius: 10px; overflow: hidden; background-size: cover; background-position: center; color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, .35); }
-  header.site .header-weather .weather-tile::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .38); }
-  header.site .header-weather .weather-txt { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-  header.site .header-weather .weather-city, header.site .header-weather .weather-state { font-size: 10px; }
-  header.site .header-weather .weather-tile strong { font-size: 18px; font-weight: 500; color: inherit; }
-  header.site .header-weather .weather-tile.tone-dark { color: #1a1a1a; text-shadow: none; }
-  header.site .header-weather .weather-tile.tone-dark::before { background: rgba(255, 255, 255, .4); }
-  header.site .header-weather .weather-tile.tone-light::before { background: rgba(0, 0, 0, .5); }
+  /* 날씨 카드: SV Career 메뉴를 열면 맨 위에 보임 (헤더에서는 숨김) */
+  #weather-menu { display: block; margin: 0 0 6px; padding: 10px 0 12px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
+  #weather-menu[hidden] { display: none; }
+  #weather-menu > :not(.weather-tile) { display: none; }
+  #weather-menu .weather-tile { position: relative; display: flex; width: 100%; height: 64px; border-radius: 10px; overflow: hidden; background-size: cover; background-position: center; color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, .35); }
+  #weather-menu .weather-tile::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
+  #weather-menu .weather-txt { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 0 14px; line-height: 1.2; }
+  #weather-menu .weather-txt span { color: inherit; }
+  #weather-menu .weather-city { font-size: 11px; }
+  #weather-menu .weather-tile strong { font-size: 20px; font-weight: 500; color: inherit; }
+  #weather-menu .weather-state { font-size: 13px; }
+  #weather-menu .weather-tile.tone-dark { color: #1a1a1a; text-shadow: none; }
+  #weather-menu .weather-tile.tone-dark::before { background: rgba(255, 255, 255, .4); }
+  #weather-menu .weather-tile.tone-light::before { background: rgba(0, 0, 0, .5); }
 }

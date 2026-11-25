@@ -465,13 +465,13 @@ async function askAI(question) {
 
 // 관리자 화면에서 저장한 기상청 인증키를 읽어 헤더 아래 날씨 위젯을 채운다 (모든 페이지 공통)
 async function loadSeoulWeather() {
-  const el = document.getElementById("weather");
-  if (!el || !db) return;
+  const els = [document.getElementById("weather"), document.getElementById("weather-menu")].filter(Boolean);
+  if (!els.length || !db) return;
   try {
     const snap = await getDoc(doc(db, "settings", "weather"));
-    await startSeoulWeather(el, snap.exists() ? snap.data().kmaServiceKey : "");
+    await startSeoulWeather(els, snap.exists() ? snap.data().kmaServiceKey : "");
   } catch (e) {
-    el.hidden = true;
+    els.forEach(el => { el.hidden = true; });
   }
 }
 

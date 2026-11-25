@@ -109,17 +109,18 @@ function draw(el, { v, b }, sky) {
   el.hidden = false;
 }
 
-// el: 날씨를 채울 요소. 키가 없거나 조회에 실패하면 요소를 숨긴다. 10분마다 갱신한다.
-export async function startSeoulWeather(el, key) {
-  if (!el) return;
+// els: 날씨를 채울 요소 하나 또는 배열. 키가 없거나 조회에 실패하면 모두 숨긴다. 10분마다 갱신한다.
+export async function startSeoulWeather(els, key) {
+  const list = [].concat(els || []).filter(Boolean);
+  if (!list.length) return;
   if (timer) { clearInterval(timer); timer = null; }
-  if (!key) { el.hidden = true; return; }
+  if (!key) { list.forEach(el => { el.hidden = true; }); return; }
   const run = async () => {
     try {
       const [obs, sky] = await Promise.all([getObservation(key), getSky(key)]);
-      draw(el, obs, sky);
+      list.forEach(el => draw(el, obs, sky));
     } catch (e) {
-      el.hidden = true;
+      list.forEach(el => { el.hidden = true; });
     }
   };
   await run();
