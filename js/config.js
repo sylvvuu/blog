@@ -15,7 +15,8 @@ export const firebaseConfig = {
 export const ADMIN_EMAIL = "fkdna3@gmail.com";
 
 // 검사용 읽기 전용 계정: 관리자 화면을 조회만 할 수 있다 (저장·삭제 버튼 비활성, 규칙은 조회만 허용)
-export const READ_ONLY_EMAILS = ["[삭제된 이메일]"];
+// 검사용 읽기 전용 계정 목록 (현재 없음)
+export const READ_ONLY_EMAILS = [];
 
 export const COMPANY_NAME = "SV";
 
