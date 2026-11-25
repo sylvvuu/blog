@@ -1,7 +1,7 @@
 import { firebaseConfig, ADMIN_EMAIL, READ_ONLY_EMAILS, READ_ONLY_EXPIRES_AT } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -669,6 +669,27 @@ $("inq-cleanup").addEventListener("click", async () => {
     await loadInquiries();
   } catch (e) {
     $("inq-msg").textContent = "정리에 실패했습니다: " + e.message;
+  }
+});
+
+// 기존 문의의 개인정보 정리: 이메일 필드를 지우고, 공개 문의의 이름을 가린다 (되돌릴 수 없음)
+const maskNameAdmin = (n = "") => (n ? n.charAt(0) + "*".repeat(Math.max(n.length - 1, 0)) : "");
+const needsPrivacyFix = q => q.email !== undefined || (q.isPublic === true && q.name !== maskNameAdmin(q.name));
+$("inq-privacy-clean").addEventListener("click", async () => {
+  const targets = inquiries.filter(needsPrivacyFix);
+  if (!targets.length) { $("inq-msg").textContent = "정리할 개인정보가 없습니다."; return; }
+  if (!confirm(`${targets.length}건의 문의에서 이메일을 지우고, 공개 문의의 이름을 가립니다. 되돌릴 수 없습니다. 계속할까요?`)) return;
+  try {
+    for (const q of targets) {
+      const updates = {};
+      if (q.email !== undefined) updates.email = deleteField();
+      if (q.isPublic === true && q.name !== maskNameAdmin(q.name)) updates.name = maskNameAdmin(q.name);
+      await updateDoc(doc(db, "inquiries", q.id), updates);
+    }
+    $("inq-msg").textContent = `${targets.length}건을 정리했습니다.`;
+    await loadInquiries();
+  } catch (e) {
+    $("inq-msg").textContent = "개인정보 정리에 실패했습니다: " + e.message;
   }
 });
 

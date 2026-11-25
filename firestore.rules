@@ -135,8 +135,10 @@ service cloud.firestore {
       allow read: if isAdmin()
         || resource.data.get('isPublic', false) == true
         || (isSignedIn() && resource.data.uid == request.auth.uid);
+      // 관리자: 답변·상태 수정, 또는 기존 문의의 이메일 삭제와 이름 가리기 (개인정보 정리 버튼 전용)
       allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply', 'repliedAt', 'status']);
+        && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply', 'repliedAt', 'status'])
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'email']));
       allow delete: if isAdmin();
     }
   }
