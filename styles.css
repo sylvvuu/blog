@@ -438,9 +438,11 @@ header.site .header-weather .weather-tile { display: none; }
 .inq-empty-btn { display: inline-block; padding: 10px 18px; border-radius: 8px; background: var(--brand); color: #fff; font-size: 15px; }
 .inq-empty-btn:hover { color: #fff; opacity: .92; }
 
-/* 메뉴 버튼과 메뉴 안의 홈 링크는 모바일에서만 보인다 */
-header.site .menu-toggle { display: none; }
-header.site .menu-home { display: none; }
+/* 메뉴 버튼과 메뉴 안의 홈 링크는 모바일에서만 보인다 (데스크톱 폭에서만 숨김) */
+@media (min-width: 761px) {
+  header.site .menu-toggle { display: none; }
+  header.site .menu-home { display: none; }
+}
 
 /* 관리자 AI 질문 도우미 */
 .ai-final { padding: 18px; background: var(--bg); }
