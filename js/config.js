@@ -14,9 +14,10 @@ export const firebaseConfig = {
 // 관리자 페이지에 로그인할 수 있는 Google 계정
 export const ADMIN_EMAIL = "fkdna3@gmail.com";
 
-// 검사용 읽기 전용 계정: 관리자 화면을 조회만 할 수 있다 (저장·삭제 버튼 비활성, 규칙은 조회만 허용)
-// 검사용 읽기 전용 계정 목록 (현재 없음)
-export const READ_ONLY_EMAILS = [];
+// 검사용 읽기 전용 계정: 관리자 화면을 조회만 할 수 있다 (저장·삭제 버튼 비활성, 11월 30일까지 유지)
+export const READ_ONLY_EMAILS = ["test1@example.com"];
+// 읽기 전용 계정 만료 시점 (11월 30일 23:59:59 KST까지 유지)
+export const READ_ONLY_EXPIRES_AT = "2026-12-01T00:00:00+09:00";
 
 export const COMPANY_NAME = "SV";
 

@@ -1,4 +1,4 @@
-import { firebaseConfig, ADMIN_EMAIL, READ_ONLY_EMAILS } from "./config.js";
+import { firebaseConfig, ADMIN_EMAIL, READ_ONLY_EMAILS, READ_ONLY_EXPIRES_AT } from "./config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, getDocs, getDoc, setDoc, orderBy, query, where, documentId, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -45,9 +45,12 @@ onAuthStateChanged(auth, async user => {
     $("admin-view").hidden = true;
     return;
   }
-  const readOnly = READ_ONLY_EMAILS.includes(user.email) && user.emailVerified;
+  const isExpired = READ_ONLY_EXPIRES_AT ? Date.now() >= Date.parse(READ_ONLY_EXPIRES_AT) : false;
+  const readOnly = !isExpired && READ_ONLY_EMAILS.includes(user.email) && user.emailVerified;
   if (user.email !== ADMIN_EMAIL && !readOnly) {
-    $("login-msg").textContent = `${user.email} 계정은 관리자 권한이 없습니다.`;
+    $("login-msg").textContent = isExpired && READ_ONLY_EMAILS.includes(user.email)
+      ? `${user.email} 계정의 읽기 권한이 만료되었습니다.`
+      : `${user.email} 계정은 관리자 권한이 없습니다.`;
     await signOut(auth);
     return;
   }
