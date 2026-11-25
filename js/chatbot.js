@@ -171,6 +171,8 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
 
   const postLink = p => `<li><a href="#/post/${encodeURIComponent(p.id)}" data-chat-link data-post-id="${esc(p.id)}" data-category="${esc(p.category || "")}">${esc(p.title)}</a></li>`;
 
+  // 직전 대화(질문과 AI 답변)를 기억해 후속 질문("그중 기간제는?")을 이어 받는다. 새로고침하면 초기화된다
+  const chatHistory = [];
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const question = input.value.trim();
@@ -182,7 +184,11 @@ export function setupChatbot({ loadPosts, track, esc, isConfigured, askAI }) {
 
     let html;
     let matched = [];
-    const ai = isConfigured && askAI ? await askAI(question).catch(() => null) : null;
+    const ai = isConfigured && askAI ? await askAI(question, chatHistory.slice(-6)).catch(() => null) : null;
+    if (ai && ai.answer) {
+      chatHistory.push({ role: "user", text: question }, { role: "assistant", text: ai.answer });
+      chatHistory.splice(0, Math.max(0, chatHistory.length - 6));
+    }
     if (!isConfigured) {
       html = `<p>챗봇을 쓰려면 Firebase 설정이 필요합니다.</p>`;
     } else if (ai && ai.noMatch) {

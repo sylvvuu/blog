@@ -329,7 +329,22 @@ function setCors(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "content-type");
 }
 
-async function askClaude({ aiKey, model, system, question, items, hint = "" }) {
+// 직전 대화(최대 3턴)를 정리한다. 클라이언트가 보낸 값이라 형식과 길이를 검사한다
+const MAX_HISTORY = 6;
+const MAX_HISTORY_TEXT = 300;
+function sanitizeHistory(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(h => h && (h.role === "user" || h.role === "assistant") && typeof h.text === "string")
+    .map(h => ({ role: h.role, text: h.text.trim().slice(0, MAX_HISTORY_TEXT) }))
+    .filter(h => h.text)
+    .slice(-MAX_HISTORY);
+}
+
+async function askClaude({ aiKey, model, system, question, items, history = [], hint = "" }) {
+  const past = history.length
+    ? `이전 대화:\n${history.map(h => `${h.role === "user" ? "질문" : "답변"}: ${h.text}`).join("\n")}\n\n`
+    : "";
   const ai = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": aiKey, "anthropic-version": "2023-06-01" },
@@ -339,7 +354,7 @@ async function askClaude({ aiKey, model, system, question, items, hint = "" }) {
       system: hint ? `${system}\n\n${hint}` : system,
       messages: [{
         role: "user",
-        content: `질문: ${question}\n\n근거 목록:\n${items.map(lineOf).join("\n")}`
+        content: `${past}질문: ${question}\n\n근거 목록:\n${items.map(lineOf).join("\n")}`
       }]
     })
   });
@@ -357,6 +372,10 @@ export default async function handler(req, res) {
   if (typeof question !== "string" || !question.trim() || question.length > 200) {
     return res.status(400).json({ error: "질문은 1~200자로 입력해 주세요." });
   }
+  const history = sanitizeHistory(req.body && req.body.history);
+  // "그중 기간제는?"처럼 짧은 후속 질문은 직전 사용자 질문과 함께 찾아야 공고를 제대로 찾는다
+  const lastUserQ = [...history].reverse().find(h => h.role === "user");
+  const searchQ = lastUserQ ? `${lastUserQ.text} ${question}` : question;
 
   const settings = await cachedSettings("chat");
   const aiKey = process.env.ANTHROPIC_API_KEY;
@@ -375,7 +394,7 @@ export default async function handler(req, res) {
     ]);
 
     let items;
-    const cond = extractConditions(question);
+    const cond = extractConditions(searchQ);
     if (cond.region || cond.employType) {
       // 지역이나 고용형태를 말했다면 공고 목록에서 먼저 조건을 확인한다
       if (!sources.includes("jobs")) {
@@ -391,15 +410,15 @@ export default async function handler(req, res) {
         return res.status(200).json({ noMatch: true, answer: noMatchText(cond), sources: [] });
       }
     } else {
-      items = await gatherItems(question, sources, work24, education, jobsSetting);
+      items = await gatherItems(searchQ, sources, work24, education, jobsSetting);
       if (!items.length) return res.status(502).json({ error: "공고 정보를 가져오지 못했습니다.", fallback: true });
     }
 
-    let answer = await askClaude({ aiKey, model, system, question, items });
+    let answer = await askClaude({ aiKey, model, system, question, items, history });
     let used = citedIndexes(answer, items.length);
     // 답은 왔지만 공고 번호가 없으면 번호를 붙이도록 한 번 더 요청한다
     if (answer && !used.length) {
-      answer = await askClaude({ aiKey, model, system, question, items, hint: CITE_RETRY_HINT });
+      answer = await askClaude({ aiKey, model, system, question, items, history, hint: CITE_RETRY_HINT });
       used = citedIndexes(answer, items.length);
     }
     // 번호가 끝까지 없으면 답을 쓰지 않고 기존 글 검색으로 돌아가게 한다

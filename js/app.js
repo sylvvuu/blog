@@ -445,7 +445,7 @@ function setupJobSearch() {
 // AI 상담: settings/chat에서 켜져 있을 때만 Vercel /api/chat을 호출한다. 실패하면 null을 돌려 기존 답변을 쓴다
 const CHAT_API = "https://sylvieee.vercel.app/api/chat";
 let chatConfigPromise = null;
-async function askAI(question) {
+async function askAI(question, history = []) {
   if (!db) return null;
   if (!chatConfigPromise) {
     chatConfigPromise = getDoc(doc(db, "settings", "chat"))
@@ -457,7 +457,7 @@ async function askAI(question) {
   const res = await fetch(CHAT_API, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ question })
+    body: JSON.stringify({ question, history })
   });
   if (!res.ok) return null;
   return res.json();
