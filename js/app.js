@@ -997,7 +997,7 @@ function setupRead(ctx, charCount) {
   if (!view) return;
   if (view.read && view.read.id === ctx.post_id) return; // 같은 글을 다시 그린 경우 유지
   const thresholdMs = Math.max((charCount / 500) * 60000, 10000);
-  view.read = { id: ctx.post_id, ctx, charCount, thresholdMs, endSeen: false, sent: false };
+  view.read = { id: ctx.post_id, ctx, charCount, thresholdMs, endSeen: false, sent: false, depths: new Set() };
   const endMark = document.querySelector(".bottom-nav");
   if (endMark && "IntersectionObserver" in window) {
     const io = new IntersectionObserver(entries => {
@@ -1027,6 +1027,19 @@ setInterval(() => {
     lastFlush = Date.now();
   }
 }, 5000);
+// 스크롤 깊이: 글 본문을 25, 50, 75, 100%까지 내려갈 때 단계마다 post_read_progress를 한 번씩 보낸다
+window.addEventListener("scroll", () => {
+  const r = view && view.read;
+  if (!r || !r.depths) return;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = max <= 0 ? 100 : Math.min(100, Math.round((window.scrollY / max) * 100));
+  for (const step of [25, 50, 75, 100]) {
+    if (pct >= step && !r.depths.has(step)) {
+      r.depths.add(step);
+      track("post_read_progress", { ...r.ctx, read_depth: step });
+    }
+  }
+}, { passive: true });
 document.addEventListener("visibilitychange", () => {
   tickActive();
   if (!isVisible()) flushActive();
